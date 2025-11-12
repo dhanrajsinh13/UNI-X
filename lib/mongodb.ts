@@ -27,8 +27,11 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     }
   }
 
-  // Create new connection with improved settings for local MongoDB
+  // Create new connection with settings compatible for both local and Atlas
   try {
+    // Check if using local MongoDB
+    const isLocalMongo = MONGODB_URI.includes('127.0.0.1') || MONGODB_URI.includes('localhost')
+    
     const client = await MongoClient.connect(MONGODB_URI, {
       maxPoolSize: 10,
       minPoolSize: 2,
@@ -38,7 +41,7 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
       connectTimeoutMS: 10000,
       retryWrites: true,
       retryReads: true,
-      directConnection: true, // Required for local MongoDB
+      ...(isLocalMongo && { directConnection: true }), // Only for local MongoDB
     })
 
     const db = client.db(DB_NAME)
