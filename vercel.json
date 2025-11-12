@@ -9,5 +9,6 @@
   },
   "regions": ["iad1"],
   "framework": "nextjs",
-  "buildCommand": "npm run build"
+  "buildCommand": "npm ci && npm run build",
+  "installCommand": "npm ci"
 }
