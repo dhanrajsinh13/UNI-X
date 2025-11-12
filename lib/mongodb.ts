@@ -32,6 +32,13 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     // Check if using local MongoDB
     const isLocalMongo = MONGODB_URI.includes('127.0.0.1') || MONGODB_URI.includes('localhost')
     
+    // SSL/TLS options for production (Vercel)
+    const tlsOptions = !isLocalMongo ? {
+      tls: true,
+      tlsAllowInvalidCertificates: true,
+      tlsAllowInvalidHostnames: true,
+    } : {}
+    
     const client = await MongoClient.connect(MONGODB_URI, {
       maxPoolSize: 10,
       minPoolSize: 2,
@@ -41,6 +48,7 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
       connectTimeoutMS: 10000,
       retryWrites: true,
       retryReads: true,
+      ...tlsOptions,
       ...(isLocalMongo && { directConnection: true }), // Only for local MongoDB
     })
 
