@@ -58,7 +58,7 @@ const Navbar = () => {
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-gray-100 z-50 flex-col justify-between py-6 px-3">
         <div>
           <Link href="/" className="flex items-center px-2 mb-6">
-            <img src="/uni-x_logo.png" alt="UNI-X" className="w-15 h-15 mr-2" />
+            <img src="/uni-x_logo.png" alt="UNI-X" className="w-10 h-10 mr-2" />
             <span className="font-bold text-xl bg-gradient-to-r from-[#1E1E1E] to-green-500 bg-clip-text text-transparent">UNI-X</span>
           </Link>
           {user ? (
