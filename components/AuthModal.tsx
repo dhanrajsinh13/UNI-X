@@ -176,14 +176,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
                   >
                     <option value="">Select Department</option>
-                    <option value="Computer Science">Computer Science</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="Business">Business</option>
-                    <option value="Arts">Arts</option>
-                    <option value="Science">Science</option>
-                    <option value="Medicine">Medicine</option>
-                    <option value="Law">Law</option>
-                    <option value="Other">Other</option>
+                    <option value="Bachelor  of Computer Applications">Masters of Computer Applications</option>
+                    <option value="Masters of Computer Applications">Masters of Computer Applications</option>
+                    <option value="Bachelor of Business Administration">Bachelor of Business Administration</option>
+                    <option value="Masters of Business Administration">Masters of Business Administration</option>
+                    <option value="Others">Others</option>
                   </select>
                 </div>
 

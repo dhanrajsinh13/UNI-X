@@ -84,18 +84,10 @@ export default function LandingPage() {
   }, [user, isLoading, router]);
 
   const departments = [
-    'Computer Science',
-    'Engineering',
-    'Business Administration',
-    'Medicine',
-    'Law',
-    'Arts & Sciences',
-    'Psychology',
-    'Mathematics',
-    'Physics',
-    'Chemistry',
-    'Biology',
-    'Literature',
+    'Bachelor of Computer Applications',
+    'Masters of Computer Applications',
+    'Bachelor of Business Administration',
+    'Masters of Business Administration',
     'Other'
   ];
 
