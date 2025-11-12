@@ -176,7 +176,7 @@ export default function SettingsPage() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/users/upload-profile-pic', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
@@ -185,8 +185,10 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json();
         setEditPfp(data.url);
+        setHasUnsavedChanges(true);
       } else {
-        alert('Failed to upload profile picture');
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to upload profile picture');
       }
     } catch (error) {
       console.error('Error uploading profile picture:', error);
