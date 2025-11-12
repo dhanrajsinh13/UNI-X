@@ -209,6 +209,7 @@ export const Collections = {
   CLUB_MEMBERS: 'club_members',
   CLUB_DISCUSSIONS: 'club_discussions',
   CLUB_COMMENTS: 'club_comments',
+  BLOCKS: 'blocks',
 }
 
 // Helper function to get next sequential ID

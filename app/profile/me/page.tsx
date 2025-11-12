@@ -7,6 +7,7 @@ import PostCard from '@/../../components/PostCard';
 import PostModal from '@/../../components/PostModal';
 import FollowersListModal from '@/../../components/FollowersListModal';
 import { useIsMobile } from '@/../../hooks/useIsMobile';
+import { fetchAPI, dataFetcher } from '@/../../lib/dataFetcher';
 
 // User profile from API
 interface UserProfile {
@@ -277,78 +278,31 @@ export default function ProfilePage() {
   const fetchUserProfile = async (background: boolean) => {
     setProfileError(null);
     if (!background) setLoading(true);
-
-    const maxAttempts = 3; // Reduced to 3 attempts
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000); // Increased to 60s total
     
     console.log('Starting profile fetch...');
     
     try {
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-          console.log(`Profile fetch attempt ${attempt}/${maxAttempts}`);
-          
-          // Progressive timeout per attempt: 20s, 25s, 30s
-          const attemptController = new AbortController();
-          const attemptTimeout = setTimeout(() => attemptController.abort(), 15000 + (attempt * 10000));
-          
-          const response = await fetch('/api/users/me', {
-            headers: { 'Authorization': `Bearer ${token}` },
-            signal: attemptController.signal,
-          });
+      const data = await fetchAPI('/api/users/me', {
+        token: token || '',
+        cacheTTL: background ? 0 : 60000, // Skip cache for background refresh, 60s cache otherwise
+        skipCache: background
+      }) as { user: UserProfile };
 
-          clearTimeout(attemptTimeout);
-
-          if (response.ok) {
-            const data = await response.json();
-            if (!isMountedRef.current) return;
-            console.log('Profile fetched successfully on attempt', attempt);
-            setUserProfile(data.user);
-            setEditUsername(data.user?.username || '');
-            setEditBio(data.user?.bio || '');
-            setEditPfp(data.user?.profile_image || null);
-            setPosts(data.user.posts || []);
-            saveProfileToCache(data.user);
-            return;
-          } else {
-            const text = await response.text().catch(() => '');
-            console.error(`Profile fetch failed (attempt ${attempt}):`, response.status, text);
-            
-            // Check if error is retryable
-            const isRetryable = response.status >= 500 || response.status === 503 || response.status === 504;
-            
-            if (attempt === maxAttempts || !isRetryable) {
-              setProfileError(`Profile load failed (${response.status}). ${isRetryable ? 'Please try again.' : ''}`);
-            } else {
-              // Exponential backoff with jitter
-              const delay = Math.min(1000 * Math.pow(2, attempt - 1) + Math.random() * 1000, 8000);
-              console.log(`Retrying profile fetch in ${Math.round(delay)}ms...`);
-              await new Promise(res => setTimeout(res, delay));
-            }
-          }
-        } catch (err: any) {
-          if (err?.name === 'AbortError') {
-            console.error(`Profile request timed out on attempt ${attempt}`);
-          } else {
-            console.error(`Profile fetch error on attempt ${attempt}:`, err.message);
-          }
-          
-          if (attempt === maxAttempts) {
-            const errorMsg = err?.name === 'AbortError' 
-              ? 'Profile load timed out. Please check your connection.' 
-              : 'Network error loading profile. Please try again.';
-            setProfileError(errorMsg);
-          } else {
-            // Exponential backoff with jitter
-            const delay = Math.min(1000 * Math.pow(2, attempt - 1) + Math.random() * 1000, 8000);
-            console.log(`Retrying profile fetch after error in ${Math.round(delay)}ms...`);
-            await new Promise(res => setTimeout(res, delay));
-          }
-        }
-      }
+      if (!isMountedRef.current) return;
+      console.log('Profile fetched successfully');
+      setUserProfile(data.user);
+      setEditUsername(data.user?.username || '');
+      setEditBio(data.user?.bio || '');
+      setEditPfp(data.user?.profile_image || null);
+      setPosts(data.user.posts || []);
+      saveProfileToCache(data.user);
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      const errorMsg = error?.name === 'AbortError' 
+        ? 'Profile load timed out. Please check your connection.' 
+        : 'Network error loading profile. Please try again.';
+      setProfileError(errorMsg);
     } finally {
-      clearTimeout(timeout);
       if (!isMountedRef.current) return;
       if (!background) setLoading(false);
       console.log('Profile fetch completed');
@@ -358,19 +312,12 @@ export default function ProfilePage() {
   const fetchSavedPosts = async () => {
     setTabLoading(true);
     try {
-      const response = await fetch('/api/users/me/saved', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const data = await fetchAPI('/api/users/me/saved', {
+        token: token || '',
+        cacheTTL: 30000 // 30 seconds cache for saved posts
+      }) as { posts: Post[] };
 
-      if (response.ok) {
-        const data = await response.json();
-        setSavedPosts(data.posts || []);
-      } else {
-        console.error('Failed to fetch saved posts');
-        setSavedPosts([]);
-      }
+      setSavedPosts(data.posts || []);
     } catch (error) {
       console.error('Error fetching saved posts:', error);
       setSavedPosts([]);
@@ -382,19 +329,12 @@ export default function ProfilePage() {
   const fetchTaggedPosts = async () => {
     setTabLoading(true);
     try {
-      const response = await fetch('/api/users/me/tagged', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const data = await fetchAPI('/api/users/me/tagged', {
+        token: token || '',
+        cacheTTL: 30000 // 30 seconds cache for tagged posts
+      }) as { posts: Post[] };
 
-      if (response.ok) {
-        const data = await response.json();
-        setTaggedPosts(data.posts || []);
-      } else {
-        console.error('Failed to fetch tagged posts');
-        setTaggedPosts([]);
-      }
+      setTaggedPosts(data.posts || []);
     } catch (error) {
       console.error('Error fetching tagged posts:', error);
       setTaggedPosts([]);
@@ -463,28 +403,21 @@ export default function ProfilePage() {
     setSavingProfile(true);
     try {
       const payload: any = { ...editForm, bio: editBio, username: editUsername, profile_image: editPfp };
-      const response = await fetch('/api/users/me', {
+      const data = await fetchAPI('/api/users/me', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        token: token || '',
         body: JSON.stringify(payload),
-      });
+        skipCache: true
+      }) as { user: UserProfile };
 
-      if (response.ok) {
-        const data = await response.json();
-        setUserProfile(data.user);
-        setIsEditing(false);
-        setHasUnsavedChanges(false);
-        saveProfileToCache(data.user);
-      } else {
-        const err = await response.json().catch(() => ({} as any));
-        alert(err.error || 'Failed to update profile');
-      }
-    } catch (error) {
+      setUserProfile(data.user);
+      setIsEditing(false);
+      setHasUnsavedChanges(false);
+      saveProfileToCache(data.user);
+      dataFetcher.clearCache('/api/users/me'); // Clear cache after update
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      alert('Update failed');
+      alert(error.message || 'Failed to update profile');
     } finally {
       setSavingProfile(false);
     }
@@ -540,25 +473,18 @@ export default function ProfilePage() {
       formData.append('file', file);
       
       // Upload to our API endpoint
-      const response = await fetch('/api/users/upload-profile-pic', {
+      const data = await fetchAPI('/api/users/upload-profile-pic', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        token: token || '',
         body: formData,
-      });
+        skipCache: true
+      }) as { url: string };
 
-      if (response.ok) {
-        const data = await response.json();
-        setEditPfp(data.url);
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
-        const errorMsg = errorData.details || errorData.error || 'Upload failed';
-        throw new Error(errorMsg);
-      }
-    } catch (error) {
+      setEditPfp(data.url);
+      dataFetcher.clearCache('/api/users/me'); // Clear cache after upload
+    } catch (error: any) {
       console.error('Profile picture upload error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      const errorMessage = error.message || 'Failed to upload image';
       alert(`Upload failed: ${errorMessage}`);
     } finally {
       setUploadingPfp(false);
@@ -642,37 +568,42 @@ export default function ProfilePage() {
     if (!confirm('Delete this post? This cannot be undone.')) return;
     setIsDeletingId(postId);
     try {
-      const resp = await fetch(`/api/posts/${postId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
-      if (resp.status === 204) {
-        // Update state
-        setPosts(prev => {
-          const updated = prev.filter(p => p.id !== postId);
-          
-          // Update cache with new posts array
-          if (userProfile) {
-            const updatedProfile = {
-              ...userProfile,
-              posts: updated,
-              _count: {
-                posts: (userProfile._count?.posts || 0) - 1,
-                followers: userProfile._count?.followers || 0,
-                following: userProfile._count?.following || 0
-              }
-            };
-            saveProfileToCache(updatedProfile);
-            setUserProfile(updatedProfile);
-          }
-          
-          return updated;
-        });
+      await fetchAPI(`/api/posts/${postId}`, {
+        method: 'DELETE',
+        token,
+        skipCache: true
+      });
+
+      // Update state
+      setPosts(prev => {
+        const updated = prev.filter(p => p.id !== postId);
         
-        window.dispatchEvent(new CustomEvent('postDeleted', { detail: { id: postId } }));
-      } else {
-        const err = await resp.json().catch(() => ({} as any));
-        alert(err.error || 'Failed to delete post');
-      }
-    } catch (e) {
-      alert('Failed to delete post');
+        // Update cache with new posts array
+        if (userProfile) {
+          const updatedProfile = {
+            ...userProfile,
+            posts: updated,
+            _count: {
+              posts: (userProfile._count?.posts || 0) - 1,
+              followers: userProfile._count?.followers || 0,
+              following: userProfile._count?.following || 0
+            }
+          };
+          saveProfileToCache(updatedProfile);
+          setUserProfile(updatedProfile);
+        }
+        
+        return updated;
+      });
+      
+      // Clear relevant caches
+      dataFetcher.clearCache('/api/users/me');
+      dataFetcher.clearCache(`/api/posts/${postId}`);
+      dataFetcher.clearCache('/api/posts');
+      
+      window.dispatchEvent(new CustomEvent('postDeleted', { detail: { id: postId } }));
+    } catch (error: any) {
+      alert(error.message || 'Failed to delete post');
     } finally {
       setIsDeletingId(null);
       setOptionsPostId(null);
@@ -690,20 +621,23 @@ export default function ProfilePage() {
     }
     setIsSavingId(postId);
     try {
-      const resp = await fetch(`/api/posts/${postId}`, {
+      await fetchAPI(`/api/posts/${postId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ caption: trimmed })
+        token,
+        body: JSON.stringify({ caption: trimmed }),
+        skipCache: true
       });
-      if (resp.ok) {
-        setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: trimmed } : p));
-        window.dispatchEvent(new CustomEvent('postUpdated', { detail: { id: postId, content: trimmed } }));
-      } else {
-        const err = await resp.json().catch(() => ({} as any));
-        alert(err.error || 'Failed to update caption');
-      }
-    } catch (e) {
-      alert('Failed to update caption');
+
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: trimmed } : p));
+      
+      // Clear relevant caches
+      dataFetcher.clearCache('/api/users/me');
+      dataFetcher.clearCache(`/api/posts/${postId}`);
+      dataFetcher.clearCache('/api/posts');
+      
+      window.dispatchEvent(new CustomEvent('postUpdated', { detail: { id: postId, content: trimmed } }));
+    } catch (error: any) {
+      alert(error.message || 'Failed to update caption');
     } finally {
       setIsSavingId(null);
       setOptionsPostId(null);

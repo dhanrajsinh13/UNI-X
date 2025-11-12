@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import FollowButton from '../../components/FollowButton'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { fetchAPI, dataFetcher, debounce } from '../../lib/dataFetcher'
 
 interface Student {
   id: number
@@ -60,20 +61,33 @@ export default function ConnectPage() {
       if (department.trim()) params.set('department', department.trim())
       if (year.trim()) params.set('year', year.trim())
       params.set('limit', '100')
-      const headers = { Authorization: `Bearer ${token}` }
 
       const hasFilters = Boolean(query.trim() || department.trim() || year.trim())
 
-      // Fetch users for explore mode and intelligent suggestions in parallel
-      const [usersResp, followingResp, suggestionsResp] = await Promise.all([
-        fetch(`/api/users?${params.toString()}`, { headers }),
-        fetch('/api/users/me/following?limit=200', { headers }).catch(() => null as any),
-        !hasFilters ? fetch('/api/users/suggestions?limit=20&algorithm=advanced', { headers }) : Promise.resolve(null)
-      ])
+      // Use batch fetching with caching
+      const requests = [
+        {
+          url: `/api/users?${params.toString()}`,
+          options: { token, cacheTTL: 60000 } // Cache for 1 minute
+        },
+        {
+          url: '/api/users/me/following?limit=200',
+          options: { token, cacheTTL: 120000 } // Cache following list for 2 minutes
+        }
+      ]
+
+      if (!hasFilters) {
+        requests.push({
+          url: '/api/users/suggestions?limit=20&algorithm=advanced',
+          options: { token, cacheTTL: 300000 } // Cache suggestions for 5 minutes
+        })
+      }
+
+      const results = await dataFetcher.fetchBatch(requests)
+      const usersData = results[0] as any
+      const followingData = (results[1] || { users: [] }) as any
+      const suggestionsData = results[2] as any
       
-      if (!usersResp.ok) throw new Error('Failed to load users')
-      const usersData = await usersResp.json()
-      const followingData = followingResp && followingResp.ok ? await followingResp.json() : { users: [] }
       const followingSet = new Set<number>((followingData.users || []).map((u: any) => u.id))
 
       const list: Student[] = (usersData.users || []).filter((u: any) => u.id !== user?.id)
@@ -85,8 +99,7 @@ export default function ConnectPage() {
       setSuggestions(deck.slice(0, hasFilters ? 100 : 20))
       
       // Load intelligent suggestions
-      if (suggestionsResp && suggestionsResp.ok) {
-        const suggestionsData = await suggestionsResp.json()
+      if (suggestionsData) {
         setIntelligentSuggestions(suggestionsData.suggestions || [])
       } else {
         setIntelligentSuggestions([])
@@ -138,29 +151,17 @@ export default function ConnectPage() {
     // Optimistically remove and trigger follow
     setHistory(prev => [{ user: currentCard, action: 'like' }, ...prev])
     onFollowSuccess(currentCard.id)
-    // Fire and forget follow
-    fetch(`/api/users/${currentCard.id}/follow`, {
+    
+    // Fire and forget follow with new data fetcher
+    fetchAPI(`/api/users/${currentCard.id}/follow`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token || ''}`,
-        'Content-Type': 'application/json'
-      }
+      token: token || '',
+      skipCache: true
     })
-    .then(response => {
-      if (!response.ok) {
-        console.error('Follow failed with status:', response.status)
-        return response.json().then(data => {
-          console.error('Follow error details:', data)
-        }).catch(() => {
-          console.error('Follow failed but no error details available')
-        })
-      }
-      return response.json()
-    })
-    .then(data => {
-      if (data) {
-        console.log('Follow success:', data)
-      }
+    .then(() => {
+      // Clear caches after follow action
+      dataFetcher.clearCache('/api/users/suggestions')
+      dataFetcher.clearCache('/api/users/me/following')
     })
     .catch(err => {
       console.error('Follow request error:', err)
@@ -220,9 +221,8 @@ export default function ConnectPage() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
   }, [])
 
-  // Search functionality for explore mode
-  const handleExploreSearch = useCallback(async (searchText: string) => {
-    setExploreSearchQuery(searchText)
+  // Search functionality for explore mode with debouncing
+  const performExploreSearch = useCallback(async (searchText: string) => {
     if (!searchText.trim() || !token) {
       // Reset to default explore users
       load()
@@ -234,19 +234,27 @@ export default function ConnectPage() {
       params.set('q', searchText.trim())
       params.set('limit', '50')
       
-      const response = await fetch(`/api/users?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const data = await fetchAPI<{ users: any[] }>(
+        `/api/users?${params.toString()}`,
+        { token, cacheTTL: 120000 } // Cache search results for 2 minutes
+      )
       
-      if (response.ok) {
-        const data = await response.json()
-        const filtered = (data.users || []).filter((u: any) => u.id !== user?.id)
-        setExploreUsers(filtered)
-      }
+      const filtered = (data.users || []).filter((u: any) => u.id !== user?.id)
+      setExploreUsers(filtered)
     } catch (err) {
       console.error('Search error:', err)
     }
   }, [token, user?.id, load])
+
+  const debouncedExploreSearch = useMemo(
+    () => debounce((searchText: string) => performExploreSearch(searchText), 300),
+    [performExploreSearch]
+  )
+
+  const handleExploreSearch = useCallback((searchText: string) => {
+    setExploreSearchQuery(searchText)
+    debouncedExploreSearch(searchText)
+  }, [debouncedExploreSearch])
 
   // Image carousel for swipe mode
   const images = useMemo(() => {

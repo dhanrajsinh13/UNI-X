@@ -51,6 +51,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const messages = await getCollection<Message>(Collections.MESSAGES)
     const users = await getCollection<User>(Collections.USERS)
+    const blocks = await getCollection(Collections.BLOCKS)
+
+    // Check if either user has blocked the other
+    const blockExists = await blocks.findOne({
+      $or: [
+        { blocker_id: auth.userId, blocked_user_id: otherUserId },
+        { blocker_id: otherUserId, blocked_user_id: auth.userId }
+      ]
+    })
+
+    if (blockExists) {
+      return res.status(403).json({ 
+        error: 'Cannot access conversation with this user',
+        blocked: true 
+      })
+    }
 
     // Get messages between current user and specified user
     const messageList = await messages.find({

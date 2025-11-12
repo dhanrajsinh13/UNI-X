@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo, Suspense, useCallback, mem
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
+import { fetchAPI, dataFetcher } from '../../lib/dataFetcher';
 
 interface Conversation {
   conversationId: string;
@@ -284,17 +285,13 @@ const MessagesPageInner = () => {
     const controller = new AbortController();
     convFetchControllerRef.current = controller;
     try {
-      const response = await fetch('/api/messages/conversations', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        signal: controller.signal,
-      });
+      const data = await fetchAPI('/api/messages/conversations', {
+        token,
+        cacheTTL: 10000, // 10 seconds cache for conversations
+        signal: controller.signal
+      }) as { conversations: Conversation[] };
 
-      if (response.ok) {
-        const data = await response.json();
-        setConversations(data.conversations || []);
-      }
+      setConversations(data.conversations || []);
     } catch (error: any) {
       if (error?.name === 'AbortError') return;
       console.error('Error loading conversations:', error);
@@ -312,47 +309,43 @@ const MessagesPageInner = () => {
     msgsFetchControllerRef.current = controller;
     setMessagesLoading(true);
     try {
-      const response = await fetch(`/api/messages/conversation/${otherUserId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        signal: controller.signal,
-      });
+      const data = await fetchAPI(`/api/messages/conversation/${otherUserId}`, {
+        token,
+        cacheTTL: 5000, // 5 seconds cache for messages
+        signal: controller.signal
+      }) as { messages: Message[]; otherUser: any };
 
-      if (response.ok) {
-        const data = await response.json();
-        const fetched: any[] = data.messages || [];
-        setMessages(prev => {
-          if (!prev || prev.length === 0) return fetched;
-          const byClientId = new Map<string, any>();
-          const byId = new Map<number, any>();
-          
-          for (const m of prev as any[]) {
-            if ((m as any).clientId) byClientId.set((m as any).clientId, m);
-            byId.set(m.id, m);
+      const fetched: any[] = data.messages || [];
+      setMessages(prev => {
+        if (!prev || prev.length === 0) return fetched;
+        const byClientId = new Map<string, any>();
+        const byId = new Map<number, any>();
+        
+        for (const m of prev as any[]) {
+          if ((m as any).clientId) byClientId.set((m as any).clientId, m);
+          byId.set(m.id, m);
+        }
+        
+        const merged = [...prev];
+        for (const fm of fetched) {
+          if (byId.has(fm.id)) continue;
+          if (fm.clientId && byClientId.has(fm.clientId)) {
+            const idx = merged.findIndex((m: any) => (m as any).clientId === fm.clientId);
+            if (idx !== -1) { merged[idx] = fm; continue; }
           }
-          
-          const merged = [...prev];
-          for (const fm of fetched) {
-            if (byId.has(fm.id)) continue;
-            if (fm.clientId && byClientId.has(fm.clientId)) {
-              const idx = merged.findIndex((m: any) => (m as any).clientId === fm.clientId);
-              if (idx !== -1) { merged[idx] = fm; continue; }
-            }
-            const last = merged[merged.length - 1] as any;
-            const sameContent = last?.messageText === fm.messageText && last?.receiverId === fm.receiverId;
-            const looksOptimistic = !!last?.clientId || (typeof last?.id === 'number' && last.id < 0);
-            const recent = Math.abs(new Date(fm.createdAt).getTime() - new Date(last?.createdAt || 0).getTime()) < 5000;
-            if (sameContent && looksOptimistic && recent) {
-              merged[merged.length - 1] = fm;
-            } else {
-              merged.push(fm);
-            }
+          const last = merged[merged.length - 1] as any;
+          const sameContent = last?.messageText === fm.messageText && last?.receiverId === fm.receiverId;
+          const looksOptimistic = !!last?.clientId || (typeof last?.id === 'number' && last.id < 0);
+          const recent = Math.abs(new Date(fm.createdAt).getTime() - new Date(last?.createdAt || 0).getTime()) < 5000;
+          if (sameContent && looksOptimistic && recent) {
+            merged[merged.length - 1] = fm;
+          } else {
+            merged.push(fm);
           }
-          return merged;
-        });
-        setActiveOtherUser(data.otherUser);
-      }
+        }
+        return merged;
+      });
+      setActiveOtherUser(data.otherUser);
     } catch (error: any) {
       if (error?.name === 'AbortError') return;
       console.error('Error loading messages:', error);
@@ -363,8 +356,12 @@ const MessagesPageInner = () => {
   
   const handleSendMessage = useCallback(async () => {
     if (!input.trim() || !activeOtherUser || !user) return;
-    const clientId = `${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    
+    // Capture the current input value before any state updates
     const messageText = input.trim();
+    const clientId = `${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    
+    console.log('Sending message:', messageText); // Debug log
     
     const optimistic: any = {
       id: -Date.now(),
@@ -383,6 +380,10 @@ const MessagesPageInner = () => {
       } : null,
     };
     
+    // Clear input immediately to prevent double-send
+    setInput('');
+    setReplyingTo(null);
+    
     setMessages(prev => {
       const now = Date.now();
       const last = prev[prev.length - 1] as any;
@@ -398,8 +399,7 @@ const MessagesPageInner = () => {
       clientId,
       replyToId: replyingTo?.id || null
     });
-    setInput('');
-    setReplyingTo(null);
+    
     stopTyping(activeOtherUser.id, user.id);
   }, [input, activeOtherUser, user, replyingTo, sendMessage, stopTyping]);
   
@@ -411,6 +411,7 @@ const MessagesPageInner = () => {
   }, [handleSendMessage]);
 
   const handleTyping = useCallback((value: string) => {
+    console.log('Input changed to:', value); // Debug log
     setInput(value);
 
     if (!user || !activeOtherUser) return;
@@ -492,30 +493,26 @@ const MessagesPageInner = () => {
     
     try {
       // Fetch user details for the new conversation
-      const response = await fetch(`/api/users/${otherUserId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const data = await fetchAPI(`/api/users/${otherUserId}`, {
+        token: token || '',
+        cacheTTL: 60000 // 60 seconds cache for user details
+      }) as { user: any };
 
-      if (response.ok) {
-        const data = await response.json();
-        const otherUser = data.user;
-        
-        // Create conversation ID
-        const conversationId = [user.id, otherUserId].sort().join('-');
-        
-        // Set up the conversation
-        setActiveConversation(conversationId);
-        setActiveOtherUser(otherUser);
-        setMessages([]); // Start with empty messages
-        
-        // Join the conversation room
-        joinConversation(otherUserId);
-        
-        if (isMobileView) {
-          setShowConversations(false);
-        }
+      const otherUser = data.user;
+      
+      // Create conversation ID
+      const conversationId = [user.id, otherUserId].sort().join('-');
+      
+      // Set up the conversation
+      setActiveConversation(conversationId);
+      setActiveOtherUser(otherUser);
+      setMessages([]); // Start with empty messages
+      
+      // Join the conversation room
+      joinConversation(otherUserId);
+      
+      if (isMobileView) {
+        setShowConversations(false);
       }
     } catch (error) {
       console.error('Error starting new conversation:', error);
@@ -546,24 +543,24 @@ const MessagesPageInner = () => {
     if (!token) return;
     
     try {
-      const response = await fetch(`/api/messages/conversations/${conversationId}/delete`, {
+      await fetchAPI(`/api/messages/conversations/${conversationId}/delete`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        token,
+        skipCache: true
       });
 
-      if (response.ok) {
-        // Remove from conversations list
-        setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId));
-        
-        // Clear active conversation if it was deleted
-        if (activeConversation === conversationId) {
-          setActiveConversation(null);
-          setActiveOtherUser(null);
-          setMessages([]);
-        }
+      // Remove from conversations list
+      setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId));
+      
+      // Clear active conversation if it was deleted
+      if (activeConversation === conversationId) {
+        setActiveConversation(null);
+        setActiveOtherUser(null);
+        setMessages([]);
       }
+      
+      // Clear cache
+      dataFetcher.clearCache('/api/messages/conversations');
     } catch (error) {
       console.error('Error deleting conversation:', error);
     }
@@ -573,24 +570,24 @@ const MessagesPageInner = () => {
     if (!token) return;
     
     try {
-      const response = await fetch(`/api/messages/conversations/${conversationId}/archive`, {
+      await fetchAPI(`/api/messages/conversations/${conversationId}/archive`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        token,
+        skipCache: true
       });
 
-      if (response.ok) {
-        // Remove from conversations list (archived conversations can be shown separately later)
-        setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId));
-        
-        // Clear active conversation if it was archived
-        if (activeConversation === conversationId) {
-          setActiveConversation(null);
-          setActiveOtherUser(null);
-          setMessages([]);
-        }
+      // Remove from conversations list (archived conversations can be shown separately later)
+      setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId));
+      
+      // Clear active conversation if it was archived
+      if (activeConversation === conversationId) {
+        setActiveConversation(null);
+        setActiveOtherUser(null);
+        setMessages([]);
       }
+      
+      // Clear cache
+      dataFetcher.clearCache('/api/messages/conversations');
     } catch (error) {
       console.error('Error archiving conversation:', error);
     }
@@ -600,21 +597,21 @@ const MessagesPageInner = () => {
     if (!token) return;
     
     try {
-      const response = await fetch(`/api/messages/conversations/${conversationId}/unread`, {
+      await fetchAPI(`/api/messages/conversations/${conversationId}/unread`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        token,
+        skipCache: true
       });
 
-      if (response.ok) {
-        // Update conversation to show as unread
-        setConversations(prev => prev.map(conv => 
-          conv.conversationId === conversationId 
-            ? { ...conv, unreadCount: conv.unreadCount || 1 }
-            : conv
-        ));
-      }
+      // Update conversation to show as unread
+      setConversations(prev => prev.map(conv => 
+        conv.conversationId === conversationId 
+          ? { ...conv, unreadCount: conv.unreadCount || 1 }
+          : conv
+      ));
+      
+      // Clear cache
+      dataFetcher.clearCache('/api/messages/conversations');
     } catch (error) {
       console.error('Error marking as unread:', error);
     }
@@ -624,24 +621,24 @@ const MessagesPageInner = () => {
     if (!token) return;
     
     try {
-      const response = await fetch(`/api/messages/conversations/${conversationId}/block`, {
+      await fetchAPI(`/api/messages/conversations/${conversationId}/block`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        token,
+        skipCache: true
       });
 
-      if (response.ok) {
-        // Remove from conversations list
-        setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId));
-        
-        // Clear active conversation if user was blocked
-        if (activeConversation === conversationId) {
-          setActiveConversation(null);
-          setActiveOtherUser(null);
-          setMessages([]);
-        }
+      // Remove from conversations list
+      setConversations(prev => prev.filter(conv => conv.conversationId !== conversationId));
+      
+      // Clear active conversation if user was blocked
+      if (activeConversation === conversationId) {
+        setActiveConversation(null);
+        setActiveOtherUser(null);
+        setMessages([]);
       }
+      
+      // Clear cache
+      dataFetcher.clearCache('/api/messages/conversations');
     } catch (error) {
       console.error('Error blocking user:', error);
     }
@@ -673,24 +670,21 @@ const MessagesPageInner = () => {
     }
     
     try {
-      const response = await fetch(`/api/messages/${messageId}/unsend`, {
+      await fetchAPI(`/api/messages/${messageId}/unsend`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        token,
+        skipCache: true
       });
 
-      console.log('Unsend response:', response.status);
-
-      if (response.ok) {
-        setMessages(prev => prev.filter(msg => msg.id !== messageId));
-        setSelectedMessageId(null);
-        console.log('Message unsent successfully');
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to unsend message:', errorData);
+      console.log('Message unsent successfully');
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      setSelectedMessageId(null);
+      
+      // Clear message cache
+      if (activeOtherUser) {
+        dataFetcher.clearCache(`/api/messages/conversation/${activeOtherUser.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error unsending message:', error);
     }
   };
@@ -703,29 +697,26 @@ const MessagesPageInner = () => {
     }
     
     try {
-      const response = await fetch(`/api/messages/${messageId}`, {
+      await fetchAPI(`/api/messages/${messageId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        token,
+        skipCache: true
       });
 
-      console.log('Delete response:', response.status);
-
-      if (response.ok) {
-        // Mark message as deleted for current user (add to deleted_for array)
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, deleted_for: [...(msg.deleted_for || []), user?.id || 0] }
-            : msg
-        ));
-        setSelectedMessageId(null);
-        console.log('Message deleted for me successfully');
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to delete message:', errorData);
+      console.log('Message deleted for me successfully');
+      // Mark message as deleted for current user (add to deleted_for array)
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, deleted_for: [...(msg.deleted_for || []), user?.id || 0] }
+          : msg
+      ));
+      setSelectedMessageId(null);
+      
+      // Clear message cache
+      if (activeOtherUser) {
+        dataFetcher.clearCache(`/api/messages/conversation/${activeOtherUser.id}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting message:', error);
     }
   };
@@ -747,30 +738,17 @@ const MessagesPageInner = () => {
     ));
     
     try {
-      const response = await fetch(`/api/messages/${messageId}/react`, {
+      await fetchAPI(`/api/messages/${messageId}/react`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ emoji })
+        token,
+        body: JSON.stringify({ emoji }),
+        skipCache: true
       });
 
-      console.log('React response:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Failed to react to message:', errorData);
-        // Revert on failure
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId ? { ...msg, reaction: null } : msg
-        ));
-      } else {
-        console.log('Reaction added successfully');
-      }
-    } catch (error) {
+      console.log('Reaction added successfully');
+    } catch (error: any) {
       console.error('Error reacting to message:', error);
-      // Revert on error
+      // Revert on failure
       setMessages(prev => prev.map(msg => 
         msg.id === messageId ? { ...msg, reaction: null } : msg
       ));
@@ -791,28 +769,15 @@ const MessagesPageInner = () => {
     ));
     
     try {
-      const response = await fetch(`/api/messages/${messageId}/react`, {
+      await fetchAPI(`/api/messages/${messageId}/react`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ emoji: null })
+        token,
+        body: JSON.stringify({ emoji: null }),
+        skipCache: true
       });
 
-      console.log('Remove reaction response:', response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Failed to remove reaction:', errorData);
-        // Revert on failure
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId ? { ...msg, reaction: previousReaction } : msg
-        ));
-      } else {
-        console.log('Reaction removed successfully');
-      }
-    } catch (error) {
+      console.log('Reaction removed successfully');
+    } catch (error: any) {
       console.error('Error removing reaction:', error);
       // Revert on error
       setMessages(prev => prev.map(msg => 
@@ -846,22 +811,25 @@ const MessagesPageInner = () => {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#02fa97]"></div>
+      <div className="h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent"></div>
       </div>
     );
   }
   
   return (
-    <div className="h-screen bg-white flex overflow-hidden">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Sidebar - Conversations */}
       {(!isMobileView || showConversations) && (
-        <div className="w-full md:w-96 border-r border-gray-200 flex flex-col pb-16 md:pb-0">
+        <div className="w-full md:w-96 bg-white border-r border-gray-200 flex flex-col pb-16 md:pb-0 shadow-sm">
           {/* Header */}
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-gray-100 bg-gradient-to-b from-white to-gray-50/50">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-xl font-bold text-gray-900">Messages</h1>
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">Messages</h1>
+                <p className="text-sm text-gray-500">{conversations.length} conversation{conversations.length !== 1 ? 's' : ''}</p>
+              </div>
+              <button className="p-2.5 hover:bg-green-50 text-gray-600 hover:text-green-600 rounded-xl transition-all hover:shadow-sm">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" 
                     stroke="currentColor" 
@@ -876,10 +844,10 @@ const MessagesPageInner = () => {
             {/* Search */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400">
                   <path d="M21 21L16.514 16.506M19 10.5C19 15.194 15.194 19 10.5 19S2 15.194 2 10.5 5.806 2 10.5 2 19 5.806 19 10.5Z" 
                     stroke="currentColor" 
-                    strokeWidth="1.5" 
+                    strokeWidth="2" 
                     strokeLinecap="round" 
                     strokeLinejoin="round"
                   />
@@ -887,8 +855,8 @@ const MessagesPageInner = () => {
               </div>
               <input
                 type="text"
-                placeholder="Search messages"
-                className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#02fa97]/20 focus:bg-white transition-all text-sm"
+                placeholder="Search conversations..."
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition-all text-sm"
               />
             </div>
           </div>
@@ -896,17 +864,23 @@ const MessagesPageInner = () => {
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
-              <div className="p-6 text-center text-gray-500">
-                <div className="text-4xl mb-2">💬</div>
-                <p>No conversations yet</p>
-                <p className="text-sm">Start messaging someone to see conversations here</p>
+              <div className="p-8 text-center">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <p className="text-gray-900 font-semibold mb-1">No conversations yet</p>
+                <p className="text-sm text-gray-500">Start messaging someone to see conversations here</p>
               </div>
             ) : (
               conversations.map((conversation) => (
                 <div
                   key={conversation.conversationId}
-                  className={`relative group cursor-pointer hover:bg-gray-50 transition-colors ${
-                    activeConversation === conversation.conversationId ? 'bg-gray-50' : ''
+                  className={`relative group cursor-pointer transition-all border-b border-gray-100 ${
+                    activeConversation === conversation.conversationId 
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-l-green-500' 
+                      : 'hover:bg-gray-50 border-l-4 border-l-transparent'
                   }`}
                 >
                   <div 
@@ -914,49 +888,61 @@ const MessagesPageInner = () => {
                     className="p-4"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-14 h-14 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
+                      <div className="relative flex-shrink-0">
+                        <div className={`w-14 h-14 rounded-full overflow-hidden ring-2 shadow-sm transition-all ${
+                          activeConversation === conversation.conversationId 
+                            ? 'ring-green-500' 
+                            : 'ring-white group-hover:ring-gray-200'
+                        }`}>
                           <img 
                             src={conversation.otherUser.profile_image || '/uploads/DefaultProfile.jpg'} 
                             alt={conversation.otherUser.name}
-                            className="w-full h-full object-cover rounded-full"
+                            className="w-full h-full object-cover"
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                           />
                         </div>
-                        {/* Online status can be added later */}
+                        {/* Online status indicator - can be added later */}
+                        {/* <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div> */}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <h3 className="font-semibold text-gray-900 text-sm truncate">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-semibold text-gray-900 text-sm truncate pr-2">
                             {conversation.otherUser.name}
                           </h3>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-2 flex-shrink-0">
                             <span className="text-xs text-gray-500">
                               {formatTimestamp(conversation.lastMessage.createdAt)}
                             </span>
                             {conversation.unreadCount > 0 && (
-                              <div className="w-5 h-5 bg-[#02fa97] rounded-full flex items-center justify-center">
-                                <span className="text-xs font-bold text-black">{conversation.unreadCount}</span>
+                              <div className="min-w-[20px] h-5 px-1.5 bg-green-600 rounded-full flex items-center justify-center shadow-sm">
+                                <span className="text-xs font-bold text-white">{conversation.unreadCount}</span>
                               </div>
                             )}
                           </div>
                         </div>
-                        <p className={`text-sm truncate ${conversation.unreadCount > 0 ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
-                          {conversation.lastMessage.isFromMe ? 'You: ' : ''}{conversation.lastMessage.text || 'No message content'}
+                        <p className={`text-sm truncate ${
+                          conversation.unreadCount > 0 
+                            ? 'font-medium text-gray-900' 
+                            : 'text-gray-600'
+                        }`}>
+                          {conversation.lastMessage.isFromMe ? (
+                            <span className="text-gray-500">You: </span>
+                          ) : null}
+                          {conversation.lastMessage.text || 'No message content'}
                         </p>
                       </div>
                     </div>
                   </div>
                   
                   {/* Three-dot menu */}
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenDropdown(openDropdown === conversation.conversationId ? null : conversation.conversationId);
                       }}
-                      className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-full transition-colors"
+                      className="p-2 text-gray-500 hover:text-gray-900 hover:bg-white rounded-lg transition-all shadow-sm hover:shadow"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M12 13C12.5523 13 13 12.5523 13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12C11 12.5523 11.4477 13 12 13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -969,11 +955,11 @@ const MessagesPageInner = () => {
                     {openDropdown === conversation.conversationId && (
                       <div 
                         ref={dropdownRef}
-                        className="absolute right-0 top-8 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+                        className="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-50"
                       >
                         <button
                           onClick={() => handleConversationAction('unread', conversation.conversationId, conversation.otherUser.name)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M21.99 6.86C21.99 6.86 22 7.75 22 12C22 16.25 21.99 17.14 21.99 17.14C21.99 18.24 21.31 19.19 20.24 19.5C19.17 19.81 17.99 19.5 17.17 18.68L16 17.51C15.59 17.1 14.99 16.86 14.35 16.86H6C3.79 16.86 2 15.07 2 12.86V6.86C2 4.65 3.79 2.86 6 2.86H18C20.21 2.86 22 4.65 22 6.86Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -986,7 +972,7 @@ const MessagesPageInner = () => {
                         
                         <button
                           onClick={() => handleConversationAction('archive', conversation.conversationId, conversation.otherUser.name)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M21 8V21H3V8M1 3H23L21 8H3L1 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -995,11 +981,11 @@ const MessagesPageInner = () => {
                           Archive
                         </button>
                         
-                        <div className="border-t border-gray-100 my-1"></div>
+                        <div className="border-t border-gray-100 my-1.5"></div>
                         
                         <button
                           onClick={() => handleConversationAction('block', conversation.conversationId, conversation.otherUser.name)}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                          className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
@@ -1010,7 +996,7 @@ const MessagesPageInner = () => {
                         
                         <button
                           onClick={() => handleConversationAction('delete', conversation.conversationId, conversation.otherUser.name)}
-                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                          className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors"
                         >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M3 6H5H21M8 6V4C8 3.44772 8.44772 3 9 3H15C15.5523 3 16 3.44772 16 4V6M19 6V20C19 20.5523 18.5523 21 18 21H6C5.44772 21 5 20.5523 5 20V6H19Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1030,36 +1016,39 @@ const MessagesPageInner = () => {
       
       {/* Chat Area */}
       {(!isMobileView || !showConversations) && activeConversation ? (
-        <div className="flex-1 flex flex-col h-full">
+        <div className="flex-1 flex flex-col h-full bg-white rounded-tl-3xl shadow-lg">
           {/* Chat Header */}
-          <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
+          <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-white to-gray-50 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <div className="flex items-center gap-3">
                 {isMobileView && (
                   <button
                     onClick={() => setShowConversations(true)}
-                    className="p-2 mr-2 text-gray-600 hover:text-gray-900 transition-colors"
+                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all"
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </button>
                 )}
-                <div className="relative mr-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-green-500 shadow-sm">
                     <img 
                       src={currentConversation?.otherUser?.profile_image || '/uploads/DefaultProfile.jpg'} 
                       alt={currentConversation?.otherUser?.name || 'User'}
-                      className="w-full h-full object-cover rounded-full"
+                      className="w-full h-full object-cover"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                     />
                   </div>
+                  {/* Online status indicator */}
+                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 text-sm">
+                  <h3 className="font-semibold text-gray-900">
                     {currentConversation?.otherUser?.name}
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-green-600 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
                     Active now
                   </p>
                 </div>
@@ -1310,20 +1299,23 @@ const MessagesPageInner = () => {
                     style={{ minHeight: '44px' }}
                   />
                   {isTyping && (
-                    <div className="absolute -top-6 left-0 text-xs text-gray-500 italic">
-                      {activeOtherUser.name} is typing...
+                    <div className="absolute -top-7 left-0 text-xs text-gray-500 italic flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+                      <span className="ml-1">{activeOtherUser.name} is typing...</span>
                     </div>
                   )}
                 </div>
                 
                 {/* Hide extra buttons on mobile, show only on desktop */}
-                <button className="hidden md:block p-2 text-gray-600 hover:text-gray-900 transition-colors">
+                <button className="hidden md:block p-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M21.44 11.05L12.25 6.77C11.91 6.58 11.5 6.58 11.16 6.77L1.97 11.05C1.55 11.27 1.55 11.73 1.97 11.95L11.16 16.23C11.5 16.42 11.91 16.42 12.25 16.23L21.44 11.95C21.86 11.73 21.86 11.27 21.44 11.05Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </button>
                 
-                <button className="hidden md:block p-2 text-gray-600 hover:text-gray-900 transition-colors">
+                <button className="hidden md:block p-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15.182 15.182C13.556 16.808 11.926 18.434 9.879 18.434C7.832 18.434 6.202 16.808 6.202 14.761C6.202 12.714 7.832 11.088 9.879 11.088C11.926 11.088 13.556 12.714 13.556 14.761M15.182 15.182L22 22M15.182 15.182C16.808 13.556 18.434 11.926 18.434 9.879C18.434 7.832 16.808 6.202 14.761 6.202C12.714 6.202 11.088 7.832 11.088 9.879C11.088 11.926 12.714 13.556 14.761 13.556" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -1332,12 +1324,15 @@ const MessagesPageInner = () => {
                 {input.trim() ? (
                   <button
                     onClick={handleSendMessage}
-                    className="px-3 py-2 md:px-4 md:py-2 bg-[#02fa97] text-black font-medium rounded-2xl hover:bg-teal-500 transition-colors text-sm flex-shrink-0"
+                    className="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all shadow-sm hover:shadow text-sm flex-shrink-0 flex items-center gap-2"
                   >
-                    Send
+                    <span>Send</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </button>
                 ) : (
-                  <button className="p-2 text-gray-600 hover:text-gray-900 transition-colors flex-shrink-0">
+                  <button className="p-2.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all flex-shrink-0">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M19 14C20.49 12.54 22 10.79 22 8.5C22 7.04131 21.4205 5.64236 20.3891 4.61091C19.3576 3.57946 17.9587 3 16.5 3C14.74 3 13.5 3.5 12 5C10.5 3.5 9.26 3 7.5 3C6.04131 3 4.64236 3.57946 3.61091 4.61091C2.57946 5.64236 2 7.04131 2 8.5C2 10.79 3.51 12.54 5 14L12 21L19 14Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -1349,15 +1344,15 @@ const MessagesPageInner = () => {
         </div>
       ) : (
         !activeConversation && !isMobileView && (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="text-center">
-              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8.5 12H8.51M12 12H12.01M15.5 12H15.51M21 12C21 16.418 16.97 20 12 20C10.89 20 9.84 19.79 8.88 19.42L3 21L4.58 15.12C4.21 14.16 4 13.11 4 12C4 7.582 8.03 4 12 4C16.97 4 21 7.582 21 12Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <div className="w-28 h-28 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-green-600">
+                  <path d="M8.5 12H8.51M12 12H12.01M15.5 12H15.51M21 12C21 16.418 16.97 20 12 20C10.89 20 9.84 19.79 8.88 19.42L3 21L4.58 15.12C4.21 14.16 4 13.11 4 12C4 7.582 8.03 4 12 4C16.97 4 21 7.582 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Your Messages</h3>
-              <p className="text-gray-600 text-sm">Select a conversation to start messaging</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Your Messages</h3>
+              <p className="text-gray-600">Select a conversation to start messaging</p>
             </div>
           </div>
         )

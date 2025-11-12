@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import PostCard from '../components/PostCard';
 import PostModal from '../components/PostModal';
-import SuggestionsSection from '../components/SuggestionsSection';
 import { usePosts } from '../hooks/usePosts';
 import { useAuth } from '../contexts/AuthContext';
-import SuggestedUsers from '../components/SuggestedUsers';
 import Link from 'next/link';
+
+// Lazy load suggestion components to speed up initial load
+const SuggestionsSection = lazy(() => import('../components/SuggestionsSection'));
+const SuggestedUsers = lazy(() => import('../components/SuggestedUsers'));
 
 // PostModal expected type
 interface PostModalData {
@@ -155,7 +157,13 @@ export default function HomePage() {
 
             {/* Instagram-like Suggestions Section - Mobile Only */}
             <div className="lg:hidden mt-4">
-              <SuggestionsSection />
+              <Suspense fallback={
+                <div className="bg-white rounded-lg p-4">
+                  <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin mx-auto"></div>
+                </div>
+              }>
+                <SuggestionsSection />
+              </Suspense>
             </div>
 
             {/* Feed */}
@@ -218,7 +226,23 @@ export default function HomePage() {
 
           {/* Right rail suggestions - Desktop only */}
           <div className="hidden lg:block">
-            <SuggestedUsers />
+            <Suspense fallback={
+              <div className="sticky top-20 bg-white rounded-xl border border-gray-100 p-4">
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+                      <div className="flex-1">
+                        <div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
+                        <div className="h-3 w-20 bg-gray-100 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            }>
+              <SuggestedUsers />
+            </Suspense>
           </div>
         </div>
       </div>

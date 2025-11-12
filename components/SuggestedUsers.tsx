@@ -4,6 +4,7 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import FollowButton from './FollowButton'
 import { useAuth } from '../contexts/AuthContext'
+import { fetchAPI } from '../lib/dataFetcher'
 
 interface SuggestedUser {
 	id: number
@@ -35,13 +36,15 @@ export default function SuggestedUsers() {
 			setLoading(true)
 			setError('')
 			try {
-				// Use the new intelligent suggestions API
-				const headers = { Authorization: `Bearer ${token}` }
-				const response = await fetch('/api/users/suggestions?limit=10&algorithm=advanced', { headers })
-				
-				if (!response.ok) throw new Error('Failed to load suggestions')
+				// Use the new intelligent suggestions API with caching
+				const data = await fetchAPI<{ suggestions: any[] }>(
+					'/api/users/suggestions?limit=10&algorithm=advanced',
+					{ 
+						token,
+						cacheTTL: 300000 // Cache for 5 minutes
+					}
+				)
 
-				const data = await response.json()
 				const suggestedUsers: SuggestedUser[] = (data.suggestions || []).map((s: any) => ({
 					id: s.id,
 					name: s.name,

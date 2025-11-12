@@ -69,6 +69,7 @@ async function handleGetUser(req: NextApiRequest, res: NextApiResponse) {
     const comments = await getCollection(Collections.COMMENTS)
     const followers = await getCollection(Collections.FOLLOWERS)
     const followRequests = await getCollection(Collections.FOLLOW_REQUESTS)
+    const blocks = await getCollection(Collections.BLOCKS)
 
     // Get user
     const user = await withRetry(async () => {
@@ -77,6 +78,23 @@ async function handleGetUser(req: NextApiRequest, res: NextApiResponse) {
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' })
+    }
+
+    // Check if either user has blocked the other
+    if (auth && auth.userId !== targetUserId) {
+      const blockExists = await blocks.findOne({
+        $or: [
+          { blocker_id: auth.userId, blocked_user_id: targetUserId },
+          { blocker_id: targetUserId, blocked_user_id: auth.userId }
+        ]
+      })
+
+      if (blockExists) {
+        return res.status(403).json({ 
+          error: 'User not accessible',
+          blocked: true 
+        })
+      }
     }
 
     // Get user's posts

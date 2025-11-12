@@ -4,8 +4,21 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { fetchAPI, dataFetcher } from '../../lib/dataFetcher';
 
 type SettingsSection = 'account-privacy' | 'edit-profile' | 'notifications' | 'password';
+
+interface BlockedUser {
+  id: number;
+  blocked_user_id: number;
+  blocked_user: {
+    id: number;
+    name: string;
+    username?: string;
+    profile_image?: string;
+  };
+  created_at: string;
+}
 
 export default function SettingsPage() {
   const { token, user, logout } = useAuth();
@@ -17,6 +30,16 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<SettingsSection>('account-privacy');
+  
+  // Additional privacy settings
+  const [showOnlineStatus, setShowOnlineStatus] = useState<boolean>(true);
+  const [showReadReceipts, setShowReadReceipts] = useState<boolean>(true);
+  const [whoCanMessage, setWhoCanMessage] = useState<'everyone' | 'followers'>('everyone');
+  const [whoCanComment, setWhoCanComment] = useState<'everyone' | 'followers'>('everyone');
+  
+  // Blocked users
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [loadingBlocked, setLoadingBlocked] = useState(false);
   
   // Edit Profile Modal States
   const [isEditing, setIsEditing] = useState(false);
@@ -39,15 +62,24 @@ export default function SettingsPage() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await fetch('/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
-        if (resp.ok) {
-          const data = await resp.json();
-          setIsPrivate(!!data.user?.is_private);
-        } else {
-          setError('Failed to load settings');
+        const data = await fetchAPI<{ user: any }>(
+          '/api/users/me',
+          { token, cacheTTL: 30000 }
+        );
+        
+        setIsPrivate(!!data.user?.is_private);
+        
+        // Load additional privacy settings from localStorage (since they're not in DB yet)
+        const savedSettings = localStorage.getItem('privacySettings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          setShowOnlineStatus(parsed.showOnlineStatus ?? true);
+          setShowReadReceipts(parsed.showReadReceipts ?? true);
+          setWhoCanMessage(parsed.whoCanMessage ?? 'everyone');
+          setWhoCanComment(parsed.whoCanComment ?? 'everyone');
         }
-      } catch {
-        setError('Network error loading settings');
+      } catch (err: any) {
+        setError(err.message || 'Failed to load settings');
       } finally {
         setLoading(false);
       }
@@ -55,26 +87,84 @@ export default function SettingsPage() {
     load();
   }, [token]);
 
+  useEffect(() => {
+    // Load blocked users
+    const loadBlockedUsers = async () => {
+      if (!token) return;
+      setLoadingBlocked(true);
+      try {
+        const data = await fetchAPI<{ blockedUsers: BlockedUser[] }>(
+          '/api/users/blocked',
+          { token, cacheTTL: 10000 } // Cache for 10 seconds
+        );
+        setBlockedUsers(data.blockedUsers || []);
+      } catch (err: any) {
+        console.error('Failed to load blocked users:', err);
+      } finally {
+        setLoadingBlocked(false);
+      }
+    };
+    loadBlockedUsers();
+  }, [token]);
+
+  const handleUnblockUser = async (blockedUserId: number) => {
+    if (!token) return;
+    try {
+      await fetchAPI(`/api/users/block/${blockedUserId}`, {
+        method: 'DELETE',
+        token,
+        skipCache: true
+      });
+      
+      setBlockedUsers(prev => prev.filter(blocked => blocked.blocked_user_id !== blockedUserId));
+      setMessage('User unblocked successfully');
+      setTimeout(() => setMessage(null), 3000);
+      
+      // Clear cache
+      dataFetcher.clearCache('/api/users/blocked');
+    } catch (err: any) {
+      console.error('Error unblocking user:', err);
+      setError(err.message || 'Failed to unblock user');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  const savePrivacySettings = () => {
+    // Save to localStorage (in production, you'd save to backend)
+    // TODO: Migrate to backend API when privacy settings schema is added to User model
+    // Recommended fields to add to User schema:
+    // - show_online_status: boolean
+    // - show_read_receipts: boolean  
+    // - who_can_message: 'everyone' | 'followers'
+    // - who_can_comment: 'everyone' | 'followers'
+    const settings = {
+      showOnlineStatus,
+      showReadReceipts,
+      whoCanMessage,
+      whoCanComment
+    };
+    localStorage.setItem('privacySettings', JSON.stringify(settings));
+  };
+
   const onSave = async () => {
     if (!token) return;
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
-      const resp = await fetch('/api/users/me', {
+      await fetchAPI('/api/users/me', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ is_private: isPrivate })
+        token,
+        body: JSON.stringify({ is_private: isPrivate }),
+        skipCache: true
       });
-      if (resp.ok) {
-        setMessage('Settings saved');
-        setTimeout(() => setMessage(null), 3000);
-      } else {
-        const err = await resp.json().catch(() => ({} as any));
-        setError(err.error || 'Failed to save settings');
-      }
-    } catch {
-      setError('Network error while saving');
+      
+      savePrivacySettings(); // Save other privacy settings
+      dataFetcher.clearCache('/api/users/me'); // Clear user cache
+      setMessage('Settings saved');
+      setTimeout(() => setMessage(null), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save settings');
     } finally {
       setSaving(false);
     }
@@ -86,20 +176,21 @@ export default function SettingsPage() {
     
     try {
       // Fetch latest user data
-      const resp = await fetch('/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (resp.ok) {
-        const data = await resp.json();
-        const latestUser = data.user;
-        
-        setEditForm({ 
-          name: latestUser.name || '', 
-          department: latestUser.department || '', 
-          year: latestUser.year || 1 
-        });
-        setEditUsername(latestUser.username || '');
-        setEditBio(latestUser.bio || '');
-        setEditPfp(latestUser.profile_image || null);
-      }
+      const data = await fetchAPI<{ user: any }>(
+        '/api/users/me',
+        { token, skipCache: true } // Skip cache to get fresh data
+      );
+      
+      const latestUser = data.user;
+      
+      setEditForm({ 
+        name: latestUser.name || '', 
+        department: latestUser.department || '', 
+        year: latestUser.year || 1 
+      });
+      setEditUsername(latestUser.username || '');
+      setEditBio(latestUser.bio || '');
+      setEditPfp(latestUser.profile_image || null);
     } catch (error) {
       console.error('Error loading user data:', error);
       // Fallback to cached user data
@@ -134,29 +225,23 @@ export default function SettingsPage() {
     setSavingProfile(true);
     try {
       const payload: any = { ...editForm, bio: editBio, username: editUsername, profile_image: editPfp };
-      const response = await fetch('/api/users/me', {
+      await fetchAPI('/api/users/me', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+        token: token || '',
         body: JSON.stringify(payload),
+        skipCache: true
       });
 
-      if (response.ok) {
-        setIsEditing(false);
-        setHasUnsavedChanges(false);
-        setMessage('Profile updated successfully');
-        setTimeout(() => setMessage(null), 3000);
-        // Reload user data
-        window.location.reload();
-      } else {
-        const err = await response.json();
-        alert(err.error || 'Failed to update profile');
-      }
-    } catch (error) {
+      setIsEditing(false);
+      setHasUnsavedChanges(false);
+      dataFetcher.clearCache('/api/users/me'); // Clear user cache
+      setMessage('Profile updated successfully');
+      setTimeout(() => setMessage(null), 3000);
+      // Reload user data
+      window.location.reload();
+    } catch (error: any) {
       console.error('Error updating profile:', error);
-      alert('Network error. Please try again.');
+      alert(error.message || 'Failed to update profile');
     } finally {
       setSavingProfile(false);
     }
@@ -176,168 +261,552 @@ export default function SettingsPage() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/users/upload-profile-pic', {
+      const data = await fetchAPI('/api/users/upload-profile-pic', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        token: token || '',
         body: formData,
-      });
+        skipCache: true
+      }) as { url: string };
 
-      if (response.ok) {
-        const data = await response.json();
-        setEditPfp(data.url);
-        setHasUnsavedChanges(true);
-      } else {
-        const errorData = await response.json();
-        alert(errorData.error || 'Failed to upload profile picture');
-      }
-    } catch (error) {
+      setEditPfp(data.url);
+      setHasUnsavedChanges(true);
+      dataFetcher.clearCache('/api/users/me'); // Clear user cache
+    } catch (error: any) {
       console.error('Error uploading profile picture:', error);
-      alert('Network error while uploading');
+      alert(error.message || 'Failed to upload profile picture');
     } finally {
       setUploadingPfp(false);
     }
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <div className="flex h-screen overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-72 border-r flex flex-col">
-          <div className="p-6">
-            <h1 className="text-2xl font-semibold">Settings</h1>
+        {/* Modern Sidebar */}
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm">
+          {/* Header */}
+          <div className="p-6 border-b border-gray-100">
+            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+            <p className="text-sm text-gray-500 mt-1">Manage your account preferences</p>
           </div>
 
           {/* Settings Sections */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-4 space-y-1">
-              <p className="text-xs text-gray-500 font-semibold px-3 py-2">How you use UNI-X</p>
-              
-              <button 
-                onClick={async () => { 
-                  setIsEditing(true); 
-                  await resetEditForm(); 
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-gray-100"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span>Edit Profile</span>
-              </button>
+          <div className="flex-1 overflow-y-auto py-4">
+            <div className="px-4 space-y-2">
+              {/* Account Section */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Account</p>
+                
+                <button 
+                  onClick={async () => { 
+                    setIsEditing(true); 
+                    await resetEditForm(); 
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 group"
+                >
+                  <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-green-100 transition-colors">
+                    <svg className="w-5 h-5 text-gray-600 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium text-gray-900">Edit Profile</span>
+                    <p className="text-xs text-gray-500">Update your information</p>
+                  </div>
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
 
-              <button 
-                onClick={() => setActiveSection('notifications')}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
-                  activeSection === 'notifications' ? 'bg-green-400' : 'hover:bg-lime-300'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span>Notifications</span>
-              </button>
+                <button 
+                  onClick={() => setActiveSection('notifications')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
+                    activeSection === 'notifications' 
+                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm' 
+                      : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                  } group`}
+                >
+                  <div className={`p-2 rounded-lg transition-colors ${
+                    activeSection === 'notifications' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${
+                      activeSection === 'notifications' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <span className={`font-medium ${activeSection === 'notifications' ? 'text-green-700' : 'text-gray-900'}`}>
+                      Notifications
+                    </span>
+                    <p className="text-xs text-gray-500">Manage alerts</p>
+                  </div>
+                  <svg className={`w-5 h-5 ${
+                    activeSection === 'notifications' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
 
-              <p className="text-xs text-gray-500 font-semibold px-3 py-2 pt-4">Who can see your content</p>
-              
-              <button 
-                onClick={() => setActiveSection('account-privacy')}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
-                  activeSection === 'account-privacy' ? 'bg-green-400' : 'hover:bg-lime-300'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <span>Account privacy</span>
-              </button>
+              {/* Privacy Section */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Privacy & Security</p>
+                
+                <button 
+                  onClick={() => setActiveSection('account-privacy')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
+                    activeSection === 'account-privacy' 
+                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm' 
+                      : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                  } group`}
+                >
+                  <div className={`p-2 rounded-lg transition-colors ${
+                    activeSection === 'account-privacy' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${
+                      activeSection === 'account-privacy' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <span className={`font-medium ${activeSection === 'account-privacy' ? 'text-green-700' : 'text-gray-900'}`}>
+                      Account Privacy
+                    </span>
+                    <p className="text-xs text-gray-500">Control visibility</p>
+                  </div>
+                  {isPrivate && (
+                    <span className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
+                      Private
+                    </span>
+                  )}
+                  <svg className={`w-5 h-5 ${
+                    activeSection === 'account-privacy' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
 
-              <button 
-                onClick={() => setActiveSection('password')}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
-                  activeSection === 'password' ? 'bg-green-400' : 'hover:bg-lime-300'
-                }`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                </svg>
-                <span>Close Friends</span>
-              </button>
+                <button 
+                  onClick={() => setActiveSection('password')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
+                    activeSection === 'password' 
+                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm' 
+                      : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                  } group`}
+                >
+                  <div className={`p-2 rounded-lg transition-colors ${
+                    activeSection === 'password' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                  }`}>
+                    <svg className={`w-5 h-5 ${
+                      activeSection === 'password' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <span className={`font-medium ${activeSection === 'password' ? 'text-green-700' : 'text-gray-900'}`}>
+                      Close Friends
+                    </span>
+                    <p className="text-xs text-gray-500">Manage lists</p>
+                  </div>
+                  <svg className={`w-5 h-5 ${
+                    activeSection === 'password' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Logout Button */}
+              <div className="pt-4 border-t border-gray-100">
+                <button 
+                  onClick={logout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left hover:bg-red-50 group"
+                >
+                  <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-red-100 transition-colors">
+                    <svg className="w-5 h-5 text-gray-600 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </div>
+                  <span className="font-medium text-gray-900 group-hover:text-red-600">Log out</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-gray-50">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent"></div>
             </div>
           ) : (
-            <div className="max-w-2xl mx-auto px-8 py-10">
+            <div className="max-w-4xl mx-auto px-8 py-10">
               {/* Account Privacy Section */}
               {activeSection === 'account-privacy' && (
                 <div>
-                  <h2 className="text-2xl font-semibold mb-6">Account privacy</h2>
+                  {/* Header */}
+                  <div className="mb-8">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Account Privacy</h2>
+                    <p className="text-gray-600">Control who can see your content and interact with you</p>
+                  </div>
                   
+                  {/* Alerts */}
                   {error && (
-                    <div className="mb-4 p-3 text-sm text-red-400 bg-red-950 border border-red-800 rounded-lg">
-                      {error}
+                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                      <svg className="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-red-900">Error</p>
+                        <p className="text-sm text-red-700">{error}</p>
+                      </div>
                     </div>
                   )}
                   {message && (
-                    <div className="mb-4 p-3 text-sm text-green-400 bg-green-950 border border-green-800 rounded-lg">
-                      {message}
+                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3">
+                      <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <p className="text-sm font-medium text-green-900">Success</p>
+                        <p className="text-sm text-green-700">{message}</p>
+                      </div>
                     </div>
                   )}
 
                   <div className="space-y-6">
-                    {/* Private Account Toggle */}
-                    <div className="flex items-start justify-between py-4">
-                      <div className="flex-1">
-                        <div className="font-medium text-white mb-1">Private account</div>
-                        <div className="text-sm text-gray-400 max-w-lg">
-                          When your account is public, your profile and posts can be seen by anyone, on or off UNI-X, even if they don't have a UNI-X account.
-                        </div>
-                        <div className="text-sm text-gray-400 max-w-lg mt-3">
-                          When your account is private, only the followers that you approve can see what you share, including your photos or videos on hashtag and location pages, and your followers and following lists. Certain info on your profile, such as your profile picture and username, is visible to everyone on and off UNI-X.
-                        </div>
+                    {/* Account Visibility Card */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                      <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          Account Visibility
+                        </h3>
                       </div>
-                      <div className="ml-6">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            checked={isPrivate} 
-                            onChange={(e) => {
-                              setIsPrivate(e.target.checked);
-                              // Auto-save on toggle
-                              setTimeout(() => onSave(), 100);
-                            }}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
+                      
+                      {/* Private Account Toggle */}
+                      <div className="p-6">
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                              Private account
+                              {isPrivate && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
+                                  Active
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-600 leading-relaxed">
+                              When your account is public, your profile and posts can be seen by anyone. 
+                              When private, only approved followers can see what you share.
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                checked={isPrivate} 
+                                onChange={(e) => {
+                                  setIsPrivate(e.target.checked);
+                                  setTimeout(() => onSave(), 100);
+                                }}
+                                className="sr-only peer"
+                              />
+                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
 
-              {/* Notifications Section */}
-              {activeSection === 'notifications' && (
-                <div>
-                  <h2 className="text-2xl font-semibold mb-6">Notifications</h2>
-                  <div className="space-y-4">
-                    <p className="text-gray-400">Notification settings will be available soon.</p>
-                  </div>
-                </div>
-              )}
+                    {/* Interactions Section */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                      <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          Interactions
+                        </h3>
+                      </div>
+                      
+                      <div className="p-6 space-y-6">
+                        {/* Who Can Comment */}
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 mb-2">Who can comment on your posts</div>
+                            <div className="text-sm text-gray-600">
+                              Control who can comment on your posts
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <select
+                              value={whoCanComment}
+                              onChange={(e) => {
+                                setWhoCanComment(e.target.value as 'everyone' | 'followers');
+                                savePrivacySettings();
+                              }}
+                              className="bg-white text-gray-900 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors"
+                            >
+                              <option value="everyone">Everyone</option>
+                              <option value="followers">Followers only</option>
+                            </select>
+                          </div>
+                        </div>
 
-              {/* Password Section */}
-              {activeSection === 'password' && (
-                <div>
-                  <h2 className="text-2xl font-semibold mb-6">Close Friends</h2>
-                  <div className="space-y-4">
-                    <p className="text-gray-400">Close friends feature coming soon.</p>
+                        <div className="border-t border-gray-100"></div>
+
+                        {/* Who Can Message */}
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 mb-2">Who can message you</div>
+                            <div className="text-sm text-gray-600">
+                              Control who can send you direct messages
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <select
+                              value={whoCanMessage}
+                              onChange={(e) => {
+                                setWhoCanMessage(e.target.value as 'everyone' | 'followers');
+                                savePrivacySettings();
+                              }}
+                              className="bg-white text-gray-900 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors"
+                            >
+                              <option value="everyone">Everyone</option>
+                              <option value="followers">Followers only</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Activity Status Section */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                      <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          Activity Status
+                        </h3>
+                      </div>
+                      
+                      <div className="p-6 space-y-6">
+                        {/* Show Online Status */}
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 mb-2">Show online status</div>
+                            <div className="text-sm text-gray-600">
+                              Let others see when you're active on UNI-X
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                checked={showOnlineStatus} 
+                                onChange={(e) => {
+                                  setShowOnlineStatus(e.target.checked);
+                                  savePrivacySettings();
+                                }}
+                                className="sr-only peer"
+                              />
+                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-gray-100"></div>
+
+                        {/* Show Read Receipts */}
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-900 mb-2">Show read receipts</div>
+                            <div className="text-sm text-gray-600">
+                              Let others see when you've read their messages
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                checked={showReadReceipts} 
+                                onChange={(e) => {
+                                  setShowReadReceipts(e.target.checked);
+                                  savePrivacySettings();
+                                }}
+                                className="sr-only peer"
+                              />
+                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Blocked Users Section */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                      <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                            <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                          Blocked Users
+                          {blockedUsers.length > 0 && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded-full">
+                              {blockedUsers.length}
+                            </span>
+                          )}
+                        </h3>
+                      </div>
+                      
+                      <div className="p-6">
+                        {loadingBlocked ? (
+                          <div className="flex items-center justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-4 border-green-500 border-t-transparent"></div>
+                          </div>
+                        ) : blockedUsers.length === 0 ? (
+                          <div className="text-center py-12">
+                            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                              <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            <p className="text-gray-500 font-medium">No blocked users</p>
+                            <p className="text-sm text-gray-400 mt-1">Users you block will appear here</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {blockedUsers.map((blocked) => (
+                              <div key={blocked.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                  <img 
+                                    src={blocked.blocked_user?.profile_image || '/uploads/DefaultProfile.jpg'}
+                                    alt={blocked.blocked_user?.name}
+                                    className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm grayscale"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-semibold text-gray-900 truncate">{blocked.blocked_user?.name}</div>
+                                    {blocked.blocked_user?.username && (
+                                      <div className="text-sm text-gray-500 truncate">@{blocked.blocked_user.username}</div>
+                                    )}
+                                    <div className="text-xs text-gray-400 mt-0.5">
+                                      Blocked {new Date(blocked.created_at).toLocaleDateString()}
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleUnblockUser(blocked.blocked_user_id)}
+                                  className="px-5 py-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg transition-colors border border-gray-300 shadow-sm ml-4"
+                                >
+                                  Unblock
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Data & History Section */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                      <div className="p-6 border-b border-gray-100">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                          Data & History
+                        </h3>
+                      </div>
+                      
+                      <div className="p-6 space-y-3">
+                        <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left border border-gray-200">
+                          <div>
+                            <div className="font-semibold text-gray-900 mb-1">Download your data</div>
+                            <div className="text-sm text-gray-600">
+                              Get a copy of your UNI-X data
+                            </div>
+                          </div>
+                          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+
+                        <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left border border-gray-200">
+                          <div>
+                            <div className="font-semibold text-gray-900 mb-1">Clear search history</div>
+                            <div className="text-sm text-gray-600">
+                              Remove your recent searches
+                            </div>
+                          </div>
+                          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Danger Zone */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-red-200 overflow-hidden">
+                      <div className="p-6 border-b border-red-100 bg-red-50">
+                        <h3 className="text-lg font-semibold text-red-700 flex items-center gap-2">
+                          <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          Danger Zone
+                        </h3>
+                      </div>
+                      
+                      <div className="p-6 space-y-3">
+                        <button 
+                          onClick={() => {
+                            if (confirm('Are you sure you want to deactivate your account? You can reactivate it anytime by logging in.')) {
+                              // Implement deactivation logic
+                              alert('Account deactivation feature coming soon');
+                            }
+                          }}
+                          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left border border-gray-300"
+                        >
+                          <div>
+                            <div className="font-semibold text-gray-900 mb-1">Deactivate account</div>
+                            <div className="text-sm text-gray-600">
+                              Temporarily disable your account
+                            </div>
+                          </div>
+                          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+
+                        <button 
+                          onClick={() => {
+                            if (confirm('⚠️ WARNING: This will permanently delete your account and all your data. This action cannot be undone. Are you absolutely sure?')) {
+                              // Implement deletion logic
+                              alert('Account deletion feature coming soon');
+                            }
+                          }}
+                          className="w-full flex items-center justify-between p-4 bg-red-50 hover:bg-red-100 rounded-xl transition-colors text-left border border-red-300"
+                        >
+                          <div>
+                            <div className="font-semibold text-red-700 mb-1">Delete account</div>
+                            <div className="text-sm text-red-600">
+                              Permanently delete your account and data
+                            </div>
+                          </div>
+                          <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchAPI } from '../lib/dataFetcher';
 
 interface User {
   id: number;
@@ -38,23 +39,17 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
         return;
       }
 
-      const response = await fetch('/api/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const data = await fetchAPI<{ users: User[] }>(
+        '/api/users',
+        { token, cacheTTL: 120000 } // Cache contacts for 2 minutes
+      );
 
-      if (!response.ok) {
-        throw new Error('Failed to load contacts');
-      }
-
-      const data = await response.json();
       // Filter out current user from contacts
       const filteredContacts = data.users?.filter((u: User) => u.id !== user?.id) || [];
       setContacts(filteredContacts);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error loading contacts:', err);
-      setError('Failed to load contacts');
+      setError(err.message || 'Failed to load contacts');
     } finally {
       setIsLoading(false);
     }

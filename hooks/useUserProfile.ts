@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchAPI } from '../lib/dataFetcher';
 
 interface Post {
   id: number;
@@ -29,13 +30,20 @@ interface UserProfile {
   };
 }
 
-export function useUserProfile(userId: string) {
+interface UseUserProfileReturn {
+  profile: UserProfile | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
+
+export function useUserProfile(userId: string): UseUserProfileReturn {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { token } = useAuth();
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     if (!token && userId === 'me') {
       setError('Authentication required');
       setLoading(false);
@@ -43,30 +51,30 @@ export function useUserProfile(userId: string) {
     }
 
     try {
-      const headers: HeadersInit = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
+      setLoading(true);
+      setError(null);
 
-      const response = await fetch(`/api/users/${userId}`, { headers });
+      const data = await fetchAPI<{ user: UserProfile }>(
+        `/api/users/${userId}`,
+        { 
+          token: token || undefined,
+          cacheTTL: 60000, // Cache for 1 minute
+        }
+      );
       
-      if (response.ok) {
-        const data = await response.json();
-        setProfile(data.user);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to fetch profile');
-      }
-    } catch (err) {
-      setError('Network error');
+      setProfile(data.user);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch profile');
+      console.error('Error fetching profile:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, token]);
 
   useEffect(() => {
     fetchProfile();
-  }, [userId, token]);
+  }, [fetchProfile]);
 
   return { profile, loading, error, refetch: fetchProfile };
 }

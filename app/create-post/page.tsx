@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { dataFetcher } from '../../lib/dataFetcher';
 
 export default function CreatePostPage() {
   const [caption, setCaption] = useState('');
@@ -83,6 +84,9 @@ export default function CreatePostPage() {
 
       if (response.ok) {
         const result = await response.json();
+        
+        // Clear posts cache after creating a new post
+        dataFetcher.clearCache('/api/posts');
         
         // Dispatch custom event to update posts in other components
         window.dispatchEvent(new CustomEvent('postCreated', { detail: result.post }));

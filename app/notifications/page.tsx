@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
+import { fetchAPI, dataFetcher } from '../../lib/dataFetcher';
 
 interface Notification {
   id: string;
@@ -15,11 +16,27 @@ interface Notification {
   meta?: any;
 }
 
+interface FollowRequest {
+  id: number;
+  requester_id: number;
+  requester: {
+    id: number;
+    name: string;
+    username?: string;
+    profile_image?: string;
+  };
+  created_at: string;
+}
+
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { onNotification, onMessageNotification } = useSocket();
+  
+  // Follow requests state
+  const [followRequests, setFollowRequests] = useState<FollowRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
   // Load from localStorage for persistence
   useEffect(() => {
@@ -31,6 +48,26 @@ export default function NotificationsPage() {
       }
     } catch {}
   }, []);
+
+  // Load follow requests
+  useEffect(() => {
+    const loadRequests = async () => {
+      if (!token) return;
+      setLoadingRequests(true);
+      try {
+        const data = await fetchAPI<{ requests: FollowRequest[] }>(
+          '/api/users/requests',
+          { token, cacheTTL: 10000 } // Cache for 10 seconds
+        );
+        setFollowRequests(data.requests || []);
+      } catch (err: any) {
+        console.error('Failed to load follow requests:', err);
+      } finally {
+        setLoadingRequests(false);
+      }
+    };
+    loadRequests();
+  }, [token]);
 
   // Subscribe to socket notifications
   useEffect(() => {
@@ -78,6 +115,26 @@ export default function NotificationsPage() {
   ), [filter, notifications]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleFollowRequest = async (requestId: number, action: 'approve' | 'reject') => {
+    if (!token) return;
+    try {
+      await fetchAPI('/api/users/requests', {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ requestId, action }),
+        skipCache: true
+      });
+      
+      setFollowRequests(prev => prev.filter(req => req.id !== requestId));
+      
+      // Clear cache after approval/rejection
+      dataFetcher.clearCache('/api/users/requests');
+    } catch (err: any) {
+      console.error('Error handling follow request:', err);
+      alert(err.message || 'Failed to handle request');
+    }
+  };
 
   const markAsRead = (id: string) => {
     setNotifications(prev => 
@@ -169,6 +226,67 @@ export default function NotificationsPage() {
             )}
           </div>
         </div>
+
+        {/* Follow Requests Section */}
+        {followRequests.length > 0 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-6">
+            <div className="p-6 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Follow Requests
+                <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                  {followRequests.length}
+                </span>
+              </h2>
+            </div>
+            
+            <div className="divide-y divide-gray-100">
+              {followRequests.map((request) => (
+                <div key={request.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <img 
+                        src={request.requester?.profile_image || '/uploads/DefaultProfile.jpg'}
+                        alt={request.requester?.name}
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-gray-900 truncate">{request.requester?.name}</div>
+                        {request.requester?.username && (
+                          <div className="text-sm text-gray-500 truncate">@{request.requester.username}</div>
+                        )}
+                        <div className="text-xs text-gray-400 mt-0.5">
+                          {new Date(request.created_at).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <button
+                        onClick={() => handleFollowRequest(request.id, 'approve')}
+                        className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => handleFollowRequest(request.id, 'reject')}
+                        className="px-5 py-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg transition-colors border border-gray-300 shadow-sm"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Notifications List */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-100">

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { fetchAPI, dataFetcher } from '../lib/dataFetcher';
 
 interface SuggestedUser {
   id: number;
@@ -30,16 +31,15 @@ const SuggestionsSection: React.FC = () => {
     
     setLoading(true);
     try {
-      const response = await fetch('/api/users/suggestions?limit=5&algorithm=advanced', {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const data = await fetchAPI<{ suggestions: SuggestedUser[] }>(
+        '/api/users/suggestions?limit=5&algorithm=advanced',
+        { 
+          token,
+          cacheTTL: 300000 // Cache for 5 minutes
         }
-      });
+      );
       
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestions(data.suggestions || []);
-      }
+      setSuggestions(data.suggestions || []);
     } catch (error) {
       console.error('Error loading suggestions:', error);
     } finally {
@@ -58,22 +58,18 @@ const SuggestionsSection: React.FC = () => {
     setFollowingStates(prev => ({ ...prev, [userId]: true }));
     
     try {
-      const response = await fetch('/api/users/follow', {
+      await fetchAPI('/api/users/follow', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ userId })
+        token,
+        body: JSON.stringify({ userId }),
+        skipCache: true
       });
       
-      if (response.ok) {
-        // Remove from suggestions after successful follow
-        setSuggestions(prev => prev.filter(s => s.id !== userId));
-      } else {
-        // Revert on error
-        setFollowingStates(prev => ({ ...prev, [userId]: false }));
-      }
+      // Remove from suggestions after successful follow
+      setSuggestions(prev => prev.filter(s => s.id !== userId));
+      
+      // Clear suggestion cache to get fresh data
+      dataFetcher.clearCache('/api/users/suggestions');
     } catch (error) {
       console.error('Error following user:', error);
       // Revert on error

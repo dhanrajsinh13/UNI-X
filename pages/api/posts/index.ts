@@ -99,21 +99,46 @@ async function handleGetPosts(req: NextApiRequest, res: NextApiResponse) {
     })
 
     // Fetch related data in parallel
-    const [postUsers, postComments, postAuras, likedPosts] = await Promise.all([
+    const [postUsers, postComments, postAuras, likedPosts, followingRelations] = await Promise.all([
       users.find({ id: { $in: userIds } as any }).toArray(),
       comments.find({ post_id: { $in: postIds } as any }).toArray(),
       auras.find({ post_id: { $in: postIds } as any }).toArray(),
-      auth ? auras.find({ user_id: auth.userId, post_id: { $in: postIds } as any }).toArray() : Promise.resolve([])
+      auth ? auras.find({ user_id: auth.userId, post_id: { $in: postIds } as any }).toArray() : Promise.resolve([]),
+      auth ? followers.find({ follower_id: auth.userId, following_id: { $in: userIds } as any }).toArray() : Promise.resolve([])
     ])
 
     // Create lookup maps
     const userMap = new Map(postUsers.map(u => [u.id, u]))
     const likedPostIdSet = new Set(likedPosts.map(l => l.post_id))
+    const followingIdSet = new Set(followingRelations.map(f => f.following_id))
     
     console.log('👥 Users fetched:', {
       totalUsers: postUsers.length,
       userMapKeys: Array.from(userMap.keys()),
       sampleUser: postUsers[0] ? { id: postUsers[0].id, name: postUsers[0].name } : null
+    })
+
+    // Filter out posts from private accounts that the user doesn't follow
+    const filteredPostList = postList.filter((post: any) => {
+      const author = userMap.get(post.user_id)
+      
+      // If no author found, include the post (shouldn't happen but safe fallback)
+      if (!author) return true
+      
+      // If author is not private, show the post
+      if (!author.is_private) return true
+      
+      // If viewing own posts, show them
+      if (auth && auth.userId === author.id) return true
+      
+      // If author is private, only show if the viewer follows them
+      return auth && author.id !== undefined && followingIdSet.has(author.id)
+    })
+
+    console.log('🔒 Privacy filter applied:', {
+      originalCount: postList.length,
+      filteredCount: filteredPostList.length,
+      removedCount: postList.length - filteredPostList.length
     })
 
     // Get comment users
@@ -123,8 +148,8 @@ async function handleGetPosts(req: NextApiRequest, res: NextApiResponse) {
       : []
     const commentUserMap = new Map(commentUsers.map(u => [u.id, u]))
 
-    // Transform posts with all related data
-    const transformedPosts = postList.map((post: any) => {
+    // Transform posts with all related data (use filtered list)
+    const transformedPosts = filteredPostList.map((post: any) => {
       const author = userMap.get(post.user_id)
       
       // Debug logging for missing authors

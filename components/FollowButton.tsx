@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import { fetchAPI, dataFetcher } from '../lib/dataFetcher'
 
 interface FollowButtonProps {
   userId: number
@@ -43,20 +44,19 @@ export default function FollowButton({
 
     try {
       const method = (followState || requestState) ? 'DELETE' : 'POST'
-      const response = await fetch(`/api/users/${userId}/follow`, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      const data = await fetchAPI<any>(
+        `/api/users/${userId}/follow`,
+        {
+          method,
+          token,
+          skipCache: true
         }
-      })
+      )
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to update follow status' }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json()
+      // Clear relevant caches after follow/unfollow
+      dataFetcher.clearCache('/api/users/suggestions')
+      dataFetcher.clearCache('/api/users/me/following')
+      dataFetcher.clearCache(`/api/users/${userId}`)
 
       // Private account case returns requested: true
       if (data.requested) {
@@ -71,7 +71,7 @@ export default function FollowButton({
         setFollowState(data.is_following)
         if (onFollowChange) onFollowChange(data.is_following, data.follower_count ?? 0)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Follow/unfollow error:', error)
       // Revert optimistic update on error
       setFollowState(previousState)

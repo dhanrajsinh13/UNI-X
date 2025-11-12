@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const users = await getCollection<User>(Collections.USERS)
     const messages = await getCollection<Message>(Collections.MESSAGES)
+    const blocks = await getCollection(Collections.BLOCKS)
 
     // Verify receiver exists
     const receiver = await users.findOne({ id: parseInt(receiverId) })
@@ -52,6 +53,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Can't message yourself
     if (parseInt(receiverId) === auth.userId) {
       return res.status(400).json({ error: 'Cannot send message to yourself' })
+    }
+
+    // Check if either user has blocked the other
+    const blockExists = await blocks.findOne({
+      $or: [
+        { blocker_id: auth.userId, blocked_user_id: parseInt(receiverId) },
+        { blocker_id: parseInt(receiverId), blocked_user_id: auth.userId }
+      ]
+    })
+
+    if (blockExists) {
+      return res.status(403).json({ error: 'Cannot send message to this user' })
     }
 
     // Get sender info

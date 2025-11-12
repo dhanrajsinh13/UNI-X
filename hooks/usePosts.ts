@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { fetchAPI } from '../lib/dataFetcher';
 
 interface Post {
   id: number;
@@ -20,7 +21,16 @@ interface Post {
   };
 }
 
-export function usePosts(category?: string, limit: number = 20) {
+interface UsePostsReturn {
+  posts: Post[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  loadMore: () => void;
+  hasMore: boolean;
+}
+
+export function usePosts(category?: string, limit: number = 20): UsePostsReturn {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,18 +38,19 @@ export function usePosts(category?: string, limit: number = 20) {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchPosts = async (append: boolean = false) => {
+  const fetchPosts = useCallback(async (append: boolean = false) => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Don't fetch if we don't have a token and auth is still loading
-      if (!token && authLoading) {
+      // Don't fetch if auth is still loading
+      if (authLoading) {
         setLoading(false);
         return;
       }
       
-      // Don't fetch if we don't have a token and auth is not loading (user not authenticated)
-      if (!token && !authLoading) {
+      // Don't fetch if not authenticated
+      if (!token) {
         setError('Authentication required');
         setLoading(false);
         return;
@@ -50,33 +61,42 @@ export function usePosts(category?: string, limit: number = 20) {
       params.append('limit', limit.toString());
       params.append('offset', append ? String(offset) : '0');
 
-      const headers: Record<string, string> = {
-        'Authorization': `Bearer ${token}`
-      };
-
-      const response = await fetch(`/api/posts?${params.toString()}`, { headers });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (append) {
-          setPosts(prev => [...prev, ...data.posts]);
-        } else {
-          setPosts(data.posts);
+      const data = await fetchAPI<{ posts: Post[] }>(
+        `/api/posts?${params.toString()}`,
+        { 
+          token,
+          cacheTTL: 15000, // Reduced to 15 seconds for faster initial load
         }
-        setHasMore(data.posts.length === limit);
-        setOffset(prev => append ? prev + data.posts.length : data.posts.length);
-        setError(null);
+      );
+        
+      if (append) {
+        setPosts(prev => [...prev, ...data.posts]);
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to fetch posts');
+        setPosts(data.posts);
       }
-    } catch (err) {
-      setError('Network error');
+      
+      setHasMore(data.posts.length === limit);
+      setOffset(prev => append ? prev + data.posts.length : data.posts.length);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch posts');
       console.error('Error fetching posts:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [category, limit, token, authLoading, offset]);
+
+  const loadMore = useCallback(() => {
+    if (!loading && hasMore) {
+      fetchPosts(true);
+    }
+  }, [loading, hasMore, fetchPosts]);
+
+  const refetch = useCallback(() => {
+    setOffset(0);
+    setHasMore(true);
+    fetchPosts(false);
+  }, [fetchPosts]);
 
   useEffect(() => {
     // Only fetch when auth is not loading
@@ -94,32 +114,37 @@ export function usePosts(category?: string, limit: number = 20) {
       setPosts(prevPosts => [newPost, ...prevPosts]);
     };
 
+    const handlePostUpdated = (event: CustomEvent) => {
+      const { id, content } = event.detail;
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.id === id ? { ...post, content } : post
+        )
+      );
+    };
+
+    const handlePostDeleted = (event: CustomEvent) => {
+      const { id } = event.detail;
+      setPosts(prevPosts => prevPosts.filter(post => post.id !== id));
+    };
+
     window.addEventListener('postCreated', handleNewPost as EventListener);
+    window.addEventListener('postUpdated', handlePostUpdated as EventListener);
+    window.addEventListener('postDeleted', handlePostDeleted as EventListener);
     
     return () => {
       window.removeEventListener('postCreated', handleNewPost as EventListener);
+      window.removeEventListener('postUpdated', handlePostUpdated as EventListener);
+      window.removeEventListener('postDeleted', handlePostDeleted as EventListener);
     };
   }, []);
 
-  // Listen for post updates and deletes
-  useEffect(() => {
-    const handleUpdated = (event: CustomEvent) => {
-      const { id, content } = event.detail || {};
-      if (!id) return;
-      setPosts(prev => prev.map(p => (p.id === id ? { ...p, content: content ?? p.content } : p)));
-    };
-    const handleDeleted = (event: CustomEvent) => {
-      const { id } = event.detail || {};
-      if (!id) return;
-      setPosts(prev => prev.filter(p => p.id !== id));
-    };
-    window.addEventListener('postUpdated', handleUpdated as EventListener);
-    window.addEventListener('postDeleted', handleDeleted as EventListener);
-    return () => {
-      window.removeEventListener('postUpdated', handleUpdated as EventListener);
-      window.removeEventListener('postDeleted', handleDeleted as EventListener);
-    };
-  }, []);
-
-  return { posts, loading, error, refetch: () => fetchPosts(false), fetchMore: () => hasMore && fetchPosts(true), hasMore };
+  return { 
+    posts, 
+    loading, 
+    error, 
+    refetch,
+    loadMore,
+    hasMore
+  };
 }

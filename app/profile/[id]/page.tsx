@@ -8,6 +8,7 @@ import PostModal from '../../../components/PostModal';
 import FollowButton from '../../../components/FollowButton';
 import FollowersListModal from '../../../components/FollowersListModal';
 import MiniChatWindow from '../../../components/MiniChatWindow';
+import { fetchAPI, dataFetcher } from '../../../lib/dataFetcher';
 
 // User profile from API
 interface UserProfile {
@@ -57,6 +58,7 @@ const ProfilePage = () => {
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showMiniChat, setShowMiniChat] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   useEffect(() => {
     if (id && token) {
@@ -67,20 +69,18 @@ const ProfilePage = () => {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/users/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      setIsBlocked(false);
+      const data = await fetchAPI<{ user: UserProfile }>(
+        `/api/users/${id}`,
+        { token: token || undefined, cacheTTL: 60000 } // Cache for 1 minute
+      );
 
-      if (response.ok) {
-        const data = await response.json();
-        setUserProfile(data.user);
-      } else {
-        console.error('Failed to fetch user profile');
+      setUserProfile(data.user);
+    } catch (error: any) {
+      console.error('Error fetching user profile:', error.message);
+      if (error.message?.includes('not accessible') || error.message?.includes('blocked')) {
+        setIsBlocked(true);
       }
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
     } finally {
       setLoading(false);
     }
@@ -93,6 +93,8 @@ const ProfilePage = () => {
         is_following: isFollowing,
         follower_count: followerCount
       });
+      // Clear profile cache after follow/unfollow
+      dataFetcher.clearCache(`/api/users/${id}`);
     }
   };
 
@@ -154,6 +156,31 @@ const ProfilePage = () => {
     );
   }
 
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+              <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">User Not Accessible</h2>
+          <p className="text-gray-600 mb-6">
+            You cannot view this profile. This may be because you or this user has blocked the other.
+          </p>
+          <button
+            onClick={() => router.push('/')}
+            className="px-6 py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const isOwnProfile = user && user.id === userProfile.id;
 
   return (
@@ -192,19 +219,21 @@ const ProfilePage = () => {
                       onFollowChange={handleFollowChange}
                       size="md"
                     />
-                    {/* Message Button */}
-                    <button
-                      onClick={handleMessage}
-                      className="flex items-center gap-2 px-4 py-2 bg-[#02fa97] hover:bg-teal-400 text-black font-medium text-sm rounded-lg transition-all duration-200 hover:shadow-md active:scale-95"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8.5 19H8C4 19 2 17 2 13V8C2 4 4 2 8 2H16C20 2 22 4 22 8V13C22 17 20 19 16 19H15.5C15.19 19 14.89 19.15 14.7 19.4L13.2 21.4C12.54 22.28 11.46 22.28 10.8 21.4L9.3 19.4C9.14 19.18 8.77 19 8.5 19Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M15.9965 11H16.0054" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M11.9955 11H12.0045" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M7.99451 11H8.00349" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      Message
-                    </button>
+                    {/* Message Button - hidden if profile is private and not following */}
+                    {(!userProfile.is_private || userProfile.is_following) && (
+                      <button
+                        onClick={handleMessage}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#02fa97] hover:bg-teal-400 text-black font-medium text-sm rounded-lg transition-all duration-200 hover:shadow-md active:scale-95"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M8.5 19H8C4 19 2 17 2 13V8C2 4 4 2 8 2H16C20 2 22 4 22 8V13C22 17 20 19 16 19H15.5C15.19 19 14.89 19.15 14.7 19.4L13.2 21.4C12.54 22.28 11.46 22.28 10.8 21.4L9.3 19.4C9.14 19.18 8.77 19 8.5 19Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M15.9965 11H16.0054" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M11.9955 11H12.0045" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M7.99451 11H8.00349" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        Message
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { fetchAPI, dataFetcher } from '../lib/dataFetcher';
 
 interface PostCardProps {
   id: number;
@@ -122,21 +123,15 @@ const PostCard: React.FC<PostCardProps> = memo(({
     setIsLiking(true);
     
     try {
-      const response = await fetch('/api/posts/aura', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ postId: id })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to update aura' }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await fetchAPI<{ post: { aura_count: number; user_liked: boolean } }>(
+        '/api/posts/aura',
+        {
+          method: 'POST',
+          token: token || '',
+          body: JSON.stringify({ postId: id }),
+          skipCache: true
+        }
+      );
       
       // Validate response format
       if (!data?.post || typeof data.post.aura_count !== 'number') {
@@ -147,6 +142,10 @@ const PostCard: React.FC<PostCardProps> = memo(({
       setAuraCount(data.post.aura_count);
       setHasAura(data.post.user_liked);
       
+      // Clear post cache
+      dataFetcher.clearCache('/api/posts');
+      dataFetcher.clearCache(`/api/posts/${id}`);
+      
       // Broadcast aura change to PostModal
       window.dispatchEvent(new CustomEvent('auraUpdated', { 
         detail: { 
@@ -155,7 +154,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
           hasAura: data.post.user_liked 
         } 
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating aura:', error);
       // Revert optimistic update if API fails
       setHasAura(previousHasAura);
@@ -273,28 +272,30 @@ const PostCard: React.FC<PostCardProps> = memo(({
     
     setIsSaving(true);
     try {
-      const resp = await fetch(`/api/posts/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ caption: trimmed })
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        const newContent = data.post?.caption ?? trimmed;
-        setEditText(newContent);
-        setIsEditing(false);
-        setShowOptions(false);
-        window.dispatchEvent(new CustomEvent('postUpdated', { detail: { id, content: newContent } }));
-      } else {
-        const err = await resp.json().catch(() => ({}));
-        alert(err.error || 'Failed to update post');
-      }
-    } catch (e) {
-      console.error('Update post failed', e);
-      alert('Failed to update post');
+      const data = await fetchAPI<{ post: { caption: string } }>(
+        `/api/posts/${id}`,
+        {
+          method: 'PUT',
+          token: token || '',
+          body: JSON.stringify({ caption: trimmed }),
+          skipCache: true
+        }
+      );
+
+      const newContent = data.post?.caption ?? trimmed;
+      setEditText(newContent);
+      setIsEditing(false);
+      setShowOptions(false);
+      
+      // Clear caches
+      dataFetcher.clearCache('/api/posts');
+      dataFetcher.clearCache(`/api/posts/${id}`);
+      dataFetcher.clearCache('/api/users/me');
+      
+      window.dispatchEvent(new CustomEvent('postUpdated', { detail: { id, content: newContent } }));
+    } catch (error: any) {
+      console.error('Update post failed', error);
+      alert(error.message || 'Failed to update post');
     } finally {
       setIsSaving(false);
     }
@@ -305,20 +306,22 @@ const PostCard: React.FC<PostCardProps> = memo(({
     if (!confirm('Delete this post? This cannot be undone.')) return;
     setIsDeleting(true);
     try {
-      const resp = await fetch(`/api/posts/${id}`, {
+      await fetchAPI(`/api/posts/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        token: token || '',
+        skipCache: true
       });
-      if (resp.status === 204) {
-        window.dispatchEvent(new CustomEvent('postDeleted', { detail: { id } }));
-        setIsDeleted(true);
-      } else {
-        const err = await resp.json().catch(() => ({}));
-        alert(err.error || 'Failed to delete post');
-      }
-    } catch (e) {
-      console.error('Delete post failed', e);
-      alert('Failed to delete post');
+
+      // Clear caches
+      dataFetcher.clearCache('/api/posts');
+      dataFetcher.clearCache(`/api/posts/${id}`);
+      dataFetcher.clearCache('/api/users/me');
+      
+      window.dispatchEvent(new CustomEvent('postDeleted', { detail: { id } }));
+      setIsDeleted(true);
+    } catch (error: any) {
+      console.error('Delete post failed', error);
+      alert(error.message || 'Failed to delete post');
     } finally {
       setIsDeleting(false);
       setShowOptions(false);
