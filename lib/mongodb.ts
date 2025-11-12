@@ -40,12 +40,12 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
     } : {}
     
     const client = await MongoClient.connect(MONGODB_URI, {
-      maxPoolSize: 10,
-      minPoolSize: 2,
-      maxIdleTimeMS: 60000,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 60000,
-      connectTimeoutMS: 10000,
+      maxPoolSize: 5,
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 30000,
+      connectTimeoutMS: 5000,
       retryWrites: true,
       retryReads: true,
       ...tlsOptions,
