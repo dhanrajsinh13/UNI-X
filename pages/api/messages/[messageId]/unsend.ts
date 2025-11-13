@@ -55,7 +55,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Emit socket event to notify both users
     try {
       // Use the internal socket server URL (not the public one)
-      const socketUrl = process.env.SOCKET_SERVER_URL || 'http://localhost:3001';
+      let socketUrl = process.env.SOCKET_SERVER_URL || 'http://localhost:3001';
+      // Remove trailing slash if present
+      socketUrl = socketUrl.replace(/\/+$/, '');
       
       console.log(`[UNSEND] Emitting socket event to: ${socketUrl}/emit-message-unsend`);
       
