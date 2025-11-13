@@ -7,6 +7,7 @@ import { useAuth } from './AuthContext'
 interface SocketContextType {
   socket: Socket | null
   isConnected: boolean
+  isConnecting: boolean
   joinConversation: (otherUserId: number) => void
   leaveConversation: (otherUserId: number) => void
   sendMessage: (messageData: { receiverId: number; messageText?: string; mediaUrl?: string | null; clientId?: string; replyToId?: number | null }) => void
@@ -29,6 +30,7 @@ interface SocketProviderProps {
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
   const { user, token, setSocketDisconnect } = useAuth()
 
   const disconnect = useCallback(() => {
@@ -63,6 +65,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     }
 
     console.log('Initializing new socket connection...');
+    setIsConnecting(true);
 
     // Initialize single Socket.IO connection to Node.js server
     let newSocket: Socket | null = null
@@ -73,11 +76,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     try {
       newSocket = io(url, {
         forceNew: true,
-        timeout: 10000,
+        timeout: 60000, // 60 seconds for Render cold starts
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 10, // More attempts for sleeping servers
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 10000,
         transports: ['websocket', 'polling'], // Try WebSocket first, fallback to polling
         upgrade: true,
         auth: { token },
@@ -88,6 +91,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         console.log('✅ Connected to Socket.io server')
         console.log('🔗 Socket ID:', newSocket!.id)
         setIsConnected(true)
+        setIsConnecting(false)
 
         // Announce online status
         newSocket!.emit('user-online')
@@ -96,10 +100,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       newSocket.on('disconnect', (reason) => {
         console.log('🔌 Disconnected from Socket.io server:', reason)
         setIsConnected(false)
+        setIsConnecting(false)
       })
 
       newSocket.on('connect_error', (error) => {
         console.error('❌ Socket.io connection error:', error.message)
+        setIsConnecting(false)
         
         // Provide helpful error messages
         if (error.message.includes('No token') || error.message.includes('Authentication')) {
@@ -233,6 +239,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const value: SocketContextType = {
     socket,
     isConnected,
+    isConnecting,
     joinConversation,
     leaveConversation,
     sendMessage,

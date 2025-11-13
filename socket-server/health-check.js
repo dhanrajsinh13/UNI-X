@@ -1,4 +1,5 @@
-const fetch = require('node-fetch');
+const http = require('http');
+const https = require('https');
 
 const colors = {
   reset: '\x1b[0m',
@@ -8,26 +9,59 @@ const colors = {
   blue: '\x1b[36m'
 };
 
-async function checkHealth(url) {
-  try {
-    console.log(`${colors.blue}Checking: ${url}${colors.reset}`);
-    const response = await fetch(url, { timeout: 10000 });
-    const data = await response.json();
-    
-    if (response.ok) {
-      console.log(`${colors.green}✅ Server is healthy${colors.reset}`);
-      console.log(`   Status: ${data.status}`);
-      console.log(`   Connections: ${data.connections || 0}`);
-      console.log(`   Uptime: ${Math.floor(data.uptime || 0)}s`);
-      return true;
-    } else {
-      console.log(`${colors.red}❌ Server returned error${colors.reset}`);
-      return false;
+async function checkHealth(urlString) {
+  return new Promise((resolve) => {
+    try {
+      console.log(`${colors.blue}Checking: ${urlString}${colors.reset}`);
+      
+      const url = new URL(urlString);
+      const protocol = url.protocol === 'https:' ? https : http;
+      
+      const req = protocol.get(urlString, (res) => {
+        let data = '';
+        
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data);
+            
+            if (res.statusCode === 200) {
+              console.log(`${colors.green}✅ Server is healthy${colors.reset}`);
+              console.log(`   Status: ${json.status}`);
+              console.log(`   Connections: ${json.connections || 0}`);
+              console.log(`   Uptime: ${Math.floor(json.uptime || 0)}s`);
+              resolve(true);
+            } else {
+              console.log(`${colors.red}❌ Server returned error (${res.statusCode})${colors.reset}`);
+              resolve(false);
+            }
+          } catch (error) {
+            console.log(`${colors.red}❌ Invalid JSON response${colors.reset}`);
+            resolve(false);
+          }
+        });
+      });
+      
+      req.on('error', (error) => {
+        console.log(`${colors.red}❌ Cannot connect: ${error.code || error.message}${colors.reset}`);
+        console.log(`   Error details:`, error);
+        resolve(false);
+      });
+      
+      req.setTimeout(10000, () => {
+        req.destroy();
+        console.log(`${colors.red}❌ Request timeout${colors.reset}`);
+        resolve(false);
+      });
+      
+    } catch (error) {
+      console.log(`${colors.red}❌ Cannot connect: ${error.message}${colors.reset}`);
+      resolve(false);
     }
-  } catch (error) {
-    console.log(`${colors.red}❌ Cannot connect: ${error.message}${colors.reset}`);
-    return false;
-  }
+  });
 }
 
 async function main() {

@@ -1,52 +1,27 @@
-const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
-const cors = require('cors');
+const express = require('express');
 
 const app = express();
-const server = createServer(app);
-
-// Environment variables
-const PORT = process.env.PORT || 3001;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
-
-// CORS configuration
-app.use(cors({
-  origin: [FRONTEND_URL, 'https://uni-x.vercel.app', 'https://uni-x-zeta.vercel.app'],
-  credentials: true
-}));
+const port = process.env.PORT || 3001;
 
 // Health check endpoint
-app.get('/', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Socket.IO server is running',
-    timestamp: new Date().toISOString()
-  });
-});
-
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy',
-    connections: io.engine.clientsCount,
-    uptime: process.uptime()
-  });
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Initialize Socket.io with CORS
+const server = createServer(app);
+
+// Initialize Socket.io with CORS for your Next.js app
 const io = new Server(server, {
   cors: {
-    origin: [FRONTEND_URL, 'https://uni-x-zeta.vercel.app'],
+    origin: process.env.CORS_ORIGIN || '*', // Set this to your Vercel URL in production
     methods: ["GET", "POST"],
     credentials: true
   },
   transports: ['websocket', 'polling'],
-  allowEIO3: true,
-  pingTimeout: 60000,
-  pingInterval: 25000
+  allowEIO3: true
 });
 
 // Authentication middleware
@@ -57,7 +32,7 @@ io.use(async (socket, next) => {
       return next(new Error('No token provided'));
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (!decoded || !decoded.userId) {
       return next(new Error('Invalid token'));
     }
@@ -101,8 +76,9 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Store message in database via API
-      const response = await fetch(`${API_BASE_URL}/api/messages`, {
+      // Call your Next.js API to store message
+      const apiUrl = process.env.NEXTJS_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,72 +126,42 @@ io.on('connection', (socket) => {
       console.log(`Message sent from ${socket.userId} to ${receiverId}`);
     } catch (error) {
       console.error('Error sending message:', error);
-      socket.emit('error', { message: 'Failed to send message' });
+      socket.emit('error', { message: error.message });
     }
   });
 
-  // Generic notifications (likes, comments, follows)
-  socket.on('notify', (payload) => {
-    const { userId, type, message, meta } = payload || {}
-    if (!userId || !type) return
-    io.to(`user-${userId}`).emit('notification', {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      type,
-      message,
-      time: new Date().toISOString(),
-      read: false,
-      ...meta
-    })
-  })
-
-  // Handle typing indicators
-  socket.on('typing-start', (data) => {
-    socket.to(`conversation-${data.conversationId}`).emit('user-typing', {
-      userId: data.userId,
-      userName: data.userName
-    });
+  // Typing indicators
+  socket.on('typing', ({ otherUserId, userId, userName }) => {
+    io.to(`user-${otherUserId}`).emit('user-typing', { userId, userName });
   });
 
-  socket.on('typing-stop', (data) => {
-    socket.to(`conversation-${data.conversationId}`).emit('user-stopped-typing', {
-      userId: data.userId
-    });
+  socket.on('stop-typing', ({ otherUserId, userId }) => {
+    io.to(`user-${otherUserId}`).emit('user-stopped-typing', { userId });
   });
 
-  // Handle message read status
-  socket.on('mark-messages-read', (data) => {
-    socket.to(`conversation-${data.conversationId}`).emit('messages-marked-read', {
-      conversationId: data.conversationId,
-      userId: data.userId,
-      readAt: new Date()
-    });
-  });
-
-  // Handle user online status
+  // User status
   socket.on('user-online', () => {
-    socket.broadcast.emit('user-status-change', {
-      userId: socket.userId,
-      status: 'online',
-      lastSeen: new Date()
-    });
+    socket.broadcast.emit('user-status', { userId: socket.userId, status: 'online' });
   });
 
   socket.on('user-offline', (userId) => {
-    socket.broadcast.emit('user-status-change', {
-      userId: userId || socket.userId,
-      status: 'offline',
-      lastSeen: new Date()
-    });
+    socket.broadcast.emit('user-status', { userId, status: 'offline' });
   });
 
-  socket.on('disconnect', () => {
-    console.log(`❌ User ${socket.userName} (${socket.userId}) disconnected:`, socket.id);
-    socket.broadcast.emit('user-status-change', {
-      userId: socket.userId,
-      status: 'offline',
-      lastSeen: new Date()
-    });
+  socket.on('disconnect', (reason) => {
+    console.log(`🔌 User ${socket.userId} disconnected:`, reason);
+    socket.broadcast.emit('user-status', { userId: socket.userId, status: 'offline' });
   });
+
+  socket.on('error', (error) => {
+    console.error('Socket error:', error);
+  });
+});
+
+server.listen(port, () => {
+  console.log(`🚀 Socket.IO server running on port ${port}`);
+  console.log(`📡 Accepting connections from: ${process.env.CORS_ORIGIN || '*'}`);
+  console.log(`🔗 Health check: http://localhost:${port}/health`);
 });
 
 // Graceful shutdown
@@ -224,11 +170,4 @@ process.on('SIGTERM', () => {
   server.close(() => {
     console.log('HTTP server closed');
   });
-});
-
-// Start server
-server.listen(PORT, () => {
-  console.log(`🚀 Socket.IO server running on port ${PORT}`);
-  console.log(`📡 Accepting connections from: ${FRONTEND_URL}`);
-  console.log(`🔗 API Base URL: ${API_BASE_URL}`);
 });

@@ -1,0 +1,187 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                  🚀 UNI-X SOCKET.IO QUICK REFERENCE             ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────┐
+│ LOCAL DEVELOPMENT                                                │
+└─────────────────────────────────────────────────────────────────┘
+
+Terminal 1 - Socket Server:
+  cd socket-server
+  npm install
+  npm run dev                    # Runs on http://localhost:3001
+
+Terminal 2 - Main App:
+  cd ..
+  npm run dev                    # Runs on http://localhost:3000
+
+Environment Variables:
+  Main App (.env.local):
+    NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+  
+  Socket Server (socket-server/.env):
+    PORT=3001
+    JWT_SECRET=<same-as-main-app>
+    FRONTEND_URL=http://localhost:3000
+    API_BASE_URL=http://localhost:3000
+
+┌─────────────────────────────────────────────────────────────────┐
+│ PRODUCTION DEPLOYMENT                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+Step 1: Deploy Socket Server to Render
+  URL: https://dashboard.render.com
+  Type: Web Service
+  Build: npm install
+  Start: npm start
+  Env Vars:
+    - JWT_SECRET (copy from Vercel)
+    - FRONTEND_URL (your Vercel URL)
+    - API_BASE_URL (your Vercel URL)
+
+Step 2: Update Vercel
+  Settings → Environment Variables → Add:
+    NEXT_PUBLIC_SOCKET_URL = <your-render-url>
+  Then redeploy
+
+┌─────────────────────────────────────────────────────────────────┐
+│ TESTING                                                          │
+└─────────────────────────────────────────────────────────────────┘
+
+Health Check:
+  npm run health                 # In socket-server folder
+  
+Browser Test:
+  Open socket-server/test.html   # Interactive test page
+  
+Check Connection:
+  1. Open your app
+  2. Press F12 (DevTools)
+  3. Console tab
+  4. Look for: "✅ Connected to Socket.io server"
+
+┌─────────────────────────────────────────────────────────────────┐
+│ COMMON ISSUES                                                    │
+└─────────────────────────────────────────────────────────────────┘
+
+❌ "Cannot connect"
+  → Check NEXT_PUBLIC_SOCKET_URL is set
+  → Verify socket server is running
+  → Check port 3001 is available
+
+❌ "Authentication failed"
+  → JWT_SECRET must be EXACTLY the same
+  → No extra spaces or newlines
+  → Copy-paste it carefully
+
+❌ "CORS error"
+  → Add your domain to socket-server/server.js cors array
+  → Check FRONTEND_URL environment variable
+
+❌ "Render service sleeping"
+  → Free tier sleeps after 15min inactivity
+  → Upgrade to Starter ($7/mo) for 24/7
+  → Or use UptimeRobot.com to ping it
+
+┌─────────────────────────────────────────────────────────────────┐
+│ USEFUL COMMANDS                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+Development:
+  cd socket-server && npm run dev     # Start socket server
+  npm run dev                         # Start main app (in root)
+  npm run health                      # Check socket server
+
+Deployment:
+  git add . && git commit -m "msg"    # Commit changes
+  git push                            # Deploy (if auto-deploy enabled)
+
+Testing:
+  curl http://localhost:3001/health   # Local health check
+  curl https://your.onrender.com/health # Production health check
+
+┌─────────────────────────────────────────────────────────────────┐
+│ FILE LOCATIONS                                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+Socket Server:
+  📁 socket-server/
+     ├── server.js               # Main server code
+     ├── package.json            # Dependencies
+     ├── .env                    # Environment variables (create this)
+     ├── test.html               # Testing tool
+     └── render.yaml             # Render config
+
+Documentation:
+  📄 START_HERE.md               # Start here! Quick guide
+  📄 DEPLOYMENT_CHECKLIST.md     # Step-by-step checklist
+  📄 SOCKET_DEPLOYMENT.md        # Detailed deployment guide
+  📄 ARCHITECTURE.md             # System architecture
+
+┌─────────────────────────────────────────────────────────────────┐
+│ PORTS                                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+Local Development:
+  3000 - Main Next.js app
+  3001 - Socket.IO server
+
+Production:
+  443 (HTTPS) - Vercel app
+  443 (HTTPS) - Render socket server
+
+┌─────────────────────────────────────────────────────────────────┐
+│ COSTS                                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+Free Tier:
+  Vercel:  Free (hobby projects)
+  Render:  Free (sleeps after 15min)
+  MongoDB: Free (512MB)
+  Total:   $0/month ⚠️ Socket server sleeps
+
+Production Tier:
+  Vercel:  $20/month (Pro)
+  Render:  $7/month (Starter - always on)
+  MongoDB: $9/month (M2)
+  Total:   $36/month ✅ Always on
+
+┌─────────────────────────────────────────────────────────────────┐
+│ QUICK LINKS                                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+Render Dashboard:  https://dashboard.render.com
+Vercel Dashboard:  https://vercel.com/dashboard
+MongoDB Atlas:     https://cloud.mongodb.com
+UptimeRobot:       https://uptimerobot.com (free pinger)
+
+┌─────────────────────────────────────────────────────────────────┐
+│ SUCCESS INDICATORS                                               │
+└─────────────────────────────────────────────────────────────────┘
+
+✅ Socket server returns {"status":"healthy"}
+✅ Browser console shows "Connected to Socket.io server"
+✅ Can send and receive messages in real-time
+✅ Typing indicators work
+✅ Notifications appear instantly
+✅ No red errors in console
+
+┌─────────────────────────────────────────────────────────────────┐
+│ SUPPORT                                                          │
+└─────────────────────────────────────────────────────────────────┘
+
+Check logs:
+  Render:  Dashboard → Your Service → Logs tab
+  Vercel:  Dashboard → Deployment → Function Logs
+  Browser: F12 → Console tab
+
+Read guides:
+  1. START_HERE.md           - Quick start
+  2. DEPLOYMENT_CHECKLIST.md - Step-by-step
+  3. SOCKET_DEPLOYMENT.md    - Detailed guide
+
+╔══════════════════════════════════════════════════════════════════╗
+║  Need help? Check the documentation files listed above!          ║
+║  All environment variables must be set correctly!                ║
+║  JWT_SECRET must be EXACTLY the same in both services!          ║
+╚══════════════════════════════════════════════════════════════════╝

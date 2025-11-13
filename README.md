@@ -1,43 +1,196 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# UNI-X - College Social Network
 
-## Getting Started
+A modern college social networking platform built with Next.js, featuring real-time messaging, posts, notifications, and more.
 
-First, run the development server:
+## 🚀 Features
+
+- **Real-time Messaging** - Socket.IO powered chat with typing indicators
+- **Social Feed** - Share posts with media, categories, and interactions
+- **Notifications** - Real-time updates for likes, comments, follows
+- **User Profiles** - Customizable profiles with privacy controls
+- **Follow System** - Public/private accounts with follow requests
+- **Privacy Controls** - Granular control over who sees your content
+- **Block System** - Block users to prevent interactions
+- **Responsive Design** - Works seamlessly on desktop and mobile
+
+## 📋 Prerequisites
+
+- Node.js 18+ 
+- MongoDB database (Neon/MongoDB Atlas)
+- Cloudinary account (for media uploads)
+- JWT secret key
+
+## 🛠️ Installation
+
+### 1. Clone the repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <your-repo-url>
+cd UNI-X
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install dependencies
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+```
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+### 3. Set up environment variables
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+Create `.env.local` in the root directory:
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Database
+DATABASE_URL=postgresql://...
+
+# Authentication
+JWT_SECRET=your-super-secret-jwt-key
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+
+# Socket.IO (for local dev)
+NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+```
+
+### 4. Set up Socket.IO Server
+
+For real-time features (messaging, notifications), you need to run the Socket.IO server:
+
+```bash
+cd socket-server
+npm install
+cp .env.example .env
+# Edit .env with your values
+npm run dev
+```
+
+The socket server will run on port 3001.
+
+## 🖥️ Development
+
+Run both servers:
+
+**Terminal 1 - Main App:**
+```bash
+npm run dev
+```
+
+**Terminal 2 - Socket Server:**
+```bash
+cd socket-server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🌐 Production Deployment
+
+### Frontend (Vercel)
+
+1. Push code to GitHub
+2. Import project on [Vercel](https://vercel.com)
+3. Add environment variables (see `.env.local`)
+4. Add `NEXT_PUBLIC_SOCKET_URL=https://your-socket-server.onrender.com`
+5. Deploy
+
+### Backend Socket Server (Render)
+
+1. See detailed guide: [SOCKET_DEPLOYMENT.md](./SOCKET_DEPLOYMENT.md)
+2. Quick steps:
+   - Push `socket-server/` to GitHub
+   - Create Web Service on [Render](https://render.com)
+   - Add environment variables
+   - Deploy
+3. Copy Render URL and add to Vercel as `NEXT_PUBLIC_SOCKET_URL`
+
+**Full deployment checklist:** [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
+
+## 📚 Documentation
+
+- [Socket.IO Deployment Guide](./SOCKET_DEPLOYMENT.md) - Deploy real-time backend
+- [Socket Setup Complete](./SOCKET_SETUP_COMPLETE.md) - Quick reference
+- [Deployment Checklist](./DEPLOYMENT_CHECKLIST.md) - Step-by-step checklist
+- [MongoDB Migration Guide](./MONGODB_MIGRATION_GUIDE.md) - Database setup
+- [Vercel Deployment Guide](./VERCEL_DEPLOYMENT_GUIDE.md) - Frontend deployment
+
+## 🏗️ Project Structure
+
+```
+UNI-X/
+├── app/                    # Next.js 13+ app directory
+│   ├── landing/           # Landing/auth pages
+│   ├── messages/          # Messaging interface
+│   ├── notifications/     # Notifications page
+│   ├── profile/          # User profiles
+│   ├── settings/         # User settings
+│   └── uniwall/          # Main feed
+├── components/            # React components
+├── contexts/             # React contexts (Auth, Socket, Toast)
+├── hooks/                # Custom React hooks
+├── lib/                  # Utility functions
+├── pages/api/            # API routes
+├── socket-server/        # Standalone Socket.IO server
+│   ├── server.js        # Socket server code
+│   ├── package.json     # Dependencies
+│   └── test.html        # Testing tool
+├── public/               # Static assets
+└── styles/              # Global styles
+```
+
+## 🔧 Tech Stack
+
+- **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend:** Next.js API Routes, Socket.IO (separate server)
+- **Database:** MongoDB (via Neon/PostgreSQL wire protocol)
+- **Authentication:** JWT
+- **Media Storage:** Cloudinary
+- **Deployment:** Vercel (frontend) + Render (Socket.IO)
+
+## 🧪 Testing
+
+### Test Socket Server
+```bash
+cd socket-server
+npm run health
+```
+
+### Test with Browser
+Open `socket-server/test.html` in browser for interactive testing.
+
+## 🐛 Troubleshooting
+
+### Socket.IO not connecting
+- Ensure socket server is running on port 3001
+- Check `NEXT_PUBLIC_SOCKET_URL` environment variable
+- Verify JWT_SECRET matches between main app and socket server
+
+### Database connection errors
+- Check DATABASE_URL is correct
+- Verify MongoDB connection string
+- See [MONGODB_MIGRATION_GUIDE.md](./MONGODB_MIGRATION_GUIDE.md)
+
+### Deployment issues
+- Follow [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
+- Check Render logs for socket server
+- Check Vercel logs for main app
+
+## 📝 License
+
+[Add your license here]
+
+## 👥 Contributors
+
+[Add contributors]
+
+---
 
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
-# UNIX
-# UNIX-NETWORK
-# UNIX-NETWORK
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
+- [Socket.IO Documentation](https://socket.io/docs/) - real-time communication
+- [MongoDB Documentation](https://docs.mongodb.com/) - database guide
