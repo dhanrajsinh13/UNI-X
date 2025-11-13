@@ -14,6 +14,8 @@ interface SocketContextType {
   onNewMessage: (callback: (message: any) => void) => () => void
   onMessageNotification: (callback: (notification: any) => void) => () => void
   onNotification: (callback: (notification: any) => void) => () => void
+  onMessageUnsent: (callback: (data: { messageId: number }) => void) => () => void
+  onMessageDeleted: (callback: (data: { messageId: number }) => void) => () => void
   startTyping: (otherUserId: number, userId: number, userName: string) => void
   stopTyping: (otherUserId: number, userId: number) => void
   onTyping: (callback: (data: any) => void) => () => void
@@ -208,6 +210,20 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     return () => socket.off('notification', callback)
   }
 
+  const onMessageUnsent = (callback: (data: { messageId: number }) => void) => {
+    if (!socket) return () => { }
+    const handler = (data: { messageId: number }) => callback(data)
+    socket.on('message-unsent', handler)
+    return () => socket.off('message-unsent', handler)
+  }
+
+  const onMessageDeleted = (callback: (data: { messageId: number }) => void) => {
+    if (!socket) return () => { }
+    const handler = (data: { messageId: number }) => callback(data)
+    socket.on('message-deleted', handler)
+    return () => socket.off('message-deleted', handler)
+  }
+
   const startTyping = (otherUserId: number, userId: number, userName: string) => {
     if (socket && user?.id) {
       const conversationId = [user.id, otherUserId].sort((a, b) => a - b).join('-')
@@ -246,6 +262,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     onNewMessage,
     onMessageNotification,
     onNotification,
+    onMessageUnsent,
+    onMessageDeleted,
     startTyping,
     stopTyping,
     onTyping,

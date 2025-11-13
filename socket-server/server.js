@@ -36,6 +36,39 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Endpoint to emit message unsend event
+app.post('/emit-message-unsend', express.json(), (req, res) => {
+  try {
+    const { messageId, senderId, receiverId } = req.body;
+    
+    // Notify both users
+    io.to(`user-${senderId}`).emit('message-unsent', { messageId });
+    io.to(`user-${receiverId}`).emit('message-unsent', { messageId });
+    
+    console.log(`📤 Message ${messageId} unsent notification sent`);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error emitting message unsend:', error);
+    res.status(500).json({ error: 'Failed to emit event' });
+  }
+});
+
+// Endpoint to emit message delete event
+app.post('/emit-message-delete', express.json(), (req, res) => {
+  try {
+    const { messageId, userId, senderId, receiverId } = req.body;
+    
+    // Only notify the user who deleted it (for their other devices)
+    io.to(`user-${userId}`).emit('message-deleted', { messageId });
+    
+    console.log(`🗑️ Message ${messageId} delete notification sent to user ${userId}`);
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Error emitting message delete:', error);
+    res.status(500).json({ error: 'Failed to emit event' });
+  }
+});
+
 // Initialize Socket.io with CORS
 const io = new Server(server, {
   cors: {

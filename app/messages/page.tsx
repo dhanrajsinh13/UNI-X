@@ -53,7 +53,7 @@ interface Message {
 
 const MessagesPageInner = () => {
   const { user, token } = useAuth();
-  const { socket, isConnected, joinConversation, leaveConversation, startTyping, stopTyping, onNewMessage, onTyping, onStoppedTyping, sendMessage } = useSocket();
+  const { socket, isConnected, joinConversation, leaveConversation, startTyping, stopTyping, onNewMessage, onMessageUnsent, onMessageDeleted, onTyping, onStoppedTyping, sendMessage } = useSocket();
   const searchParams = useSearchParams();
   
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -176,15 +176,8 @@ const MessagesPageInner = () => {
         copy.splice(idx, 1);
         return [updated, ...copy];
       });
-
-      const now = Date.now();
-      if (now - lastRefreshAtRef.current > 5000 && !refreshTimeoutRef.current) {
-        refreshTimeoutRef.current = setTimeout(() => {
-          lastRefreshAtRef.current = Date.now();
-          refreshTimeoutRef.current = null;
-          loadConversations(true);
-        }, 1500);
-      }
+      
+      // No need to refresh conversations - we're updating them in real-time above
     });
     const offTyping = onTyping((data: { userId: number; userName: string }) => {
       setTypingUsers(prev => {
@@ -198,12 +191,46 @@ const MessagesPageInner = () => {
     const offStopped = onStoppedTyping((data: { userId: number }) => {
       setTypingUsers(prev => prev.filter(u => u.userId !== data.userId));
     });
+    
+    // Listen for message unsent events
+    const offUnsent = onMessageUnsent((data: { messageId: number }) => {
+      console.log('Message unsent event received:', data.messageId);
+      setMessages(prev => prev.filter(msg => msg.id !== data.messageId));
+      
+      // Update conversation last message if needed
+      setConversations(prev => prev.map(conv => {
+        if (conv.lastMessage?.id === data.messageId) {
+          return {
+            ...conv,
+            lastMessage: {
+              ...conv.lastMessage,
+              text: 'This message was unsent',
+              mediaUrl: null
+            }
+          };
+        }
+        return conv;
+      }));
+    });
+    
+    // Listen for message deleted events (for current user only)
+    const offDeleted = onMessageDeleted((data: { messageId: number }) => {
+      console.log('Message deleted event received:', data.messageId);
+      setMessages(prev => prev.map(msg => 
+        msg.id === data.messageId 
+          ? { ...msg, deleted_for: [...(msg.deleted_for || []), user?.id || 0] }
+          : msg
+      ));
+    });
+    
     return () => {
       offNew && offNew();
       offTyping && offTyping();
       offStopped && offStopped();
+      offUnsent && offUnsent();
+      offDeleted && offDeleted();
     };
-  }, [socket, activeConversation]);
+  }, [socket, activeConversation, user?.id, onNewMessage, onTyping, onStoppedTyping, onMessageUnsent, onMessageDeleted]);
   
   // Scroll to bottom of messages (only for new messages)
   const prevMessagesLengthRef = useRef(messages.length);
