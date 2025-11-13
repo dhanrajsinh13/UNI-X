@@ -1118,7 +1118,7 @@ const MessagesPageInner = () => {
           </div>
           
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 bg-white pb-32 md:pb-4">
+          <div className="flex-1 overflow-y-auto p-4 bg-white pb-32 md:pb-4 will-change-scroll">
             <div className="max-w-2xl mx-auto space-y-4">
               {displayedMessages.map((message, index) => {
                 const isFromMe = message.senderId === user?.id;

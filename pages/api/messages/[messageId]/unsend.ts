@@ -42,21 +42,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Delete the message (unsend for everyone)
     await messagesCollection.deleteOne({ id: numericMessageId });
 
-    // Emit socket event to notify the other user
+    // Emit socket event to notify both users
     try {
-      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.API_BASE_URL || '';
-      if (socketUrl) {
-        await fetch(`${socketUrl}/emit-message-unsend`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messageId: numericMessageId,
-            senderId: decoded.userId,
-            receiverId: message.receiver_id
-          })
-        }).catch(() => {}); // Ignore errors
-      }
+      // Use the internal socket server URL (not the public one)
+      const socketUrl = process.env.SOCKET_SERVER_URL || 'http://localhost:3001';
+      
+      await fetch(`${socketUrl}/emit-message-unsend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messageId: numericMessageId,
+          senderId: decoded.userId,
+          receiverId: message.receiver_id
+        })
+      }).catch(err => {
+        console.error('Failed to emit socket event:', err.message);
+      });
     } catch (e) {
+      console.error('Socket notification error:', e);
       // Socket notification failed, but message was deleted
     }
 
