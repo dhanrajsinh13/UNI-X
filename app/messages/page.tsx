@@ -709,7 +709,7 @@ const MessagesPageInner = () => {
     
     try {
       await fetchAPI(`/api/messages/${messageId}/unsend`, {
-        method: 'DELETE',
+        method: 'POST',
         token,
         skipCache: true
       });
