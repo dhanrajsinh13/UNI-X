@@ -171,7 +171,18 @@ const MessagesPageInner = () => {
           },
           unreadCount: (activeConversation && convId === activeConversation) ? 0 : (idx >= 0 ? (prev[idx].unreadCount + 1) : 1),
         };
-        if (idx === -1) return [updated, ...prev];
+        
+        // Only update if conversation doesn't exist or last message changed
+        if (idx === -1) {
+          return [updated, ...prev];
+        }
+        
+        const existing = prev[idx];
+        if (existing.lastMessage?.id === messageData.id && 
+            existing.lastMessage?.text === messageData.messageText) {
+          return prev; // No change needed
+        }
+        
         const copy = [...prev];
         copy.splice(idx, 1);
         return [updated, ...copy];
@@ -836,6 +847,11 @@ const MessagesPageInner = () => {
     setReplyingTo(null);
   };
 
+  // Memoize filtered messages to prevent unnecessary re-renders
+  const displayedMessages = useMemo(() => {
+    return messages.filter(message => !message.deleted_for?.includes(user?.id || 0));
+  }, [messages, user?.id]);
+
   if (isLoading) {
     return (
       <div className="h-screen bg-gray-50 flex items-center justify-center">
@@ -1104,13 +1120,13 @@ const MessagesPageInner = () => {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 bg-white pb-32 md:pb-4">
             <div className="max-w-2xl mx-auto space-y-4">
-              {messages
-                .filter(message => !message.deleted_for?.includes(user?.id || 0))
-                .map((message, index) => {
+              {displayedMessages.map((message, index) => {
                 const isFromMe = message.senderId === user?.id;
+                // Use a more unique key that handles both real and optimistic messages
+                const messageKey = message.id > 0 ? `msg-${message.id}` : `temp-${message.id}-${message.createdAt}`;
                 return (
                   <div
-                    key={message.id}
+                    key={messageKey}
                     className={`group flex ${isFromMe ? 'justify-end' : 'justify-start'} relative`}
                   >
                     <div className={`flex ${isFromMe ? 'flex-row-reverse' : 'flex-row'} items-end gap-2 max-w-[70%]`}>
