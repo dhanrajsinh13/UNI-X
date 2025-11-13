@@ -708,13 +708,15 @@ const MessagesPageInner = () => {
     }
     
     try {
-      await fetchAPI(`/api/messages/${messageId}/unsend`, {
+      const response = await fetchAPI(`/api/messages/${messageId}/unsend`, {
         method: 'POST',
         token,
         skipCache: true
       });
 
-      console.log('Message unsent successfully');
+      console.log('Message unsent successfully:', response);
+      
+      // Remove from local state immediately (socket will handle other user)
       setMessages(prev => prev.filter(msg => msg.id !== messageId));
       setSelectedMessageId(null);
       
@@ -724,6 +726,10 @@ const MessagesPageInner = () => {
       }
     } catch (error: any) {
       console.error('Error unsending message:', error);
+      
+      // Even if API fails, try to remove from UI (might already be deleted)
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      setSelectedMessageId(null);
     }
   };
 

@@ -30,9 +30,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Find the message
     const message = await messagesCollection.findOne({ id: numericMessageId });
 
+    console.log(`[UNSEND] Looking for message ID: ${numericMessageId}`);
+    
     if (!message) {
-      return res.status(404).json({ error: 'Message not found' });
+      console.log(`[UNSEND] Message ${numericMessageId} not found in database`);
+      // Message might have already been deleted - return success anyway
+      return res.status(200).json({ success: true, message: 'Message already removed' });
     }
+
+    console.log(`[UNSEND] Found message from ${message.sender_id} to ${message.receiver_id}`);
 
     // Check if the user is the sender (MongoDB uses snake_case)
     if (message.sender_id !== decoded.userId) {
@@ -40,30 +46,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Delete the message (unsend for everyone)
-    await messagesCollection.deleteOne({ id: numericMessageId });
+    const deleteResult = await messagesCollection.deleteOne({ id: numericMessageId });
+    console.log(`[UNSEND] Delete result: ${deleteResult.deletedCount} document(s) deleted`);
+
+    // Get receiver ID for socket event (from message we found earlier)
+    const receiverId = message.receiver_id;
 
     // Emit socket event to notify both users
     try {
       // Use the internal socket server URL (not the public one)
       const socketUrl = process.env.SOCKET_SERVER_URL || 'http://localhost:3001';
       
-      await fetch(`${socketUrl}/emit-message-unsend`, {
+      console.log(`[UNSEND] Emitting socket event to: ${socketUrl}/emit-message-unsend`);
+      
+      const socketResponse = await fetch(`${socketUrl}/emit-message-unsend`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messageId: numericMessageId,
           senderId: decoded.userId,
-          receiverId: message.receiver_id
+          receiverId: receiverId
         })
-      }).catch(err => {
-        console.error('Failed to emit socket event:', err.message);
       });
-    } catch (e) {
-      console.error('Socket notification error:', e);
+      
+      if (socketResponse.ok) {
+        console.log(`[UNSEND] Socket event emitted successfully`);
+      } else {
+        console.error(`[UNSEND] Socket event failed: ${socketResponse.status}`);
+      }
+    } catch (e: any) {
+      console.error('Socket notification error:', e.message);
       // Socket notification failed, but message was deleted
     }
 
-    res.status(204).end();
+    res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error unsending message:', error);
     res.status(500).json({ error: 'Failed to unsend message' });
