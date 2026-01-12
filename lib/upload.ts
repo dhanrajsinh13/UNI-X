@@ -19,6 +19,11 @@ export interface UploadResult {
   type: 'image' | 'video'
 }
 
+// Allowed file types for security
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm']
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov', '.webm']
+
 export async function parseForm(req: NextApiRequest): Promise<{
   fields: formidable.Fields
   files: formidable.Files
@@ -39,14 +44,32 @@ export async function parseForm(req: NextApiRequest): Promise<{
   const form = formidable({
     uploadDir: fs.existsSync(uploadDir) ? uploadDir : os.tmpdir(),
     keepExtensions: true,
-    maxFileSize: 10 * 1024 * 1024, // 10MB
-    multiples: false, // Only allow single file uploads
+    maxFileSize: 10 * 1024 * 1024, // 10MB limit
+    maxFiles: 1, // Only allow single file uploads
+    multiples: false,
+    allowEmptyFiles: false,
+    filter: function ({ mimetype, originalFilename }) {
+      // Validate file type and extension
+      const isValidMime = mimetype && (
+        ALLOWED_IMAGE_TYPES.includes(mimetype) || 
+        ALLOWED_VIDEO_TYPES.includes(mimetype)
+      )
+      
+      const ext = originalFilename ? path.extname(originalFilename).toLowerCase() : ''
+      const isValidExt = ALLOWED_EXTENSIONS.includes(ext)
+      
+      return !!(isValidMime && isValidExt)
+    },
   })
 
   return new Promise((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
-      if (err) reject(err)
-      else resolve({ fields, files })
+      if (err) {
+        console.error('Form parse error:', err)
+        reject(new Error('File upload failed: ' + err.message))
+      } else {
+        resolve({ fields, files })
+      }
     })
   })
 }

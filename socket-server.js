@@ -32,16 +32,39 @@ io.use(async (socket, next) => {
       return next(new Error('No token provided'));
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Validate JWT_SECRET is configured
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ CRITICAL: JWT_SECRET not configured in socket server');
+      return next(new Error('Server configuration error'));
+    }
+
+    // Enhanced JWT verification matching lib/auth.ts
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+      issuer: 'unix-social',
+      audience: 'unix-api'
+    });
+    
     if (!decoded || !decoded.userId) {
       return next(new Error('Invalid token'));
     }
 
     socket.userId = decoded.userId;
     socket.userName = decoded.name || `User ${decoded.userId}`;
+    socket.tokenJti = decoded.jti; // Store token ID for potential revocation
     next();
   } catch (error) {
-    console.error('Socket authentication error:', error);
+    console.error('Socket authentication error:', error.message);
+    
+    // Provide specific error messages
+    if (error.name === 'JsonWebTokenError') {
+      return next(new Error('Authentication failed: Invalid token signature'));
+    } else if (error.name === 'TokenExpiredError') {
+      return next(new Error('Authentication failed: Token expired'));
+    } else if (error.name === 'NotBeforeError') {
+      return next(new Error('Authentication failed: Token not active'));
+    }
+    
     next(new Error('Authentication failed'));
   }
 });
@@ -72,12 +95,18 @@ io.on('connection', (socket) => {
       const { receiverId, messageText, mediaUrl, clientId, replyToId } = messageData;
       
       if (!receiverId || (!messageText?.trim() && !mediaUrl)) {
-        socket.emit('error', { message: 'Invalid message data' });
+        console.error('Invalid message data:', messageData);
+        socket.emit('message-error', { 
+          message: 'Invalid message data',
+          clientId 
+        });
         return;
       }
 
       // Call your Next.js API to store message
       const apiUrl = process.env.NEXTJS_API_URL || 'http://localhost:3000';
+      console.log(`📤 Sending message to API: ${apiUrl}/api/messages`);
+      
       const response = await fetch(`${apiUrl}/api/messages`, {
         method: 'POST',
         headers: {
@@ -93,7 +122,8 @@ io.on('connection', (socket) => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to save message: ${errorText}`);
+        console.error(`API Error (${response.status}):`, errorText);
+        throw new Error(`Failed to save message: ${response.status} ${errorText}`);
       }
 
       const result = await response.json();
@@ -123,10 +153,14 @@ io.on('connection', (socket) => {
         from: { id: socket.userId, name: socket.userName }
       });
 
-      console.log(`Message sent from ${socket.userId} to ${receiverId}`);
+      console.log(`✅ Message sent from ${socket.userId} to ${receiverId}`);
     } catch (error) {
-      console.error('Error sending message:', error);
-      socket.emit('error', { message: error.message });
+      console.error('❌ Error sending message:', error.message);
+      console.error('Stack:', error.stack);
+      socket.emit('message-error', { 
+        message: error.message || 'Failed to send message',
+        clientId: messageData?.clientId 
+      });
     }
   });
 

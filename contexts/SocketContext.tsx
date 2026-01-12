@@ -105,24 +105,45 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         setIsConnecting(false)
       })
 
-      newSocket.on('connect_error', (error) => {
-        console.error('❌ Socket.io connection error:', error.message)
+      newSocket.on('connect_error', (error: any) => {
+        console.error('❌ Socket.io connection error:', error.message || error)
+        console.error('Error details:', { 
+          message: error.message, 
+          type: error.type,
+          description: error.description,
+          context: error.context 
+        })
         setIsConnecting(false)
         
         // Provide helpful error messages
-        if (error.message.includes('No token') || error.message.includes('Authentication')) {
+        if (error.message?.includes('No token') || error.message?.includes('Authentication')) {
           console.error('💡 Authentication error - Please logout and login again')
-        } else if (error.message.includes('xhr poll error')) {
-          console.error('💡 Cannot reach server - Please check if server is running on http://localhost:3000')
+          console.error('💡 Or check if socket-server/.env has JWT_SECRET configured')
+        } else if (error.message?.includes('xhr poll error')) {
+          console.error('💡 Cannot reach server - Check if socket server is running')
+          console.error('💡 Expected URL:', url)
+        } else if (!error.message) {
+          console.error('💡 Generic error - Socket server might not be running or JWT_SECRET mismatch')
         }
         
         setIsConnected(false)
       })
 
-      // Handle auth errors
+      // Handle socket errors
       newSocket.on('error', (error) => {
-        console.error('Socket error:', error);
-      });
+        console.error('❌ Socket error:', error?.message || error || 'Unknown error')
+        if (error) {
+          console.error('Error details:', JSON.stringify(error, null, 2))
+        }
+      })
+
+      // Handle message-specific errors
+      newSocket.on('message-error', (error) => {
+        console.error('❌ Message send failed:', error.message || 'Unknown error')
+        if (error.clientId) {
+          console.error('Failed message clientId:', error.clientId)
+        }
+      })
 
       setSocket(newSocket)
     } catch (error) {

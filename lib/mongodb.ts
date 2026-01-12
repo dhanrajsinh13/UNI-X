@@ -1,6 +1,6 @@
 import { MongoClient, Db, Collection, ObjectId, WithId, Document } from 'mongodb'
 
-// MongoDB Connection URI
+// MongoDB Connection URI - Validate format
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || ''
 const DB_NAME = process.env.MONGODB_DB_NAME || 'unix'
 
@@ -8,82 +8,130 @@ if (!MONGODB_URI) {
   throw new Error('Please define MONGODB_URI or DATABASE_URL environment variable')
 }
 
-// Global cached connection
+// Validate MongoDB URI format for security
+if (!MONGODB_URI.startsWith('mongodb://') && !MONGODB_URI.startsWith('mongodb+srv://')) {
+  throw new Error('Invalid MongoDB URI format. Must start with mongodb:// or mongodb+srv://')
+}
+
+// Global cached connection with connection pooling
 let cachedClient: MongoClient | null = null
 let cachedDb: Db | null = null
+let connectionAttempts = 0
+const MAX_RETRY_ATTEMPTS = 3
+let isConnecting = false
 
-// Connect to MongoDB
+// Connect to MongoDB with enhanced security and performance
 export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
   // Return cached connection if available
-  if (cachedClient && cachedDb) {
+  if (cachedClient && cachedDb && !isConnecting) {
     try {
-      // Verify connection is still alive
-      await cachedDb.admin().ping()
+      // Quick check - just return cached connection
       return { client: cachedClient, db: cachedDb }
     } catch (error) {
-      console.warn('⚠️ Cached MongoDB connection lost, reconnecting...')
+      console.warn('⚠️ Cached MongoDB connection error, reconnecting...')
       cachedClient = null
       cachedDb = null
     }
   }
 
-  // Create new connection with settings compatible for both local and Atlas
-  try {
-    // Check if using local MongoDB
-    const isLocalMongo = MONGODB_URI.includes('127.0.0.1') || MONGODB_URI.includes('localhost')
-    
-    // SSL/TLS options for production (Vercel)
-    const tlsOptions = !isLocalMongo ? {
-      tls: true,
-      tlsAllowInvalidCertificates: true,
-      tlsAllowInvalidHostnames: true,
-    } : {}
-    
-    const client = await MongoClient.connect(MONGODB_URI, {
-      maxPoolSize: 5,
-      minPoolSize: 1,
-      maxIdleTimeMS: 30000,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 30000,
-      connectTimeoutMS: 5000,
-      retryWrites: true,
-      retryReads: true,
-      ...tlsOptions,
-      ...(isLocalMongo && { directConnection: true }), // Only for local MongoDB
-    })
-
-    const db = client.db(DB_NAME)
-
-    // Cache the connection
-    cachedClient = client
-    cachedDb = db
-
-    console.log('✅ Connected to MongoDB database:', DB_NAME)
-    return { client, db }
-  } catch (error: any) {
-    console.error('❌ MongoDB connection error:', error.message)
-    
-    // Provide helpful error messages
-    if (error.message?.includes('ENOTFOUND') || error.message?.includes('ECONNREFUSED') || error.message?.includes('querySrv')) {
-      console.error('💡 DNS resolution failed. Possible solutions:')
-      console.error('   1. Check your internet connection')
-      console.error('   2. Try using Google DNS (8.8.8.8) or Cloudflare DNS (1.1.1.1)')
-      console.error('   3. Check if VPN/proxy is blocking MongoDB Atlas')
-      console.error('   4. Verify MongoDB URI is correct')
-      console.error('   5. Try flushing DNS cache: ipconfig /flushdns')
-    } else if (error.message?.includes('ETIMEDOUT')) {
-      console.error('💡 Connection timed out. Check if your IP is whitelisted in MongoDB Atlas.')
-    } else if (error.message?.includes('SSL') || error.message?.includes('TLS')) {
-      console.error('💡 SSL/TLS error. Try:')
-      console.error('   1. Check if MongoDB Atlas cluster is running')
-      console.error('   2. Verify your IP is whitelisted (or use 0.0.0.0/0 for testing)')
-      console.error('   3. Check your network firewall settings')
-    } else if (error.message?.includes('Authentication failed')) {
-      console.error('💡 Authentication failed. Check your MongoDB username and password.')
+  // Prevent multiple simultaneous connection attempts
+  if (isConnecting) {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    if (cachedClient && cachedDb) {
+      return { client: cachedClient, db: cachedDb }
     }
-    
-    throw error
   }
+
+  isConnecting = true
+
+  // Retry logic for connection
+  while (connectionAttempts < MAX_RETRY_ATTEMPTS) {
+    try {
+      connectionAttempts++
+      
+      // Check if using local MongoDB
+      const isLocalMongo = MONGODB_URI.includes('127.0.0.1') || MONGODB_URI.includes('localhost')
+      
+      // Enhanced connection options
+      const connectionOptions: any = {
+        // Connection pool settings
+        maxPoolSize: process.env.NODE_ENV === 'production' ? 10 : 5,
+        minPoolSize: 1,
+        maxIdleTimeMS: 30000,
+        
+        // Timeout settings - more lenient for Atlas
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        connectTimeoutMS: 10000,
+        
+        // Reliability
+        retryWrites: true,
+        retryReads: true,
+      }
+      
+      // SSL/TLS options for Atlas
+      if (!isLocalMongo) {
+        Object.assign(connectionOptions, {
+          tls: true,
+          // Allow invalid certificates for development/Atlas compatibility
+          tlsAllowInvalidCertificates: process.env.NODE_ENV !== 'production',
+          tlsAllowInvalidHostnames: process.env.NODE_ENV !== 'production',
+        })
+      } else {
+        connectionOptions.directConnection = true
+      }
+      
+      const client = await MongoClient.connect(MONGODB_URI, connectionOptions)
+      const db = client.db(DB_NAME)
+
+      // Verify connection with ping
+      await db.admin().ping()
+
+      // Cache the connection
+      cachedClient = client
+      cachedDb = db
+      connectionAttempts = 0 // Reset on success
+      isConnecting = false
+
+      console.log('✅ Connected to MongoDB database:', DB_NAME)
+      
+      return { client, db }
+      
+    } catch (error: any) {
+      console.error(`❌ MongoDB connection attempt ${connectionAttempts} failed:`, error.message)
+      
+      if (connectionAttempts >= MAX_RETRY_ATTEMPTS) {
+        connectionAttempts = 0 // Reset for next attempt
+        isConnecting = false
+        
+        // Provide helpful error messages
+        if (error.message?.includes('ENOTFOUND') || error.message?.includes('ECONNREFUSED') || error.message?.includes('querySrv')) {
+          console.error('💡 DNS resolution failed. Possible solutions:')
+          console.error('   1. Check your internet connection')
+          console.error('   2. Try using Google DNS (8.8.8.8) or Cloudflare DNS (1.1.1.1)')
+          console.error('   3. Check if VPN/proxy is blocking MongoDB Atlas')
+          console.error('   4. Verify MongoDB URI is correct')
+          console.error('   5. Try flushing DNS cache: ipconfig /flushdns')
+        } else if (error.message?.includes('ETIMEDOUT')) {
+          console.error('💡 Connection timed out. Check if your IP is whitelisted in MongoDB Atlas.')
+        } else if (error.message?.includes('SSL') || error.message?.includes('TLS')) {
+          console.error('💡 SSL/TLS error. Try:')
+          console.error('   1. Check if MongoDB Atlas cluster is running')
+          console.error('   2. Verify your IP is whitelisted (or use 0.0.0.0/0 for testing)')
+          console.error('   3. Check your network firewall settings')
+        } else if (error.message?.includes('Authentication failed')) {
+          console.error('💡 Authentication failed. Check your MongoDB username and password.')
+        }
+        
+        throw error
+      }
+      
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, connectionAttempts) * 1000))
+    }
+  }
+  
+  throw new Error('Failed to connect to MongoDB after maximum retry attempts')
 }
 
 // Get database instance
