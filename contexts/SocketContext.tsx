@@ -33,7 +33,32 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
-  const { user, token, setSocketDisconnect } = useAuth()
+  const { user, token, setSocketDisconnect, logout } = useAuth()
+
+  // Helper function to validate token format and expiration
+  const isTokenValid = useCallback((token: string | null): boolean => {
+    if (!token || token.length < 20) return false;
+    
+    // Basic JWT format check (should have 3 parts separated by dots)
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    
+    try {
+      // Decode the payload (middle part) to check expiration
+      const payload = JSON.parse(atob(parts[1]));
+      
+      // Check if token has expired
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        console.warn('⚠️ Socket token has expired');
+        return false;
+      }
+      
+      return true;
+    } catch (e) {
+      console.error('❌ Invalid socket token format:', e);
+      return false;
+    }
+  }, []);
 
   const disconnect = useCallback(() => {
     if (socket) {
@@ -57,6 +82,25 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       if (socket) {
         disconnect();
       }
+      return;
+    }
+
+    // Validate token before attempting connection
+    if (!isTokenValid(token)) {
+      console.error('❌ Cannot connect socket: Token is invalid or expired');
+      console.error('💡 Triggering logout to clear invalid token');
+      
+      // Clear socket if it exists
+      if (socket) {
+        disconnect();
+      }
+      
+      // Trigger logout to clear invalid token
+      if (typeof window !== 'undefined') {
+        alert('Your session has expired. Please log in again.');
+        logout();
+      }
+      
       return;
     }
 
@@ -115,10 +159,33 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         })
         setIsConnecting(false)
         
-        // Provide helpful error messages
-        if (error.message?.includes('No token') || error.message?.includes('Authentication')) {
-          console.error('💡 Authentication error - Please logout and login again')
-          console.error('💡 Or check if socket-server/.env has JWT_SECRET configured')
+        // Handle authentication errors
+        const isAuthError = error.message?.includes('No token') || 
+                           error.message?.includes('Authentication') || 
+                           error.message?.includes('Token expired') ||
+                           error.message?.includes('Invalid token');
+        
+        if (isAuthError) {
+          console.error('💡 Authentication error - Token is invalid or expired')
+          console.error('💡 Clearing invalid token and logging out...')
+          
+          // Disconnect socket
+          if (newSocket) {
+            newSocket.close();
+          }
+          
+          // Clear socket state
+          setSocket(null);
+          setIsConnected(false);
+          
+          // Trigger logout
+          if (typeof window !== 'undefined') {
+            // Use setTimeout to avoid updating state during render
+            setTimeout(() => {
+              alert('Your session has expired. Please log in again.');
+              logout();
+            }, 100);
+          }
         } else if (error.message?.includes('xhr poll error')) {
           console.error('💡 Cannot reach server - Check if socket server is running')
           console.error('💡 Expected URL:', url)
@@ -157,7 +224,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         console.warn('Error closing socket:', error);
       }
     }
-  }, [user?.id, token])
+  }, [user?.id, token, socket, disconnect, isTokenValid, logout])
 
   const joinConversation = useCallback((otherUserId: number) => {
     if (socket && user?.id) {

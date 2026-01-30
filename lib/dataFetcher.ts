@@ -170,6 +170,25 @@ class DataFetchManager {
           // Don't retry on client errors (4xx)
           if (response.status >= 400 && response.status < 500) {
             const error = await response.json().catch(() => ({ error: 'Request failed' }));
+            
+            // Special handling for 401 Unauthorized - clear invalid token
+            if (response.status === 401) {
+              console.error('🔒 Unauthorized request to:', url);
+              console.error('Auth header present:', !!options.headers?.['Authorization' as keyof typeof options.headers]);
+              
+              // Clear potentially invalid token from localStorage
+              if (typeof window !== 'undefined') {
+                const token = localStorage.getItem('token');
+                if (token) {
+                  console.warn('⚠️ Clearing potentially invalid token');
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('user');
+                  // Dispatch custom event to trigger logout
+                  window.dispatchEvent(new CustomEvent('unauthorized'));
+                }
+              }
+            }
+            
             throw new Error(error.error || `HTTP ${response.status}`);
           }
 
@@ -250,7 +269,14 @@ export async function fetchAPI<T>(
   };
 
   if (token) {
+    // Validate token format before sending
+    if (token.length < 20) {
+      console.error('🔒 Invalid token format (too short)');
+      throw new Error('Invalid authentication token');
+    }
     headers['Authorization'] = `Bearer ${token}`;
+  } else {
+    console.warn('⚠️ No token provided for request to:', endpoint);
   }
 
   return dataFetcher.fetch<T>(endpoint, {
