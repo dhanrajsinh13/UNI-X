@@ -30,7 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.20.0",
     "multer": "^2.0.2",
-    "next": "15.5.3",
+    "next": "^15.5.11",
     "next-auth": "^4.24.11",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.1",
@@ -46,6 +46,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "eslint": "^9",
-    "eslint-config-next": "15.5.3"
+    "eslint-config-next": "^15.5.11"
   }
 }
