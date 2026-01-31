@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const express = require('express');
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.SOCKET_PORT || process.env.PORT || 3001;
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -14,13 +14,30 @@ app.get('/health', (req, res) => {
 const server = createServer(app);
 
 // Initialize Socket.io with CORS for your Next.js app
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  process.env.CORS_ORIGIN,
+  process.env.NEXT_PUBLIC_APP_URL
+].filter(Boolean);
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || '*', // Set this to your Vercel URL in production
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+      
+      // Check if origin is in allowed list or if we're using wildcard in development
+      if (allowedOrigins.includes(origin) || (process.env.NODE_ENV === 'development' && !process.env.CORS_ORIGIN)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ["GET", "POST"],
     credentials: true
   },
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   allowEIO3: true
 });
 

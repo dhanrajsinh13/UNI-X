@@ -177,10 +177,12 @@ export default function LandingPage() {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Welcome Back!</h2>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="login-college-id" className="block text-sm font-medium text-gray-700 mb-2">
                       College ID
                     </label>
                     <input
+                      id="login-college-id"
+                      name="college_id"
                       type="text"
                       required
                       value={loginForm.college_id}
@@ -191,10 +193,12 @@ export default function LandingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-2">
                       Password
                     </label>
                     <input
+                      id="login-password"
+                      name="password"
                       type="password"
                       required
                       value={loginForm.password}
@@ -218,10 +222,12 @@ export default function LandingPage() {
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Join UNIX!</h2>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="register-name" className="block text-sm font-medium text-gray-700 mb-2">
                       Full Name
                     </label>
                     <input
+                      id="register-name"
+                      name="name"
                       type="text"
                       required
                       value={registerForm.name}
@@ -232,10 +238,12 @@ export default function LandingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="register-username" className="block text-sm font-medium text-gray-700 mb-2">
                       Username
                     </label>
                     <input
+                      id="register-username"
+                      name="username"
                       type="text"
                       required
                       value={registerForm.username}
@@ -246,10 +254,12 @@ export default function LandingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-2">
                       Email
                     </label>
                     <input
+                      id="register-email"
+                      name="email"
                       type="email"
                       required
                       value={registerForm.email}
@@ -260,10 +270,12 @@ export default function LandingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="register-college-id" className="block text-sm font-medium text-gray-700 mb-2">
                       College ID
                     </label>
                     <input
+                      id="register-college-id"
+                      name="college_id"
                       type="text"
                       required
                       value={registerForm.college_id}
@@ -275,10 +287,12 @@ export default function LandingPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="register-department" className="block text-sm font-medium text-gray-700 mb-2">
                         Department
                       </label>
                       <select
+                        id="register-department"
+                        name="department"
                         required
                         value={registerForm.department}
                         onChange={(e) => setRegisterForm({ ...registerForm, department: e.target.value })}
@@ -292,10 +306,12 @@ export default function LandingPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="register-year" className="block text-sm font-medium text-gray-700 mb-2">
                         Year
                       </label>
                       <select
+                        id="register-year"
+                        name="year"
                         required
                         value={registerForm.year}
                         onChange={(e) => setRegisterForm({ ...registerForm, year: parseInt(e.target.value) })}
@@ -311,10 +327,12 @@ export default function LandingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-2">
                       Password
                     </label>
                     <input
+                      id="register-password"
+                      name="password"
                       type="password"
                       required
                       value={registerForm.password}
@@ -325,10 +343,12 @@ export default function LandingPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="register-confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
                       Confirm Password
                     </label>
                     <input
+                      id="register-confirm-password"
+                      name="confirmPassword"
                       type="password"
                       required
                       value={registerForm.confirmPassword}

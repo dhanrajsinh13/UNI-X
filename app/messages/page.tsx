@@ -903,6 +903,8 @@ const MessagesPageInner = () => {
                 </svg>
               </div>
               <input
+                id="conversation-search"
+                name="search"
                 type="text"
                 placeholder="Search conversations..."
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition-all text-sm"
@@ -1339,6 +1341,8 @@ const MessagesPageInner = () => {
                 
                 <div className="flex-1 relative">
                   <textarea
+                    id="message-input"
+                    name="message"
                     value={input}
                     onChange={(e) => handleTyping(e.target.value)}
                     onKeyPress={handleKeyPress}

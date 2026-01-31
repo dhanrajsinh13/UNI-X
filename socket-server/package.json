@@ -8,14 +8,20 @@
     "dev": "nodemon server.js",
     "health": "node health-check.js"
   },
-  "keywords": ["socket.io", "websocket", "real-time", "chat"],
+  "keywords": [
+    "socket.io",
+    "websocket",
+    "real-time",
+    "chat"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^4.18.2",
-    "socket.io": "^4.6.1",
     "jsonwebtoken": "^9.0.2",
-    "cors": "^2.8.5"
+    "socket.io": "^4.6.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

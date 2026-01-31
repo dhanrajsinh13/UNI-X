@@ -11,7 +11,13 @@
     "start": "NODE_ENV=production node server.js",
     "lint": "eslint",
     "build": "next build",
-    "postinstall": "echo 'MongoDB setup complete'"
+    "postinstall": "echo 'MongoDB setup complete'",
+    "socket:dev": "node -r dotenv/config socket-server.js dotenv_config_path=.env.local",
+    "socket:prod": "cd socket-server && set NODE_ENV=production && npm start",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "sync:env": "powershell -ExecutionPolicy Bypass -File sync-env.ps1",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -26,8 +32,9 @@
     "autoprefixer": "^10.4.22",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
+    "express": "^5.2.1",
     "formidable": "^3.5.4",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "mongodb": "^6.20.0",
     "multer": "^2.0.2",
     "next": "^15.5.11",
@@ -37,7 +44,8 @@
     "postcss": "^8.5.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "socket.io": "^4.8.1",
+    "redis": "^5.10.0",
+    "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^3.4.18",
     "typescript": "^5",
@@ -45,7 +53,14 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jest": "^30.0.0",
+    "dotenv": "^17.2.3",
     "eslint": "^9",
-    "eslint-config-next": "^15.5.11"
+    "eslint-config-next": "^15.5.11",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "ts-jest": "^29.4.6"
   }
 }

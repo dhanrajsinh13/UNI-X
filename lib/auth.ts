@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { NextApiRequest } from 'next'
 import crypto from 'crypto'
+import { checkRateLimit } from './redis'
 
 const JWT_SECRET = process.env.JWT_SECRET
 
@@ -92,4 +93,24 @@ export function refreshToken(oldToken: string): string | null {
   
   // Only allow refresh if token is still valid
   return generateToken(decoded.userId)
+}
+
+// Rate limiting middleware using Redis (or in-memory fallback)
+export async function rateLimitMiddleware(
+  identifier: string,
+  limit: number = 100,
+  windowSeconds: number = 60
+): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+  const key = `ratelimit:${identifier}`
+  return await checkRateLimit(key, limit, windowSeconds)
+}
+
+// Get client IP address for rate limiting
+export function getClientIp(req: NextApiRequest): string {
+  const forwarded = req.headers['x-forwarded-for']
+  const ip = forwarded
+    ? (typeof forwarded === 'string' ? forwarded.split(',')[0] : forwarded[0])
+    : req.socket.remoteAddress
+  
+  return ip || 'unknown'
 }

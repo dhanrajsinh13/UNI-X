@@ -86,15 +86,16 @@ export default function FollowButton({
   }, [loading, token, followState, userId, onFollowChange]);
 
   const sizeClasses = useMemo(() => ({
-    sm: 'px-3 py-1 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base'
+    sm: 'btn-sm',
+    md: '',
+    lg: 'btn-lg'
   }), []);
 
   const baseClasses = useMemo(() => `
     font-semibold rounded-lg transition-all duration-200 
     disabled:opacity-50 disabled:cursor-not-allowed
     focus:outline-none focus:ring-2 focus:ring-offset-2
+    active:scale-95
     ${sizeClasses[size]}
   `, [sizeClasses, size]);
 
@@ -105,14 +106,15 @@ export default function FollowButton({
         disabled={loading}
         className={`
           ${baseClasses}
-          bg-gray-200 text-gray-800 border border-gray-300
-          hover:bg-gray-300 focus:ring-gray-500
+          ${sizeClasses[size] || 'px-6 py-2.5'}
+          bg-gray-100 text-text border border-border
+          hover:bg-gray-200 focus:ring-gray-300
           ${className}
         `}
       >
         {loading ? (
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-2 border-text border-t-transparent rounded-full animate-spin"></div>
             <span>Following</span>
           </div>
         ) : (
@@ -129,14 +131,15 @@ export default function FollowButton({
         disabled={loading}
         className={`
           ${baseClasses}
-          bg-yellow-100 text-yellow-800 border border-yellow-300
-          hover:bg-yellow-200 focus:ring-yellow-500
+          ${sizeClasses[size] || 'px-6 py-2.5'}
+          bg-warning/10 text-warning border border-warning/30
+          hover:bg-warning/20 focus:ring-warning
           ${className}
         `}
       >
         {loading ? (
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-yellow-700 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-2 border-warning border-t-transparent rounded-full animate-spin"></div>
             <span>Requested</span>
           </div>
         ) : (
@@ -152,8 +155,9 @@ export default function FollowButton({
       disabled={loading}
       className={`
         ${baseClasses}
-        bg-green-600 text-white border border-green-600
-        hover:bg-green-700 focus:ring-green-500
+        ${sizeClasses[size] || 'px-6 py-2.5'}
+        bg-info text-white border border-info
+        hover:bg-info/90 focus:ring-info
         ${className}
       `}
     >

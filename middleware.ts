@@ -42,26 +42,28 @@ export function middleware(request: NextRequest) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   
   // Content Security Policy
+  const isDev = process.env.NODE_ENV === 'development'
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://*.cloudinary.com wss://* ws://*",
+    `connect-src 'self' https://*.cloudinary.com wss://* ws://* ${isDev ? 'http://localhost:* ws://localhost:*' : ''}`,
     "media-src 'self' https: blob:",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests"
-  ].join('; ')
+    isDev ? "" : "upgrade-insecure-requests"
+  ].filter(Boolean).join('; ')
   response.headers.set('Content-Security-Policy', csp)
 
   // API Routes - Enhanced security
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    // Rate limiting
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+    // Rate limiting - get IP from headers or fallback
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown'
     if (!rateLimit(ip, 100, 60000)) {
       return new NextResponse('Too Many Requests', { 
         status: 429,

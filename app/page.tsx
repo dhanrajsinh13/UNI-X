@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import PostCard from '../components/PostCard';
 import PostModal from '../components/PostModal';
+import SwipeButton from '../components/SwipeButton';
 import { usePosts } from '../hooks/usePosts';
 import { useAuth } from '../contexts/AuthContext';
 import Link from 'next/link';
@@ -112,10 +113,10 @@ export default function HomePage() {
   // Show loading while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#02fa97] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-text-secondary">Loading...</p>
         </div>
       </div>
     );
@@ -127,24 +128,27 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
+      {/* Floating Swipe Button */}
+      <SwipeButton />
+
       {/* Main content area: centered feed + right rail */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-wide mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[630px_1fr] gap-8 lg:gap-12">
           {/* Feed column */}
           <div className="lg:col-span-2">
             {/* Category Filter (sticky) */}
-            <div className="bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white sticky top-0 z-30 border-b border-gray-100">
-              <div className="px-2 sm:px-0 py-3">
-                <div className="flex items-center space-x-2 overflow-x-auto pb-1">
+            <div className="bg-white/95 backdrop-blur-sm supports-[backdrop-filter]:bg-white/95 sticky top-0 z-sticky border-b border-border-light">
+              <div className="px-4 md:px-0 py-4">
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
                   {categories.map((category) => (
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
                         selectedCategory === category.id
-                          ? 'bg-gray-900 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-text text-white shadow-sm'
+                          : 'bg-gray-50 text-text hover:bg-gray-100'
                       }`}
                     >
                       <span>{category.emoji}</span>
@@ -167,17 +171,17 @@ export default function HomePage() {
             </div>
 
             {/* Feed */}
-            <div className="mt-6 space-y-6">
+            <div className="mt-4 md:mt-6 space-y-4 md:space-y-6 px-0">
               {loading ? (
                 <div className="flex justify-center items-center py-12">
-                  <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-900 rounded-full animate-spin"></div>
+                  <div className="w-8 h-8 border-4 border-gray-200 border-t-text rounded-full animate-spin"></div>
                 </div>
               ) : error ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-600 mb-4">Unable to load posts</p>
+                <div className="text-center py-12 px-4">
+                  <p className="text-text-secondary mb-4">Unable to load posts</p>
                   <button 
                     onClick={refetch}
-                    className="text-gray-900 font-semibold hover:opacity-80"
+                    className="btn-secondary"
                   >
                     Try Again
                   </button>
@@ -203,10 +207,10 @@ export default function HomePage() {
                   />
                 ))
               ) : (
-                <div className="text-center py-12">
+                <div className="text-center py-12 px-4">
                   <div className="text-6xl mb-4">📱</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
-                  <p className="text-gray-600 mb-6">
+                  <h3 className="text-xl font-semibold text-text mb-2">No posts yet</h3>
+                  <p className="text-text-secondary mb-6">
                     {selectedCategory === 'all' 
                       ? 'Be the first to share something!'
                       : `No posts in ${categories.find(c => c.id === selectedCategory)?.name} category yet.`}
@@ -214,7 +218,7 @@ export default function HomePage() {
                   {user && (
                     <button 
                       onClick={() => window.dispatchEvent(new CustomEvent('openCreatePost'))}
-                      className="bg-gray-900 text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors"
+                      className="btn-primary"
                     >
                       Create Post
                     </button>
@@ -247,10 +251,11 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Floating Messages button */}
-      <Link href="/messages" className="fixed bottom-6 right-6 md:right-10 bg-white border border-gray-200 shadow-lg rounded-full px-4 py-3 flex items-center gap-2 hover:shadow-xl transition-shadow">
-        <span className="text-xl">💬</span>
-        <span className="font-semibold text-gray-700 hidden sm:inline">Messages</span>
+      {/* Floating Messages button - Instagram style */}
+      <Link href="/messages" className="fixed bottom-20 md:bottom-6 right-4 md:right-8 bg-white shadow-card hover:shadow-card-hover rounded-full p-4 transition-all hover:scale-105 z-sticky">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-text">
+          <path d="M21 11.5C21 16.75 16.97 21 12 21C10.73 21 9.52 20.75 8.42 20.31L3 21.5L4.19 16.08C3.64 14.83 3.25 13.45 3.25 12C3.25 6.75 7.03 2.5 12 2.5C16.97 2.5 21 6.75 21 11.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </Link>
 
       {/* Post Modal */}

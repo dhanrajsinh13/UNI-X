@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -21,15 +24,15 @@ app.use(cors({
 
 // Health check endpoint
 app.get('/', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     message: 'Socket.IO server is running',
     timestamp: new Date().toISOString()
   });
 });
 
 app.get('/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'healthy',
     connections: io.engine.clientsCount,
     uptime: process.uptime()
@@ -40,11 +43,11 @@ app.get('/health', (req, res) => {
 app.post('/emit-message-unsend', express.json(), (req, res) => {
   try {
     const { messageId, senderId, receiverId } = req.body;
-    
+
     // Notify both users
     io.to(`user-${senderId}`).emit('message-unsent', { messageId });
     io.to(`user-${receiverId}`).emit('message-unsent', { messageId });
-    
+
     console.log(`📤 Message ${messageId} unsent notification sent`);
     res.status(200).json({ success: true });
   } catch (error) {
@@ -57,16 +60,33 @@ app.post('/emit-message-unsend', express.json(), (req, res) => {
 app.post('/emit-message-delete', express.json(), (req, res) => {
   try {
     const { messageId, userId, senderId, receiverId } = req.body;
-    
+
     // Only notify the user who deleted it (for their other devices)
     io.to(`user-${userId}`).emit('message-deleted', { messageId });
-    
+
     console.log(`🗑️ Message ${messageId} delete notification sent to user ${userId}`);
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error emitting message delete:', error);
     res.status(500).json({ error: 'Failed to emit event' });
   }
+});
+
+// Track online users: Map<userId, Set<socketId>>
+const onlineUsers = new Map();
+
+// Helper to check if user is online
+const isUserOnline = (userId) => onlineUsers.has(userId) && onlineUsers.get(userId).size > 0;
+
+// Helper to get online user IDs
+const getOnlineUserIds = () => Array.from(onlineUsers.keys());
+
+// Endpoint to get online users
+app.get('/online-users', (req, res) => {
+  res.json({
+    onlineUsers: getOnlineUserIds(),
+    count: onlineUsers.size
+  });
 });
 
 // Initialize Socket.io with CORS
@@ -101,7 +121,7 @@ io.use(async (socket, next) => {
       issuer: 'unix-social',
       audience: 'unix-api'
     });
-    
+
     if (!decoded || !decoded.userId) {
       return next(new Error('Invalid token'));
     }
@@ -112,7 +132,7 @@ io.use(async (socket, next) => {
     next();
   } catch (error) {
     console.error('❌ Socket authentication error:', error.message);
-    
+
     if (error.name === 'JsonWebTokenError') {
       return next(new Error('Authentication failed: Invalid token signature'));
     } else if (error.name === 'TokenExpiredError') {
@@ -120,7 +140,7 @@ io.use(async (socket, next) => {
     } else if (error.name === 'NotBeforeError') {
       return next(new Error('Authentication failed: Token not active'));
     }
-    
+
     next(new Error('Authentication failed'));
   }
 });
@@ -128,6 +148,19 @@ io.use(async (socket, next) => {
 // Socket.io connection handling
 io.on('connection', (socket) => {
   console.log(`✅ User ${socket.userName} (${socket.userId}) connected:`, socket.id);
+
+  // Track user as online
+  if (!onlineUsers.has(socket.userId)) {
+    onlineUsers.set(socket.userId, new Set());
+  }
+  onlineUsers.get(socket.userId).add(socket.id);
+
+  // Broadcast online status
+  socket.broadcast.emit('user-status-change', {
+    userId: socket.userId,
+    status: 'online',
+    lastSeen: new Date()
+  });
 
   // Auto-join user to their personal room
   socket.join(`user-${socket.userId}`);
@@ -149,18 +182,18 @@ io.on('connection', (socket) => {
   socket.on('send-message', async (messageData) => {
     try {
       const { receiverId, messageText, mediaUrl, clientId, replyToId } = messageData;
-      
+
       if (!receiverId || (!messageText?.trim() && !mediaUrl)) {
         console.error('❌ Invalid message data:', messageData);
-        socket.emit('message-error', { 
+        socket.emit('message-error', {
           message: 'Invalid message data',
-          clientId 
+          clientId
         });
         return;
       }
 
       console.log(`📤 Sending message from ${socket.userId} to ${receiverId}`);
-      
+
       // Store message in database via API
       const response = await fetch(`${API_BASE_URL}/api/messages`, {
         method: 'POST',
@@ -183,7 +216,7 @@ io.on('connection', (socket) => {
 
       const result = await response.json();
       const savedMessage = result.message;
-      
+
       // Format for frontend
       const formattedMessage = {
         id: savedMessage.id,
@@ -201,20 +234,38 @@ io.on('connection', (socket) => {
       // Emit to conversation room
       const conversationId = [socket.userId, parseInt(receiverId)].sort().join('-');
       io.to(`conversation-${conversationId}`).emit('new-message', formattedMessage);
-      
+
       // Also emit to receiver's personal room
       io.to(`user-${receiverId}`).emit('message-notification', {
         message: formattedMessage,
         from: { id: socket.userId, name: socket.userName }
       });
 
+      // Send acknowledgment to sender (message saved successfully)
+      socket.emit('message-ack', {
+        clientId,
+        messageId: savedMessage.id,
+        status: 'sent',
+        sentAt: new Date().toISOString()
+      });
+
+      // If receiver is online, it will be delivered immediately
+      if (isUserOnline(parseInt(receiverId))) {
+        socket.emit('message-delivered', {
+          messageId: savedMessage.id,
+          clientId,
+          deliveredTo: parseInt(receiverId),
+          deliveredAt: new Date().toISOString()
+        });
+      }
+
       console.log(`✅ Message sent from ${socket.userId} to ${receiverId}`);
     } catch (error) {
       console.error('❌ Error sending message:', error.message);
       console.error('Stack:', error.stack);
-      socket.emit('message-error', { 
+      socket.emit('message-error', {
         message: error.message || 'Failed to send message',
-        clientId: messageData?.clientId 
+        clientId: messageData?.clientId
       });
     }
   });
@@ -247,13 +298,42 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Handle message read status
-  socket.on('mark-messages-read', (data) => {
-    socket.to(`conversation-${data.conversationId}`).emit('messages-marked-read', {
-      conversationId: data.conversationId,
-      userId: data.userId,
-      readAt: new Date()
+  // Handle message received acknowledgment (for delivery status)
+  socket.on('message-received', (data) => {
+    const { messageId, senderId } = data;
+    if (!messageId || !senderId) return;
+
+    // Notify sender that message was delivered
+    io.to(`user-${senderId}`).emit('message-delivered', {
+      messageId,
+      deliveredTo: socket.userId,
+      deliveredAt: new Date().toISOString()
     });
+    console.log(`📬 Message ${messageId} delivered to user ${socket.userId}`);
+  });
+
+  // Handle message read status (for read receipts)
+  socket.on('mark-messages-read', (data) => {
+    const { conversationId, messageIds, senderId } = data;
+
+    // Notify conversation participants
+    socket.to(`conversation-${conversationId}`).emit('messages-marked-read', {
+      conversationId,
+      messageIds: messageIds || [],
+      readBy: socket.userId,
+      readAt: new Date().toISOString()
+    });
+
+    // Also notify sender's personal room for multi-device sync
+    if (senderId) {
+      io.to(`user-${senderId}`).emit('messages-read', {
+        messageIds: messageIds || [],
+        readBy: socket.userId,
+        readAt: new Date().toISOString()
+      });
+    }
+
+    console.log(`👁️ Messages marked read by user ${socket.userId}`);
   });
 
   // Handle user online status
@@ -275,11 +355,20 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log(`❌ User ${socket.userName} (${socket.userId}) disconnected:`, socket.id);
-    socket.broadcast.emit('user-status-change', {
-      userId: socket.userId,
-      status: 'offline',
-      lastSeen: new Date()
-    });
+
+    // Remove socket from online tracking
+    if (onlineUsers.has(socket.userId)) {
+      onlineUsers.get(socket.userId).delete(socket.id);
+      // If no more sockets for this user, remove from map and broadcast offline
+      if (onlineUsers.get(socket.userId).size === 0) {
+        onlineUsers.delete(socket.userId);
+        socket.broadcast.emit('user-status-change', {
+          userId: socket.userId,
+          status: 'offline',
+          lastSeen: new Date()
+        });
+      }
+    }
   });
 });
 

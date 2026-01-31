@@ -1,197 +1,312 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '../contexts/AuthContext'
+import { fetchAPI } from '../lib/dataFetcher'
+import FollowButton from './FollowButton'
 
 interface SearchResult {
-  users: Array<{
-    id: number;
-    name: string;
-    department: string;
-    year: number;
-  }>;
-  posts: Array<{
-    id: number;
-    content: string;
-    category: string;
-    author: {
-      name: string;
-      department: string;
-    };
-  }>;
+  users: SearchUser[]
+  posts: SearchPost[]
+}
+
+interface SearchUser {
+  id: number
+  name: string
+  username: string
+  department?: string
+  year?: number
+  profile_image?: string
+  college_name?: string
+  mutualFriends?: number
+  mutualFriendNames?: string[]
+  interests?: string[]
+  isFollowing?: boolean
+}
+
+interface SearchPost {
+  id: number
+  caption: string
+  created_at: string
+  user: {
+    id: number
+    name: string
+    username: string
+    profile_image?: string
+  }
 }
 
 interface SearchModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
 
-const SearchModal: React.FC<SearchModalProps> = ({ isOpen, onClose }) => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const { token } = useAuth();
+export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
+  const { token } = useAuth()
+  const router = useRouter()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeTab, setActiveTab] = useState<'people' | 'posts'>('people')
+  const [loading, setLoading] = useState(false)
+  const [results, setResults] = useState<SearchResult>({ users: [], posts: [] })
+  const [debouncedQuery, setDebouncedQuery] = useState('')
 
-  // Helper function to convert enum category to readable format
-  const formatCategory = useCallback((category?: string) => {
-    if (!category) return '';
-    
-    const categoryMap: { [key: string]: string } = {
-      'GENERAL': 'general',
-      'ACADEMIC': 'academic',
-      'EVENT': 'events',    // Singular form  
-      'EVENTS': 'events',   // Plural form
-      'CLUBS': 'clubs',
-      'SPORTS': 'sports',
-      'SOCIAL': 'social',
-      // Legacy values
-      'INTERNSHIP': 'internship',
-      'WORKSHOP': 'academic',
-      'LIBRARY_MEMORY': 'library'
-    };
-    
-    return categoryMap[category] || category.toLowerCase();
-  }, []);
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
-  const performSearch = useCallback(async (searchQuery: string) => {
-    if (!token) return;
-    
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+  // Perform search
+  useEffect(() => {
+    let isCancelled = false
+
+    const performSearch = async () => {
+      if (!debouncedQuery.trim() || !token) {
+        setResults({ users: [], posts: [] })
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+      try {
+        const data = await fetchAPI<SearchResult>(
+          `/api/search?q=${encodeURIComponent(debouncedQuery)}`,
+          { token, cacheTTL: 60000 }
+        )
+        if (!isCancelled) {
+          // Ensure data has the expected structure
+          setResults({
+            users: data?.users || [],
+            posts: data?.posts || []
+          })
         }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setResults(data.results);
+      } catch (error) {
+        console.error('Search error:', error)
+        if (!isCancelled) {
+          setResults({ users: [], posts: [] })
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false)
+        }
       }
-    } catch (error) {
-      console.error('Search error:', error);
-    } finally {
-      setLoading(false);
     }
-  }, [token]);
 
-  useEffect(() => {
-    if (!isOpen) {
-      setQuery('');
-      setResults(null);
+    performSearch()
+    return () => {
+      isCancelled = true
     }
-  }, [isOpen]);
+  }, [debouncedQuery, token])
 
-  useEffect(() => {
-    const searchTimeout = setTimeout(() => {
-      if (query.trim().length > 2) {
-        performSearch(query);
-      } else {
-        setResults(null);
-      }
-    }, 300);
+  const handleUserClick = useCallback((username: string) => {
+    router.push(`/profile/${username}`)
+    onClose()
+  }, [router, onClose])
 
-    return () => clearTimeout(searchTimeout);
-  }, [query, performSearch]);
+  const handlePostClick = useCallback((postId: number) => {
+    // Assuming you have a post detail view
+    router.push(`/?post=${postId}`)
+    onClose()
+  }, [router, onClose])
 
-  if (!isOpen) return null;
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }, [onClose])
+
+  if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-start justify-center pt-16 px-4"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden animate-scale-in">
+        {/* Header with Search Bar */}
+        <div className="p-6 border-b border-border-light">
           <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <svg className="w-5 h-5 text-text-tertiary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
             <input
               type="text"
-              placeholder="Search students, posts, departments..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full px-4 py-3 pl-12 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+              placeholder="Search people, interests, and content..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               autoFocus
+              className="w-full pl-12 pr-12 py-3 bg-bg-secondary rounded-xl text-base placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent transition-all"
             />
-            <span className="absolute left-4 top-3.5 text-gray-400 text-xl">🔍</span>
-            <button
-              onClick={onClose}
-              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-tertiary hover:text-text transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex border-b border-border-light bg-white sticky top-0 z-10">
+          <button
+            onClick={() => setActiveTab('people')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === 'people' 
+                ? 'text-text' 
+                : 'text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            People
+            {activeTab === 'people' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === 'posts' 
+                ? 'text-text' 
+                : 'text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            Posts
+            {activeTab === 'posts' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500" />
+            )}
+          </button>
+        </div>
+
         {/* Results */}
-        <div className="max-h-96 overflow-y-auto">
-          {loading && (
-            <div className="p-8 text-center">
-              <div className="w-8 h-8 border-4 border-[#02fa97] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Searching...</p>
+        <div className="flex-1 overflow-y-auto">
+          {!searchQuery.trim() ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <svg className="w-16 h-16 text-text-tertiary mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-text mb-2">Discover UNI-X</h3>
+              <p className="text-text-secondary text-sm max-w-sm">
+                Search for people, interests, and content across your university network
+              </p>
             </div>
-          )}
-
-          {results && !loading && (
-            <div className="p-6 space-y-6">
-              {/* Users */}
-              {results.users && results.users.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Students</h3>
-                  <div className="space-y-2">
-                    {results.users.map(user => (
-                      <div key={user.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                          {user.name.split(' ').map((n: string) => n[0]).join('')}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{user.name}</p>
-                          <p className="text-sm text-gray-600">{user.department} • {user.year}rd Year</p>
-                        </div>
+          ) : loading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent"></div>
+            </div>
+          ) : activeTab === 'people' ? (
+            (results?.users?.length ?? 0) > 0 ? (
+              <div className="divide-y divide-border-light">
+                {results.users.map((user) => (
+                  <div
+                    key={user.id}
+                    className="p-4 hover:bg-bg-secondary transition-colors cursor-pointer"
+                    onClick={() => handleUserClick(user.username)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={user.profile_image || '/default-avatar.png'}
+                          alt={user.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-border-light"
+                        />
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Posts */}
-              {results.posts && results.posts.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Posts</h3>
-                  <div className="space-y-2">
-                    {results.posts.map(post => (
-                      <div key={post.id} className="p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
-                        <p className="text-gray-900 text-sm mb-1">{post.content.substring(0, 100)}...</p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="bg-gray-100 px-2 py-1 rounded">#{formatCategory(post.category)}</span>
-                          <span>by {post.author.name}</span>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-text truncate">{user.name}</h4>
+                        <p className="text-sm text-text-secondary truncate">@{user.username}</p>
+                        {user.department && (
+                          <p className="text-xs text-text-tertiary truncate">
+                            {user.department}
+                            {user.year && ` • Year ${user.year}`}
+                            {user.college_name && ` • ${user.college_name}`}
+                          </p>
+                        )}
+                        {user.mutualFriends && user.mutualFriends > 0 && (
+                          <p className="text-xs text-accent mt-1">
+                            {user.mutualFriends} mutual {user.mutualFriends === 1 ? 'friend' : 'friends'}
+                            {user.mutualFriendNames && user.mutualFriendNames.length > 0 && (
+                              <span className="text-text-tertiary">
+                                {' • '}
+                                {user.mutualFriendNames.slice(0, 2).join(', ')}
+                                {user.mutualFriends > 2 && ` +${user.mutualFriends - 2} more`}
+                              </span>
+                            )}
+                          </p>
+                        )}
+                        {user.interests && user.interests.length > 0 && (
+                          <div className="flex gap-1 mt-1">
+                            {user.interests.slice(0, 3).map((interest, idx) => (
+                              <span key={idx} className="text-sm">{interest}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
+                      <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <FollowButton
+                          userId={user.id}
+                          isFollowing={user.isFollowing || false}
+                          size="sm"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {/* No results */}
-              {results && results.users?.length === 0 && results.posts?.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-4">🔍</div>
-                  <p className="text-gray-600">No results found for &quot;{query}&quot;</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!query && !results && !loading && (
-            <div className="p-8 text-center">
-              <div className="text-4xl mb-4">🔍</div>
-              <p className="text-gray-600">Start typing to search students and posts</p>
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                <svg className="w-12 h-12 text-text-tertiary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <p className="text-text-secondary">No people found</p>
+              </div>
+            )
+          ) : (
+            (results?.posts?.length ?? 0) > 0 ? (
+              <div className="divide-y divide-border-light">
+                {results.posts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="p-4 hover:bg-bg-secondary transition-colors cursor-pointer"
+                    onClick={() => handlePostClick(post.id)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={post.user.profile_image || '/default-avatar.png'}
+                        alt={post.user.name}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-border-light flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 mb-1">
+                          <h4 className="font-semibold text-text text-sm">{post.user.name}</h4>
+                          <span className="text-text-tertiary text-xs">@{post.user.username}</span>
+                        </div>
+                        <p className="text-text-secondary text-sm line-clamp-2">{post.caption}</p>
+                        <p className="text-text-tertiary text-xs mt-1">
+                          {new Date(post.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                <svg className="w-12 h-12 text-text-tertiary mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-text-secondary">No posts found</p>
+              </div>
+            )
           )}
         </div>
       </div>
     </div>
-  );
-};
-
-export default SearchModal;
+  )
+}

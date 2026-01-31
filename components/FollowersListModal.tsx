@@ -176,21 +176,21 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
   }, [isOpen, fetchPage]);
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900 text-base">{type === 'followers' ? 'Followers' : 'Following'}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">×</button>
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-container max-w-md">
+        <div className="modal-header">
+          <h3 className="font-semibold text-text text-base">{type === 'followers' ? 'Followers' : 'Following'}</h3>
+          <button onClick={onClose} className="btn-icon text-text-secondary hover:text-text">×</button>
         </div>
 
         {error && (
-          <div className="px-4 py-3 text-sm text-red-600 border-b border-gray-100">{error}</div>
+          <div className="px-6 py-3 text-sm text-error bg-error/10 border-b border-border-light">{error}</div>
         )}
 
-        <div className="overflow-y-auto" style={{ maxHeight: '60vh' }}>
+        <div className="overflow-y-auto scrollbar-thin" style={{ maxHeight: '60vh' }}>
           {initialLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="w-8 h-8 border-4 border-[#02fa97] border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
             <>

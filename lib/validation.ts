@@ -233,3 +233,42 @@ export function sanitizeApiResponse<T extends Record<string, any>>(
   
   return sanitized
 }
+
+// Validate privacy settings
+export function validatePrivacySettings(settings: any): { valid: boolean; error?: string } {
+  if (!settings || typeof settings !== 'object') {
+    return { valid: false, error: 'Invalid privacy settings' }
+  }
+  
+  // Validate is_private
+  if (settings.is_private !== undefined && typeof settings.is_private !== 'boolean') {
+    return { valid: false, error: 'is_private must be a boolean' }
+  }
+  
+  // Validate show_online_status
+  if (settings.show_online_status !== undefined && typeof settings.show_online_status !== 'boolean') {
+    return { valid: false, error: 'show_online_status must be a boolean' }
+  }
+  
+  // Validate show_read_receipts
+  if (settings.show_read_receipts !== undefined && typeof settings.show_read_receipts !== 'boolean') {
+    return { valid: false, error: 'show_read_receipts must be a boolean' }
+  }
+  
+  // Validate who_can_message
+  if (settings.who_can_message !== undefined) {
+    if (!['everyone', 'followers'].includes(settings.who_can_message)) {
+      return { valid: false, error: 'who_can_message must be "everyone" or "followers"' }
+    }
+  }
+  
+  // Validate who_can_comment
+  if (settings.who_can_comment !== undefined) {
+    if (!['everyone', 'followers'].includes(settings.who_can_comment)) {
+      return { valid: false, error: 'who_can_comment must be "everyone" or "followers"' }
+    }
+  }
+  
+  return { valid: true }
+}
+

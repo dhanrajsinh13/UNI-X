@@ -170,25 +170,31 @@ class DataFetchManager {
           // Don't retry on client errors (4xx)
           if (response.status >= 400 && response.status < 500) {
             const error = await response.json().catch(() => ({ error: 'Request failed' }));
-            
+
             // Special handling for 401 Unauthorized - clear invalid token
             if (response.status === 401) {
               console.error('🔒 Unauthorized request to:', url);
               console.error('Auth header present:', !!options.headers?.['Authorization' as keyof typeof options.headers]);
-              
-              // Clear potentially invalid token from localStorage
-              if (typeof window !== 'undefined') {
+
+              // Only trigger logout for critical auth endpoints (not all 401s)
+              // This prevents premature logout on temporary issues
+              const criticalAuthEndpoints = ['/api/auth/validate', '/api/users/me'];
+              const isCriticalEndpoint = criticalAuthEndpoints.some(endpoint => url.includes(endpoint));
+
+              if (isCriticalEndpoint && typeof window !== 'undefined') {
                 const token = localStorage.getItem('token');
                 if (token) {
-                  console.warn('⚠️ Clearing potentially invalid token');
+                  console.warn('⚠️ Session expired on critical endpoint - logging out');
                   localStorage.removeItem('token');
                   localStorage.removeItem('user');
                   // Dispatch custom event to trigger logout
                   window.dispatchEvent(new CustomEvent('unauthorized'));
                 }
+              } else {
+                console.warn('⚠️ 401 on non-critical endpoint, not logging out:', url);
               }
             }
-            
+
             throw new Error(error.error || `HTTP ${response.status}`);
           }
 
@@ -220,10 +226,33 @@ class DataFetchManager {
   }
 
   /**
-   * Batch multiple requests
+   * Batch multiple requests with token support
    */
-  async fetchBatch<T>(requests: Array<{ url: string; options?: FetchOptions }>): Promise<T[]> {
-    return Promise.all(requests.map(req => this.fetch<T>(req.url, req.options)));
+  async fetchBatch<T>(requests: Array<{ url: string; options?: FetchOptions & { token?: string } }>): Promise<T[]> {
+    return Promise.all(requests.map(req => {
+      const { token, ...fetchOptions } = req.options || {};
+
+      // Add Authorization header if token is provided
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...(fetchOptions.headers as Record<string, string> || {}),
+      };
+
+      if (token) {
+        if (token.length < 20) {
+          console.error('🔒 Invalid token format in batch request (too short)');
+          throw new Error('Invalid authentication token');
+        }
+        headers['Authorization'] = `Bearer ${token}`;
+      } else {
+        console.warn('⚠️ No token provided for batch request to:', req.url);
+      }
+
+      return this.fetch<T>(req.url, {
+        ...fetchOptions,
+        headers,
+      });
+    }));
   }
 
   /**
@@ -263,8 +292,13 @@ export async function fetchAPI<T>(
 ): Promise<T> {
   const { token, ...fetchOptions } = options;
 
+  // Check if body is FormData (file upload)
+  const isFormData = fetchOptions.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    // Only set Content-Type for non-FormData requests
+    // For FormData, browser will set correct multipart/form-data with boundary
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(fetchOptions.headers as Record<string, string>),
   };
 

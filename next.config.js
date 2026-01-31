@@ -4,13 +4,12 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // Hide X-Powered-By header
   
+  // Build configuration - strict mode for production quality
   eslint: {
-    // Skip ESLint during production builds to avoid failing on lint errors
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // Enable ESLint checking during builds
   },
   typescript: {
-    // Skip TypeScript type checking during production builds
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false, // Enable TypeScript type checking during builds
   },
   
   // Security headers
@@ -42,6 +41,4 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
   },
-};
-
-module.exports = nextConfig;
+};module.exports = nextConfig;

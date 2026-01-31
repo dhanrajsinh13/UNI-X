@@ -21,6 +21,8 @@ interface Message {
     profile_image: string | null;
   };
   clientId?: string;
+  // Message status: 'sending' | 'sent' | 'delivered' | 'read'
+  status?: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
 interface MessagesProps {
@@ -31,15 +33,31 @@ interface MessagesProps {
 
 const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose }) => {
   const { user, token } = useAuth();
-  const { socket, isConnected, joinConversation, leaveConversation, startTyping, stopTyping, onNewMessage, onTyping, onStoppedTyping, sendMessage } = useSocket();
-  
+  const {
+    socket,
+    isConnected,
+    joinConversation,
+    leaveConversation,
+    startTyping,
+    stopTyping,
+    onNewMessage,
+    onTyping,
+    onStoppedTyping,
+    sendMessage,
+    onMessageAck,
+    onMessageDelivered,
+    onMessagesRead,
+    markMessagesRead,
+    confirmMessageReceived
+  } = useSocket();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [typingUsers, setTypingUsers] = useState<{ userId: number; userName: string }[]>([]);
   const [conversationId, setConversationId] = useState<string>('');
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -47,7 +65,7 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
     if (user && token) {
       const convId = [user.id, otherUserId].sort().join('-');
       setConversationId(convId);
-      
+
       // Join conversation room via other user's ID
       joinConversation(otherUserId);
       loadInitialMessages();
@@ -57,6 +75,25 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
       };
     }
   }, [otherUserId, user, token]);
+
+  // Mark messages as read when viewing the conversation
+  useEffect(() => {
+    if (!user || !isConnected || messages.length === 0) return;
+
+    // Find unread messages from the other user
+    const unreadFromOther = messages.filter(
+      m => m.senderId === otherUserId && m.id > 0
+    );
+
+    if (unreadFromOther.length > 0) {
+      const messageIds = unreadFromOther.map(m => m.id);
+      // Mark as read after a short delay (ensures user actually sees messages)
+      const timer = setTimeout(() => {
+        markMessagesRead(otherUserId, messageIds, otherUserId);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, user, otherUserId, isConnected, markMessagesRead]);
 
   useEffect(() => {
     if (!socket) return;
@@ -90,30 +127,76 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
           }
         }
 
+        // 4) Confirm receipt for incoming messages (for delivery status)
+        if (user && messageData.senderId !== user.id && messageData.id > 0) {
+          confirmMessageReceived(messageData.id, messageData.senderId);
+        }
+
         return [...prev, messageData];
       });
     });
 
     const offTyping = onTyping((data: { userId: number; userName: string }) => {
-        setTypingUsers(prev => {
-          const exists = prev.find(u => u.userId === data.userId);
-          if (!exists) {
-            return [...prev, data];
-          }
-          return prev;
-        });
+      setTypingUsers(prev => {
+        const exists = prev.find(u => u.userId === data.userId);
+        if (!exists) {
+          return [...prev, data];
+        }
+        return prev;
+      });
     });
 
     const offStopped = onStoppedTyping((data: { userId: number }) => {
-        setTypingUsers(prev => prev.filter(u => u.userId !== data.userId));
+      setTypingUsers(prev => prev.filter(u => u.userId !== data.userId));
     });
 
-      return () => {
+    return () => {
       offNewMessage && offNewMessage();
       offTyping && offTyping();
       offStopped && offStopped();
     };
   }, [socket]);
+
+  // Handle message status updates
+  useEffect(() => {
+    if (!socket) return;
+
+    // Message acknowledged (saved on server) - update from 'sending' to 'sent'
+    const offAck = onMessageAck((data) => {
+      setMessages(prev => prev.map(msg => {
+        if ((msg as any).clientId === data.clientId) {
+          return { ...msg, id: data.messageId, status: 'sent' as const };
+        }
+        return msg;
+      }));
+    });
+
+    // Message delivered to recipient
+    const offDelivered = onMessageDelivered((data) => {
+      setMessages(prev => prev.map(msg => {
+        if (msg.id === data.messageId || (msg as any).clientId === data.clientId) {
+          return { ...msg, status: 'delivered' as const };
+        }
+        return msg;
+      }));
+    });
+
+    // Messages read by recipient
+    const offRead = onMessagesRead((data) => {
+      setMessages(prev => prev.map(msg => {
+        if (data.messageIds.includes(msg.id)) {
+          return { ...msg, status: 'read' as const };
+        }
+        return msg;
+      }));
+    });
+
+    return () => {
+      offAck && offAck();
+      offDelivered && offDelivered();
+      offRead && offRead();
+    };
+  }, [socket, onMessageAck, onMessageDelivered, onMessagesRead]);
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive
@@ -122,7 +205,7 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
 
   const loadInitialMessages = async () => {
     if (!token) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch(`/api/messages/conversation/${otherUserId}`, {
@@ -137,7 +220,7 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
       }
 
       const data = await response.json();
-      
+
       if (!data || !Array.isArray(data.messages)) {
         throw new Error('Invalid response format');
       }
@@ -199,7 +282,7 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
 
     setIsSending(true);
     const messageText = newMessage.trim();
-    
+
     const clientId = `${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const optimistic: any = {
       id: -Date.now(),
@@ -211,11 +294,12 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
       sender: { id: user.id, name: user.name, profile_image: null },
       receiver: { id: otherUserId, name: '', profile_image: null },
       clientId,
+      status: 'sending', // Initial status before server acknowledgment
     };
-    
+
     // Clear input immediately
     setNewMessage('');
-    
+
     setMessages(prev => {
       const now = Date.now();
       const last = prev[prev.length - 1] as any;
@@ -227,16 +311,16 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
       }
       return [...prev, optimistic];
     });
-    
+
     try {
       sendMessage({ receiverId: otherUserId, messageText: optimistic.messageText, clientId });
       stopTyping(otherUserId, user.id);
     } catch (error) {
       console.error('Failed to send message:', error);
-      
+
       // Remove optimistic message on failure
       setMessages(prev => prev.filter(m => (m as any).clientId !== clientId));
-      
+
       // Show error message
       setMessages(prev => [...prev, {
         id: -Date.now(),
@@ -266,7 +350,7 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
     // Start typing indicator
     if (value.trim()) {
       startTyping(otherUserId, user.id, user.name);
-      
+
       // Stop typing after 2 seconds of inactivity
       typingTimeoutRef.current = setTimeout(() => {
         stopTyping(otherUserId, user.id);
@@ -324,18 +408,17 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
         ) : (
           messages.map((message) => {
             const isOwn = user ? message.senderId === user.id : false;
-            
+
             return (
               <div
                 key={message.id}
                 className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                    isOwn
-                      ? 'bg-[#02fa97] text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwn
+                    ? 'bg-[#02fa97] text-white'
+                    : 'bg-gray-100 text-gray-900'
+                    }`}
                 >
                   {message.mediaUrl && (
                     <div className="mb-2">
@@ -357,13 +440,35 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
                   {message.messageText && (
                     <p className="text-sm">{message.messageText}</p>
                   )}
-                  <p
-                    className={`text-xs mt-1 ${
-                      isOwn ? 'text-white/80' : 'text-gray-500'
-                    }`}
-                  >
-                    {formatTime(message.createdAt)}
-                  </p>
+                  <div className={`flex items-center justify-end gap-1 mt-1`}>
+                    <span
+                      className={`text-xs ${isOwn ? 'text-white/80' : 'text-gray-500'
+                        }`}
+                    >
+                      {formatTime(message.createdAt)}
+                    </span>
+                    {/* Message status indicator for own messages */}
+                    {isOwn && (
+                      <span className="text-xs ml-1">
+                        {(message as any).status === 'sending' && (
+                          <span className="text-white/60">⏳</span>
+                        )}
+                        {(message as any).status === 'sent' && (
+                          <span className="text-white/80">✓</span>
+                        )}
+                        {(message as any).status === 'delivered' && (
+                          <span className="text-white">✓✓</span>
+                        )}
+                        {(message as any).status === 'read' && (
+                          <span className="text-blue-200">✓✓</span>
+                        )}
+                        {/* Default for messages from DB without status */}
+                        {!(message as any).status && message.id > 0 && (
+                          <span className="text-white">✓✓</span>
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );

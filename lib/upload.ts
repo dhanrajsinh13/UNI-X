@@ -28,6 +28,12 @@ export async function parseForm(req: NextApiRequest): Promise<{
   fields: formidable.Fields
   files: formidable.Files
 }> {
+  // Validate content-type header - must be multipart/form-data
+  const contentType = req.headers['content-type'] || ''
+  if (!contentType.includes('multipart/form-data')) {
+    throw new Error(`Invalid content type. Expected multipart/form-data, got: ${contentType}`)
+  }
+
   // On Vercel and other serverless platforms, the project filesystem is read-only.
   // Use the OS temporary directory for uploads.
   const uploadDir = path.join(os.tmpdir(), 'unix-uploads')
@@ -48,25 +54,42 @@ export async function parseForm(req: NextApiRequest): Promise<{
     maxFiles: 1, // Only allow single file uploads
     multiples: false,
     allowEmptyFiles: false,
+    // Explicitly disable JSON parsing - we only want multipart form data
+    hashAlgorithm: false,
     filter: function ({ mimetype, originalFilename }) {
       // Validate file type and extension
       const isValidMime = mimetype && (
-        ALLOWED_IMAGE_TYPES.includes(mimetype) || 
+        ALLOWED_IMAGE_TYPES.includes(mimetype) ||
         ALLOWED_VIDEO_TYPES.includes(mimetype)
       )
-      
+
       const ext = originalFilename ? path.extname(originalFilename).toLowerCase() : ''
       const isValidExt = ALLOWED_EXTENSIONS.includes(ext)
-      
+
       return !!(isValidMime && isValidExt)
     },
   })
 
   return new Promise((resolve, reject) => {
+    // Check if request body was already consumed (common issue with Next.js)
+    if ((req as any).body && Object.keys((req as any).body).length > 0) {
+      console.warn('Request body appears to have been pre-parsed. This may cause issues.')
+    }
+
     form.parse(req, (err, fields, files) => {
       if (err) {
         console.error('Form parse error:', err)
-        reject(new Error('File upload failed: ' + err.message))
+
+        // Provide more helpful error messages
+        if (err.message?.includes('JSON')) {
+          reject(new Error('File upload failed: Request was incorrectly parsed as JSON. Ensure Content-Type is multipart/form-data and bodyParser is disabled for this route.'))
+        } else if (err.message?.includes('maxFileSize')) {
+          reject(new Error('File upload failed: File size exceeds 10MB limit'))
+        } else if (err.message?.includes('maxFiles')) {
+          reject(new Error('File upload failed: Only one file upload is allowed'))
+        } else {
+          reject(new Error('File upload failed: ' + err.message))
+        }
       } else {
         resolve({ fields, files })
       }

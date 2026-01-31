@@ -59,23 +59,26 @@ export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db
         minPoolSize: 1,
         maxIdleTimeMS: 30000,
         
-        // Timeout settings - more lenient for Atlas
-        serverSelectionTimeoutMS: 10000,
+        // Timeout settings - more lenient for Atlas with better DNS handling
+        serverSelectionTimeoutMS: 30000, // Increased from 10s to 30s for better Atlas compatibility
         socketTimeoutMS: 45000,
-        connectTimeoutMS: 10000,
+        connectTimeoutMS: 30000, // Increased from 10s to 30s
         
         // Reliability
         retryWrites: true,
         retryReads: true,
+        
+        // Compression for better performance
+        compressors: ['zlib'],
       }
       
       // SSL/TLS options for Atlas
       if (!isLocalMongo) {
         Object.assign(connectionOptions, {
           tls: true,
-          // Allow invalid certificates for development/Atlas compatibility
-          tlsAllowInvalidCertificates: process.env.NODE_ENV !== 'production',
-          tlsAllowInvalidHostnames: process.env.NODE_ENV !== 'production',
+          // For production, enforce strict TLS validation
+          tlsAllowInvalidCertificates: false,
+          tlsAllowInvalidHostnames: false,
         })
       } else {
         connectionOptions.directConnection = true
@@ -161,9 +164,16 @@ export interface User {
   bio?: string
   profile_image?: string
   is_private: boolean
+  is_deactivated?: boolean
+  deactivated_at?: Date
   followers_count: number
   following_count: number
   created_at: Date
+  // Privacy settings
+  show_online_status?: boolean
+  show_read_receipts?: boolean
+  who_can_message?: 'everyone' | 'followers'
+  who_can_comment?: 'everyone' | 'followers'
 }
 
 export interface Post {

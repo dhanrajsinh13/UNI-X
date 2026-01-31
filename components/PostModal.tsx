@@ -79,7 +79,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   // Helper function to convert enum category to readable format
   const formatCategory = (category?: string) => {
     if (!category) return '';
-    
+
     const categoryMap: { [key: string]: string } = {
       'GENERAL': 'general',
       'ACADEMIC': 'academic',
@@ -93,7 +93,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
       'WORKSHOP': 'academic',
       'LIBRARY_MEMORY': 'library'
     };
-    
+
     return categoryMap[category] || category.toLowerCase();
   };
 
@@ -248,19 +248,19 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   const handleAuraClick = async () => {
     // Prevent multiple clicks while processing
     if (!token || isLiking) return;
-    
+
     // Store the previous state for potential rollback
     const previousHasAura = hasAura;
     const previousAuraCount = auraCount;
-    
+
     // Optimistic update - instant UI feedback
     const newHasAura = !hasAura;
     const newAuraCount = hasAura ? auraCount - 1 : auraCount + 1;
-    
+
     setHasAura(newHasAura);
     setAuraCount(newAuraCount);
     setIsLiking(true);
-    
+
     // Add visual feedback immediately
     const button = document.querySelector('[data-aura-button]') as HTMLElement;
     if (button) {
@@ -271,7 +271,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
         }
       }, 100);
     }
-    
+
     try {
       const response = await fetch('/api/posts/aura', {
         method: 'POST',
@@ -287,14 +287,14 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
         // Sync with server response (in case there's a discrepancy)
         setAuraCount(data.post.aura_count);
         setHasAura(data.post.user_liked);
-        
+
         // Broadcast aura change to PostCard component
-        window.dispatchEvent(new CustomEvent('auraUpdated', { 
-          detail: { 
-            postId: post.id, 
+        window.dispatchEvent(new CustomEvent('auraUpdated', {
+          detail: {
+            postId: post.id,
             auraCount: data.post.aura_count,
-            hasAura: data.post.user_liked 
-          } 
+            hasAura: data.post.user_liked
+          }
         }));
       } else {
         console.error('Failed to update aura');
@@ -317,13 +317,13 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   const handleCaptionSave = async () => {
     if (!token) return;
     const trimmed = editCaption.trim();
-    
+
     // Validate caption is not empty
     if (!trimmed) {
       alert('Caption cannot be empty');
       return;
     }
-    
+
     setIsSavingCaption(true);
     try {
       const response = await fetch(`/api/posts/${post.id}`, {
@@ -334,7 +334,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
         },
         body: JSON.stringify({ caption: trimmed })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         const newContent = data.post?.caption ?? trimmed;
@@ -360,7 +360,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
     try {
       commentInputRef.current?.focus();
       commentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' } as any);
-    } catch {}
+    } catch { }
   }, []);
 
   const handleShareClick = useCallback(async () => {
@@ -379,7 +379,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
         const shareUrl = `${window.location.origin}/post/${post.id}`;
         await navigator.clipboard.writeText(shareUrl);
         alert('Link copied to clipboard');
-      } catch {}
+      } catch { }
     }
   }, [post.id, post.content, post.authorName]);
 
@@ -389,7 +389,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
 
     const commentText = newComment.trim();
     const tempId = Date.now(); // Temporary ID for optimistic update
-    
+
     // Optimistic update - add comment immediately
     const optimisticComment = {
       id: tempId,
@@ -409,7 +409,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
     setNewComment('');
     setReplyingTo(null);
     setIsPosting(true);
-    
+
     try {
       const response = await fetch('/api/comments', {
         method: 'POST',
@@ -417,8 +417,8 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
-          postId: post.id, 
+        body: JSON.stringify({
+          postId: post.id,
           comment_text: commentText,
           parent_id: replyingTo || undefined
         }),
@@ -427,7 +427,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
       if (response.ok) {
         const data = await response.json();
         // Replace optimistic comment with real one
-        setComments(prev => prev.map(c => 
+        setComments(prev => prev.map(c =>
           c.id === tempId ? data.comment : c
         ));
       } else {
@@ -457,7 +457,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
     if (mediaType === 'video') {
       return 'w-full h-full object-contain'; // Let video maintain its natural ratio
     }
-    
+
     // For images, default to Instagram's supported ratios
     // 1:1 (square), 4:5 (portrait), 1.91:1 (landscape)
     return 'w-full h-full object-contain';
@@ -494,7 +494,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   const [showFullCaption, setShowFullCaption] = useState(false);
   const contentText = typeof post?.content === 'string' ? post.content : '';
   const shouldTruncate = contentText.length > 125;
-  const displayContent = shouldTruncate && !showFullCaption 
+  const displayContent = shouldTruncate && !showFullCaption
     ? contentText.substring(0, 125) + '...'
     : contentText;
 
@@ -537,7 +537,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
         // Check if click is inside emoji picker or emoji button
         const emojiButton = target.closest('.emoji-picker-container');
         const emojiPicker = target.closest('.emoji-picker-dropdown');
-        
+
         if (!emojiButton && !emojiPicker) {
           console.log('Clicking outside emoji picker, closing...');
           setShowEmojiPicker(false);
@@ -548,14 +548,14 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
     if (showEmojiPicker) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showEmojiPicker]);
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-modal p-4">
       <div className="bg-white rounded-2xl max-w-6xl w-full h-[90vh] flex overflow-hidden shadow-2xl">
         {/* Left Side - Media */}
         <div className="flex-1 bg-black flex items-center justify-center relative">
@@ -563,9 +563,9 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
             <div className="w-full h-full flex items-center justify-center relative">
               {/* Current Media */}
               {mediaItems[currentMediaIndex].type === 'image' ? (
-                <img 
-                  src={mediaItems[currentMediaIndex].url} 
-                  alt="Post media" 
+                <img
+                  src={mediaItems[currentMediaIndex].url}
+                  alt="Post media"
                   className={getMediaClasses(mediaItems[currentMediaIndex].type, mediaItems[currentMediaIndex].url)}
                   onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
                 />
@@ -583,8 +583,8 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                           <div
                             className="h-full bg-white transition-all duration-100 ease-linear"
                             style={{
-                              width: index === currentMediaIndex ? `${videoProgress}%` : 
-                                     index < currentMediaIndex ? '100%' : '0%'
+                              width: index === currentMediaIndex ? `${videoProgress}%` :
+                                index < currentMediaIndex ? '100%' : '0%'
                             }}
                           />
                         </div>
@@ -599,11 +599,11 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Video element with tap-to-pause */}
-                  <video 
+                  <video
                     ref={videoRef}
-                    src={mediaItems[currentMediaIndex].url} 
+                    src={mediaItems[currentMediaIndex].url}
                     autoPlay
                     muted={false}
                     loop
@@ -630,14 +630,14 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                       <div className="bg-black/50 rounded-full p-4">
                         <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
+                          <path d="M8 5v14l11-7z" />
                         </svg>
                       </div>
                     </div>
                   )}
                 </div>
               )}
-              
+
               {/* Carousel Navigation */}
               {hasMultipleMedia && (
                 <>
@@ -650,7 +650,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                       ‹
                     </button>
                   )}
-                  
+
                   {/* Next Button */}
                   {currentMediaIndex < mediaItems.length - 1 && (
                     <button
@@ -660,16 +660,15 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                       ›
                     </button>
                   )}
-                  
+
                   {/* Dots Indicator */}
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1">
                     {mediaItems.map((_, index) => (
                       <button
                         key={index}
                         onClick={() => setCurrentMediaIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          index === currentMediaIndex ? 'bg-white' : 'bg-white/50'
-                        }`}
+                        className={`w-2 h-2 rounded-full transition-colors ${index === currentMediaIndex ? 'bg-white' : 'bg-white/50'
+                          }`}
                       />
                     ))}
                   </div>
@@ -680,7 +679,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
             <div className="text-white text-center p-8 flex flex-col items-center justify-center h-full">
               <div className="text-6xl mb-6">📝</div>
               <div className="max-w-md">
-                <p 
+                <p
                   className="text-xl leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: parseCaption(contentText) }}
                 />
@@ -695,9 +694,9 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden">
-                <img 
-                  src={post.profilePic || '/uploads/DefaultProfile.jpg'} 
-                  alt={post.authorName || 'User'} 
+                <img
+                  src={post.profilePic || '/uploads/DefaultProfile.jpg'}
+                  alt={post.authorName || 'User'}
                   className="w-full h-full object-cover rounded-full"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                 />
@@ -751,12 +750,12 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   )}
                 </div>
               )}
-            <button 
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-2xl"
-            >
-              ×
-            </button>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
             </div>
           </div>
 
@@ -773,7 +772,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                     <div className="flex-1">
                       {!isEditingCaption ? (
                         <>
-                          <span 
+                          <span
                             className="text-sm text-gray-900 leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: parseCaption(displayContent) }}
                           />
@@ -862,7 +861,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                 <div className="flex-1">
                   <div className="flex items-start mb-1">
                     <span className="font-semibold text-sm mr-2">{comment.user.name}</span>
-                    <span 
+                    <span
                       className="text-sm text-gray-900 leading-relaxed flex-1"
                       dangerouslySetInnerHTML={{ __html: parseCaption(comment.text) }}
                     />
@@ -872,69 +871,68 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                     <button
                       onClick={async () => {
                         if (!token) return;
-                        
+
                         // Optimistic update - instant UI feedback
                         const currentLiked = comment.userLiked;
                         const currentLikes = comment.likes;
                         const newLiked = !currentLiked;
                         const newLikes = currentLiked ? currentLikes - 1 : currentLikes + 1;
-                        
+
                         // Update UI immediately
-                        setComments(prev => prev.map(c => c.id === comment.id ? { 
-                          ...c, 
+                        setComments(prev => prev.map(c => c.id === comment.id ? {
+                          ...c,
                           likes: newLikes,
-                          userLiked: newLiked 
+                          userLiked: newLiked
                         } : c));
-                        
+
                         try {
                           const resp = await fetch('/api/comments/like', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                             body: JSON.stringify({ commentId: comment.id })
                           });
-                          
+
                           if (resp.ok) {
                             const data = await resp.json();
                             // Update with server response (in case of discrepancy)
-                            setComments(prev => prev.map(c => c.id === comment.id ? { 
-                              ...c, 
+                            setComments(prev => prev.map(c => c.id === comment.id ? {
+                              ...c,
                               likes: data.likes,
-                              userLiked: data.liked 
+                              userLiked: data.liked
                             } : c));
                           } else {
                             // Rollback on error
-                            setComments(prev => prev.map(c => c.id === comment.id ? { 
-                              ...c, 
+                            setComments(prev => prev.map(c => c.id === comment.id ? {
+                              ...c,
                               likes: currentLikes,
-                              userLiked: currentLiked 
+                              userLiked: currentLiked
                             } : c));
                             showToast('Failed to update comment like. Please try again.', 'error', 2000);
                             console.error('Like failed, rolled back');
                           }
                         } catch (e) {
                           // Rollback on error
-                          setComments(prev => prev.map(c => c.id === comment.id ? { 
-                            ...c, 
+                          setComments(prev => prev.map(c => c.id === comment.id ? {
+                            ...c,
                             likes: currentLikes,
-                            userLiked: currentLiked 
+                            userLiked: currentLiked
                           } : c));
                           showToast('Network error. Please check your connection.', 'error', 2000);
                           console.error('Toggle like failed, rolled back', e);
                         }
                       }}
-                      className={`flex items-center space-x-1 hover:scale-110 active:scale-95 transition-all duration-200 font-medium ${
-                        comment.userLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
-                      }`}
+                      className={`flex items-center space-x-1 hover:scale-110 active:scale-95 transition-all duration-200 font-medium ${comment.userLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
+                        }`}
                     >
-                      <svg 
-                        width="12" 
-                        height="12" 
-                        viewBox="0 0 24 24" 
-                        fill={comment.userLiked ? "currentColor" : "none"} 
-                        stroke="currentColor" 
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill={comment.userLiked ? "currentColor" : "none"}
+                        stroke="currentColor"
                         strokeWidth="2"
                       >
-                        <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L4.22 13.45L12 21.23L19.78 13.45L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6053C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39467C21.7563 5.72723 21.351 5.1208 20.84 4.61V4.61Z"/>
+                        <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L4.22 13.45L12 21.23L19.78 13.45L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6053C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39467C21.7563 5.72723 21.351 5.1208 20.84 4.61V4.61Z" />
                       </svg>
                       <span>
                         {comment.likes > 0 && `${comment.likes} `}
@@ -958,7 +956,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                             await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
                             alert('Comment link copied');
                           }
-                        } catch {}
+                        } catch { }
                       }}
                       className="hover:text-gray-600 font-medium"
                     >
@@ -968,16 +966,16 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                       <button
                         onClick={async () => {
                           if (!token) return;
-                          
+
                           // Optimistic update - remove comment immediately
                           setComments(prev => prev.filter(c => c.id !== comment.id));
-                          
+
                           try {
-                            const resp = await fetch(`/api/comments?id=${comment.id}`, { 
-                              method: 'DELETE', 
-                              headers: { 'Authorization': `Bearer ${token}` } 
+                            const resp = await fetch(`/api/comments?id=${comment.id}`, {
+                              method: 'DELETE',
+                              headers: { 'Authorization': `Bearer ${token}` }
                             });
-                            
+
                             if (resp.status !== 204) {
                               // Rollback if deletion failed
                               setComments(prev => {
@@ -989,7 +987,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                               });
                               showToast('Failed to delete comment', 'error');
                             }
-                          } catch (e) { 
+                          } catch (e) {
                             console.error('Delete comment failed', e);
                             // Rollback on error
                             setComments(prev => {
@@ -1008,7 +1006,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                     )}
                     <button className="text-gray-300 hover:text-red-500">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L4.22 13.45L12 21.23L19.78 13.45L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6053C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39467C21.7563 5.72723 21.351 5.1208 20.84 4.61V4.61Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M20.84 4.61C20.3292 4.099 19.7228 3.69364 19.0554 3.41708C18.3879 3.14052 17.6725 2.99817 16.95 2.99817C16.2275 2.99817 15.5121 3.14052 14.8446 3.41708C14.1772 3.69364 13.5708 4.099 13.06 4.61L12 5.67L10.94 4.61C9.9083 3.5783 8.50903 2.9987 7.05 2.9987C5.59096 2.9987 4.19169 3.5783 3.16 4.61C2.1283 5.6417 1.5487 7.04097 1.5487 8.5C1.5487 9.95903 2.1283 11.3583 3.16 12.39L4.22 13.45L12 21.23L19.78 13.45L20.84 12.39C21.351 11.8792 21.7563 11.2728 22.0329 10.6053C22.3095 9.93789 22.4518 9.22248 22.4518 8.5C22.4518 7.77752 22.3095 7.06211 22.0329 6.39467C21.7563 5.72723 21.351 5.1208 20.84 4.61V4.61Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
                   </div>
@@ -1036,14 +1034,14 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
             {!isMobile && (
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-4">
-                  <button 
+                  <button
                     onClick={handleAuraClick}
                     data-aura-button
                     className="flex items-center space-x-2 group hover:opacity-75 active:opacity-60 cursor-pointer"
                     style={{ transition: 'transform 0.2s ease-out' }}
                   >
-                    <svg 
-                      width={24} 
+                    <svg
+                      width={24}
                       height={24}
                       viewBox="0 0 100 100"
                       style={{
@@ -1052,52 +1050,52 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                         strokeWidth: '2',
                       }}
                     >
-                      <polygon 
+                      <polygon
                         points="77.333,33.31 55.438,33.31 75.43,1.829 47.808,1.829 23.198,51.05 41.882,51.05 21.334,99.808"
                       />
                     </svg>
                   </button>
-                  
+
                   <button onClick={handleCommentButtonClick} className="group transition-all duration-200 hover:scale-105" aria-label="Comment">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8.5 12H8.51M12 12H12.01M15.5 12H15.51M21 12C21 16.418 16.97 20 12 20C10.89 20 9.84 19.79 8.88 19.42L3 21L4.58 15.12C4.21 14.16 4 13.11 4 12C4 7.582 8.03 4 12 4C16.97 4 21 7.582 21 12Z" 
-                        stroke="currentColor" 
-                        strokeWidth="1.5" 
-                        strokeLinecap="round" 
+                      <path d="M8.5 12H8.51M12 12H12.01M15.5 12H15.51M21 12C21 16.418 16.97 20 12 20C10.89 20 9.84 19.79 8.88 19.42L3 21L4.58 15.12C4.21 14.16 4 13.11 4 12C4 7.582 8.03 4 12 4C16.97 4 21 7.582 21 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </button>
-                  
+
                   <button onClick={handleShareClick} className="group transition-all duration-200 hover:scale-105" aria-label="Share">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 13L10.5 9.5L13.5 12.5L17 9M21 12C21 16.418 16.97 20 12 20C7.03 20 3 16.418 3 12C3 7.582 7.03 4 12 4C16.97 4 21 7.582 21 12Z" 
-                        stroke="currentColor" 
-                        strokeWidth="1.5" 
-                        strokeLinecap="round" 
+                      <path d="M7 13L10.5 9.5L13.5 12.5L17 9M21 12C21 16.418 16.97 20 12 20C7.03 20 3 16.418 3 12C3 7.582 7.03 4 12 4C16.97 4 21 7.582 21 12Z"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
                   </button>
                 </div>
-                
+
                 <button className="group transition-all duration-200 hover:scale-105" aria-label="Bookmark">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 7.8C5 6.11984 5 5.27976 5.32698 4.63803C5.6146 4.07354 6.07354 3.6146 6.63803 3.32698C7.27976 3 8.11984 3 9.8 3H14.2C15.8802 3 16.7202 3 17.362 3.32698C17.9265 3.6146 18.3854 4.07354 18.673 4.63803C19 5.27976 19 6.11984 19 7.8V21L12 17L5 21V7.8Z" 
-                      stroke="currentColor" 
-                      strokeWidth="1.5" 
-                      strokeLinecap="round" 
+                    <path d="M5 7.8C5 6.11984 5 5.27976 5.32698 4.63803C5.6146 4.07354 6.07354 3.6146 6.63803 3.32698C7.27976 3 8.11984 3 9.8 3H14.2C15.8802 3 16.7202 3 17.362 3.32698C17.9265 3.6146 18.3854 4.07354 18.673 4.63803C19 5.27976 19 6.11984 19 7.8V21L12 17L5 21V7.8Z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
                       strokeLinejoin="round"
                     />
                   </svg>
                 </button>
               </div>
             )}
-            
+
             <div className="text-sm font-semibold mb-1">
               {auraCount} {auraCount === 1 ? 'aura' : 'auras'}
             </div>
-            
+
             <p className="text-xs text-gray-400 mb-3">
               {post.timestamp}
               {/* Add location if available */}
@@ -1108,7 +1106,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                 </>
               )}
             </p>
-            
+
             {/* Comment Input */}
             <div className="border-t border-gray-100 pt-3 relative">
               <form onSubmit={handleCommentSubmit} className="flex items-center space-x-3">
@@ -1126,7 +1124,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   ref={commentInputRef}
                 />
                 <div className="flex items-center space-x-2 emoji-picker-container">
-                  <button 
+                  <button
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
@@ -1151,10 +1149,10 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   )}
                 </div>
               </form>
-              
+
               {/* Emoji Picker - Outside the form */}
               {showEmojiPicker && (
-                <div className="absolute bottom-full right-0 mb-2 bg-white border-2 border-orange-100 rounded-lg shadow-xl p-3 w-80 h-48 overflow-y-auto emoji-picker-dropdown" style={{zIndex: 10000}}>
+                <div className="absolute bottom-full right-0 mb-2 bg-white border-2 border-orange-100 rounded-lg shadow-xl p-3 w-80 h-48 overflow-y-auto emoji-picker-dropdown" style={{ zIndex: 10000 }}>
                   <div className="text-xs text-gray-500 mb-2">Click an emoji to add it: (Current: "{newComment}")</div>
                   <div className="grid grid-cols-8 gap-1">
                     {commonEmojis.map((emoji, index) => (
@@ -1173,7 +1171,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   </div>
                 </div>
               )}
-              
+
               {/* Character count for comments */}
               {newComment.length > 0 && (
                 <div className="text-xs text-gray-400 mt-1 text-right">

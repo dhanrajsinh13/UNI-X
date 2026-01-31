@@ -78,16 +78,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="modal-overlay">
+      <div className="modal-container">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'login' ? 'Sign In to UNIX' : 'Join UNIX'}
+        <div className="modal-header">
+          <h2 className="text-xl font-semibold text-text">
+            {mode === 'login' ? 'Sign In to UNI-X' : 'Join UNI-X'}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="btn-icon"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -96,11 +96,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="modal-body">
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text mb-1.5">
                   Full Name
                 </label>
                 <input
@@ -109,7 +109,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                  className="input"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -117,7 +117,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text mb-1.5">
                   Email
                 </label>
                 <input
@@ -126,14 +126,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                  className="input"
                   placeholder="you@example.com"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text mb-1.5">
                 College ID
               </label>
               <input
@@ -142,13 +142,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                 value={formData.college_id}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                className="input"
                 placeholder="Enter your college ID"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text mb-1.5">
                 Password
               </label>
               <input
@@ -157,7 +157,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                className="input"
                 placeholder="Enter your password"
               />
             </div>
@@ -165,7 +165,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             {mode === 'register' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-text mb-1.5">
                     Department
                   </label>
                   <select
@@ -173,7 +173,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                     value={formData.department}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                    className="input"
                   >
                     <option value="">Select Department</option>
                     <option value="Bachelor  of Computer Applications">Masters of Computer Applications</option>
@@ -185,7 +185,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-text mb-1.5">
                     Year
                   </label>
                   <select
@@ -193,7 +193,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
                     value={formData.year}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                    className="input"
                   >
                     <option value="">Select Year</option>
                     <option value="1">1st Year</option>
@@ -208,7 +208,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             )}
 
             {error && (
-              <div className="text-red-600 text-sm text-center">
+              <div className="text-error text-sm text-center bg-error/10 py-2 px-4 rounded-lg">
                 {error}
               </div>
             )}
@@ -216,11 +216,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#02fa97] text-black py-3 rounded-lg font-semibold hover:bg-teal-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="btn-primary w-full btn-lg"
             >
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   {mode === 'login' ? 'Signing In...' : 'Creating Account...'}
                 </>
               ) : (
@@ -232,7 +232,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
           <div className="mt-6 text-center">
             <button
               onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-              className="text-[#02fa97] hover:text-teal-600 font-medium"
+              className="link text-sm font-semibold"
             >
               {mode === 'login' ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
             </button>

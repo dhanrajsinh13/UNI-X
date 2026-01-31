@@ -341,26 +341,38 @@ const PostCard: React.FC<PostCardProps> = memo(({
 
   const getCategoryColor = useMemo(() => (cat?: string) => {
     switch (cat?.toLowerCase()) {
-      case 'event': return 'bg-red-100 text-red-800';
-      case 'internship': return 'bg-blue-100 text-blue-800';
-      case 'workshop': return 'bg-green-100 text-green-800';
-      case 'library': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-teal-100 text-teal-800';
+      case 'event': 
+      case 'events': 
+        return 'badge-error';
+      case 'internship': 
+      case 'academic':
+        return 'badge-primary';
+      case 'workshop': 
+        return 'badge-success';
+      case 'library': 
+        return 'badge-warning';
+      case 'clubs':
+      case 'sports':
+        return 'badge-success';
+      case 'social':
+        return 'badge-gray';
+      default: 
+        return 'badge-primary';
     }
   }, []);
 
   if (isDeleted) return null;
 
   return (
-    <div className={`${edgeToEdge ? 'bg-white rounded-none border-0 shadow-none' : 'group bg-white rounded-3xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-[#02fa97]/20 hover:-translate-y-1'} transition-all duration-300 overflow-hidden`}>
+    <div className={`${edgeToEdge ? 'bg-white rounded-none border-0 shadow-none' : 'card-interactive'} overflow-hidden`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 pb-3 relative">
+      <div className="flex items-center justify-between p-4 pb-2 relative">
         <div className="flex items-center space-x-3">
           <div 
             className="relative cursor-pointer"
             onClick={handleAuthorClick}
           >
-            <div className="w-12 h-12 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden ring-2 ring-white shadow-md hover:ring-[#02fa97] transition-all duration-200">
+            <div className="avatar avatar-lg avatar-ring">
               <img 
                 src={profilePic || '/uploads/DefaultProfile.jpg'} 
                 alt={authorName} 
@@ -368,24 +380,24 @@ const PostCard: React.FC<PostCardProps> = memo(({
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
               />
             </div>
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success rounded-full border-2 border-white"></div>
           </div>
           <div 
             className="cursor-pointer hover:opacity-80 transition-opacity"
             onClick={handleAuthorClick}
           >
-            <p className="font-semibold text-gray-900 text-sm hover:underline">{authorName}</p>
-            <p className="text-xs text-gray-500">{authorDept} • {authorYear}rd Year</p>
+            <p className="font-semibold text-text text-sm hover:underline">{authorName}</p>
+            <p className="text-xs text-text-secondary">{authorDept} • {authorYear}rd Year</p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           {category && (
-            <span className={`text-xs px-3 py-1 rounded-full font-medium ${getCategoryColor(category)}`}>
+            <span className={`badge ${getCategoryColor(category)}`}>
               {category}
             </span>
           )}
-          <span className="text-xs text-gray-400">{timestamp}</span>
+          <span className="text-xs text-text-tertiary">{timestamp}</span>
           {/* In-feed edit/delete disabled: manage via profile modal only */}
         </div>
       </div>
@@ -472,8 +484,8 @@ const PostCard: React.FC<PostCardProps> = memo(({
       >
         {!isEditing ? (
           <>
-            <p className={`text-sm text-gray-800 leading-relaxed ${!isExpanded && editText && editText.length > 150 ? 'line-clamp-3' : ''}`}>
-              <span className="font-semibold text-gray-900 mr-1">{authorName}</span>
+            <p className={`text-sm text-text leading-relaxed ${!isExpanded && editText && editText.length > 150 ? 'line-clamp-3' : ''}`}>
+              <span className="font-semibold text-text mr-1">{authorName}</span>
               {editText}
             </p>
             {editText && editText.length > 150 && (
@@ -482,32 +494,32 @@ const PostCard: React.FC<PostCardProps> = memo(({
                   e.stopPropagation();
                   setIsExpanded(!isExpanded);
                 }}
-                className="text-gray-500 text-xs font-medium mt-1 hover:underline"
+                className="text-text-secondary text-xs font-medium mt-1 hover:text-text transition-colors"
               >
-                {isExpanded ? 'Show less' : 'Read more'}
+                {isExpanded ? 'Show less' : 'more'}
               </button>
             )}
           </>
         ) : (
-          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+          <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
             <textarea
-              className="w-full border border-gray-200 rounded-lg p-2 text-sm text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className="textarea text-sm"
               rows={3}
               maxLength={2200}
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
             />
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleEditSave}
                 disabled={isSaving || !editText.trim()}
-                className="px-3 py-1 rounded-md bg-[#02fa97] text-white text-sm disabled:opacity-60"
+                className="btn-primary btn-sm"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
               <button
                 onClick={() => { setIsEditing(false); setEditText(content); }}
-                className="px-3 py-1 rounded-md bg-gray-100 text-gray-700 text-sm"
+                className="btn-secondary btn-sm"
               >
                 Cancel
               </button>
@@ -517,8 +529,8 @@ const PostCard: React.FC<PostCardProps> = memo(({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center space-x-6">
+      <div className="flex items-center justify-between px-4 py-3 border-t border-border-light">
+        <div className="flex items-center gap-4">
           {/* Aura/Like Button */}
           <button 
             id={`aura-btn-${id}`}
@@ -543,7 +555,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
             </svg>
             {auraCount > 0 && (
               <span className={`text-sm font-medium ${
-                hasAura ? 'text-[#02fa97]' : 'text-gray-900'
+                hasAura ? 'text-accent' : 'text-text'
               }`}>
                 {auraCount}
               </span>
@@ -565,7 +577,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
               />
             </svg>
             {commentCount > 0 && (
-              <span className="text-sm font-medium text-gray-900">{commentCount}</span>
+              <span className="text-sm font-medium text-text">{commentCount}</span>
             )}
           </button>
           
@@ -602,22 +614,24 @@ const PostCard: React.FC<PostCardProps> = memo(({
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Share Post</h3>
-            <div className="space-y-3">
+        <div className="modal-overlay">
+          <div className="modal-container max-w-md">
+            <div className="modal-header">
+              <h3 className="text-lg font-semibold">Share Post</h3>
+            </div>
+            <div className="modal-body space-y-2">
               <button
                 onClick={() => {
                   const url = `${window.location.origin}/post/${id}`;
                   window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, '_blank');
                 }}
-                className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg"
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
               >
                 <span>Share to WhatsApp</span>
               </button>
               <button
                 onClick={copyToClipboard}
-                className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg"
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M8 2V5L12 9L16 5V2H8Z" stroke="currentColor" strokeWidth="1.5"/>
@@ -625,10 +639,12 @@ const PostCard: React.FC<PostCardProps> = memo(({
                 </svg>
                 <span>Copy Link</span>
               </button>
-              <div className="text-xs text-gray-500 px-3">Tip: You can also use your device share menu.</div>
+              <div className="text-xs text-text-secondary px-4 py-2">Tip: You can also use your device share menu.</div>
+            </div>
+            <div className="modal-footer">
               <button
                 onClick={() => setShowShareModal(false)}
-                className="w-full p-2 text-gray-500 hover:bg-gray-50 rounded-lg"
+                className="btn-secondary flex-1"
               >
                 Cancel
               </button>

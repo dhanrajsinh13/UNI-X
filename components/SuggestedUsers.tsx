@@ -80,47 +80,47 @@ export default function SuggestedUsers() {
 
 	return (
 		<div className="sticky top-20 lg:top-20">
-			<div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-				<div className="px-4 py-3 flex items-center justify-between">
-					<h3 className="text-sm font-semibold text-gray-900">Suggested for you</h3>
+			<div className="card overflow-hidden">
+				<div className="px-4 py-3 flex items-center justify-between border-b border-border-light">
+					<h3 className="text-sm font-semibold text-text">Suggested for you</h3>
 					{suggestions.length > 4 && (
-						<button onClick={() => router.push('/suggestions')} className="text-xs font-semibold text-gray-500 hover:text-gray-700">
+						<button onClick={() => router.push('/suggestions')} className="link-muted text-xs font-semibold">
 							See all
 						</button>
 					)}
 				</div>
-				<div className="divide-y divide-gray-100">
+				<div className="divide-y divide-border-light">
 					{loading && (
-						<div className="p-4 space-y-3">
+						<div className="p-4 space-y-4">
 							{[...Array(5)].map((_, i) => (
 								<div key={i} className="flex items-center justify-between">
 									<div className="flex items-center gap-3">
-										<div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+										<div className="avatar avatar-md bg-gray-200 animate-pulse" />
 										<div>
 											<div className="h-3 w-32 bg-gray-200 rounded mb-2 animate-pulse" />
 											<div className="h-3 w-20 bg-gray-100 rounded animate-pulse" />
 										</div>
 									</div>
-									<div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
+									<div className="h-8 w-20 bg-gray-200 rounded-lg animate-pulse" />
 								</div>
 							))}
 						</div>
 					)}
 					{!loading && suggestions.length === 0 && (
-						<div className="p-4 text-sm text-gray-500">No suggestions right now.</div>
+						<div className="p-4 text-sm text-text-secondary">No suggestions right now.</div>
 					)}
 					{!loading && visible.map(u => (
-						<div key={u.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/profile/${u.id}`)}>
+						<div key={u.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => router.push(`/profile/${u.id}`)}>
 							<div className="flex items-center gap-3 min-w-0">
 								<img 
 									src={u.profile_image || '/uploads/DefaultProfile.jpg'} 
 									alt={u.name} 
-									className="w-10 h-10 rounded-full object-cover" 
+									className="avatar avatar-md object-cover" 
 									onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
 								/>
 								<div className="min-w-0">
-									<p className="text-sm font-medium text-gray-900 truncate">{u.name}</p>
-									<p className="text-xs text-gray-500 truncate">
+									<p className="text-sm font-semibold text-text truncate">{u.name}</p>
+									<p className="text-xs text-text-secondary truncate">
 										{u.reason || (u.department ? `${u.department}${u.year ? ` · Year ${u.year}` : ''}` : 'New to UNIX')}
 									</p>
 								</div>
@@ -139,9 +139,9 @@ export default function SuggestedUsers() {
 			</div>
 
 			{/* Footer - Desktop only */}
-			<div className="hidden lg:block mt-6 text-[11px] text-gray-400 space-y-2">
+			<div className="hidden lg:block mt-6 text-xxs text-text-tertiary space-y-2">
 				<p>About · Help · Press · API  · Privacy · Terms · Locations · Language</p>
-				<p>© 2025 UNIX</p>
+				<p>© 2026 UNI-X</p>
 			</div>
 		</div>
 	)

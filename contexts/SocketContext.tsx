@@ -16,6 +16,13 @@ interface SocketContextType {
   onNotification: (callback: (notification: any) => void) => () => void
   onMessageUnsent: (callback: (data: { messageId: number }) => void) => () => void
   onMessageDeleted: (callback: (data: { messageId: number }) => void) => () => void
+  // New: Message status acknowledgment handlers
+  onMessageAck: (callback: (data: { clientId: string; messageId: number; status: string; sentAt: string }) => void) => () => void
+  onMessageDelivered: (callback: (data: { messageId: number; clientId?: string; deliveredTo: number; deliveredAt: string }) => void) => () => void
+  onMessagesRead: (callback: (data: { messageIds: number[]; readBy: number; readAt: string }) => void) => () => void
+  // New: Methods for acknowledgment
+  markMessagesRead: (otherUserId: number, messageIds: number[], senderId?: number) => void
+  confirmMessageReceived: (messageId: number, senderId: number) => void
   startTyping: (otherUserId: number, userId: number, userName: string) => void
   stopTyping: (otherUserId: number, userId: number) => void
   onTyping: (callback: (data: any) => void) => () => void
@@ -38,21 +45,21 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   // Helper function to validate token format and expiration
   const isTokenValid = useCallback((token: string | null): boolean => {
     if (!token || token.length < 20) return false;
-    
+
     // Basic JWT format check (should have 3 parts separated by dots)
     const parts = token.split('.');
     if (parts.length !== 3) return false;
-    
+
     try {
       // Decode the payload (middle part) to check expiration
       const payload = JSON.parse(atob(parts[1]));
-      
+
       // Check if token has expired
       if (payload.exp && payload.exp * 1000 < Date.now()) {
         console.warn('⚠️ Socket token has expired');
         return false;
       }
-      
+
       return true;
     } catch (e) {
       console.error('❌ Invalid socket token format:', e);
@@ -89,18 +96,18 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     if (!isTokenValid(token)) {
       console.error('❌ Cannot connect socket: Token is invalid or expired');
       console.error('💡 Triggering logout to clear invalid token');
-      
+
       // Clear socket if it exists
       if (socket) {
         disconnect();
       }
-      
+
       // Trigger logout to clear invalid token
       if (typeof window !== 'undefined') {
         alert('Your session has expired. Please log in again.');
         logout();
       }
-      
+
       return;
     }
 
@@ -127,8 +134,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         reconnectionAttempts: 10, // More attempts for sleeping servers
         reconnectionDelay: 2000,
         reconnectionDelayMax: 10000,
-        transports: ['websocket', 'polling'], // Try WebSocket first, fallback to polling
-        upgrade: true,
+        transports: ['polling', 'websocket'], // Start with polling for better Render compatibility
+        upgrade: true, // Upgrade to WebSocket after initial connection
         auth: { token },
         withCredentials: true,
       })
@@ -150,50 +157,39 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       })
 
       newSocket.on('connect_error', (error: any) => {
-        console.error('❌ Socket.io connection error:', error.message || error)
-        console.error('Error details:', { 
-          message: error.message, 
-          type: error.type,
-          description: error.description,
-          context: error.context 
-        })
         setIsConnecting(false)
-        
+        setIsConnected(false)
+
         // Handle authentication errors
-        const isAuthError = error.message?.includes('No token') || 
-                           error.message?.includes('Authentication') || 
-                           error.message?.includes('Token expired') ||
-                           error.message?.includes('Invalid token');
-        
+        const isAuthError = error.message?.includes('No token') ||
+          error.message?.includes('Authentication') ||
+          error.message?.includes('Token expired') ||
+          error.message?.includes('Invalid token');
+
         if (isAuthError) {
-          console.error('💡 Authentication error - Token is invalid or expired')
-          console.error('💡 Clearing invalid token and logging out...')
-          
+          console.error('🔐 Socket authentication failed - Session expired')
+
           // Disconnect socket
           if (newSocket) {
             newSocket.close();
           }
-          
+
           // Clear socket state
           setSocket(null);
-          setIsConnected(false);
-          
+
           // Trigger logout
           if (typeof window !== 'undefined') {
-            // Use setTimeout to avoid updating state during render
             setTimeout(() => {
               alert('Your session has expired. Please log in again.');
               logout();
             }, 100);
           }
         } else if (error.message?.includes('xhr poll error')) {
-          console.error('💡 Cannot reach server - Check if socket server is running')
-          console.error('💡 Expected URL:', url)
-        } else if (!error.message) {
-          console.error('💡 Generic error - Socket server might not be running or JWT_SECRET mismatch')
+          console.warn('🔌 Socket server unreachable at:', url)
+          console.warn('💡 Start local socket server with: node socket-server.js')
+        } else {
+          console.warn('🔌 Socket connection failed:', error.message || 'Unknown error')
         }
-        
-        setIsConnected(false)
       })
 
       // Handle socket errors
@@ -244,22 +240,25 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
   const sendMessage = useCallback((messageData: { receiverId: number; messageText?: string; mediaUrl?: string | null; clientId?: string; replyToId?: number | null }) => {
     if (!socket || !socket.connected) {
-      console.warn('Cannot send message: socket not connected');
-      throw new Error('Socket not connected');
+      console.warn('⚠️ Cannot send message: socket not connected. Please wait for connection to be established.');
+      // Don't throw - let the UI handle this gracefully with optimistic updates
+      return false;
     }
 
     if (!user?.id) {
-      console.warn('Cannot send message: user not authenticated');
-      throw new Error('User not authenticated');
+      console.warn('⚠️ Cannot send message: user not authenticated');
+      return false;
     }
 
     // Validate message data
     if (!messageData.receiverId) {
-      throw new Error('Receiver ID is required');
+      console.error('❌ Receiver ID is required');
+      return false;
     }
 
     if (!messageData.messageText?.trim() && !messageData.mediaUrl) {
-      throw new Error('Message content is required');
+      console.error('❌ Message content is required');
+      return false;
     }
 
     try {
@@ -271,10 +270,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         senderName: user.name,
         createdAt: new Date().toISOString(),
       })
-      console.log(`Sending message to conversation: ${conversationId}`)
+      console.log(`📤 Sending message to conversation: ${conversationId}`)
+      return true;
     } catch (error) {
-      console.error('Failed to send message via socket:', error);
-      throw error;
+      console.error('❌ Failed to send message via socket:', error);
+      return false;
     }
   }, [socket, user])
 
@@ -340,6 +340,45 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     return () => socket.off('user-stopped-typing', handler)
   }
 
+  // New: Message acknowledgment handler (confirms message saved on server)
+  const onMessageAck = (callback: (data: { clientId: string; messageId: number; status: string; sentAt: string }) => void) => {
+    if (!socket) return () => { }
+    const handler = (d: any) => callback(d)
+    socket.on('message-ack', handler)
+    return () => socket.off('message-ack', handler)
+  }
+
+  // New: Message delivered handler (confirms recipient received message)
+  const onMessageDelivered = (callback: (data: { messageId: number; clientId?: string; deliveredTo: number; deliveredAt: string }) => void) => {
+    if (!socket) return () => { }
+    const handler = (d: any) => callback(d)
+    socket.on('message-delivered', handler)
+    return () => socket.off('message-delivered', handler)
+  }
+
+  // New: Messages read handler (confirms recipient read messages)
+  const onMessagesRead = (callback: (data: { messageIds: number[]; readBy: number; readAt: string }) => void) => {
+    if (!socket) return () => { }
+    const handler = (d: any) => callback(d)
+    socket.on('messages-read', handler)
+    return () => socket.off('messages-read', handler)
+  }
+
+  // New: Mark messages as read
+  const markMessagesRead = useCallback((otherUserId: number, messageIds: number[], senderId?: number) => {
+    if (socket && user?.id) {
+      const conversationId = [user.id, otherUserId].sort((a, b) => a - b).join('-')
+      socket.emit('mark-messages-read', { conversationId, messageIds, senderId })
+    }
+  }, [socket, user?.id])
+
+  // New: Confirm message was received (for delivery status)
+  const confirmMessageReceived = useCallback((messageId: number, senderId: number) => {
+    if (socket) {
+      socket.emit('message-received', { messageId, senderId })
+    }
+  }, [socket])
+
   const value: SocketContextType = {
     socket,
     isConnected,
@@ -352,6 +391,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     onNotification,
     onMessageUnsent,
     onMessageDeleted,
+    onMessageAck,
+    onMessageDelivered,
+    onMessagesRead,
+    markMessagesRead,
+    confirmMessageReceived,
     startTyping,
     stopTyping,
     onTyping,
