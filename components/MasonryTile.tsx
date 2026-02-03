@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
+import Image from 'next/image'
 
 interface MasonryTileProps {
   id: number;
@@ -34,7 +35,7 @@ const MasonryTile: React.FC<MasonryTileProps> = ({ id, mediaUrl, mediaType = 'im
         await navigator.clipboard.writeText(url);
         alert('Post link copied');
       }
-    } catch {}
+    } catch { }
     setMenuOpen(false);
   }, [id, title]);
 
@@ -91,7 +92,7 @@ const MasonryTile: React.FC<MasonryTileProps> = ({ id, mediaUrl, mediaType = 'im
     setIsVideoHovered(true);
     if (videoRef.current) {
       videoRef.current.currentTime = 0; // Reset to start
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(() => { });
     }
   }, []);
 
@@ -145,7 +146,7 @@ const MasonryTile: React.FC<MasonryTileProps> = ({ id, mediaUrl, mediaType = 'im
       <button onClick={onClick} className="block w-full text-left">
         {mediaType === 'video' ? (
           !videoError ? (
-            <div 
+            <div
               className="relative rounded-2xl overflow-hidden"
               onMouseEnter={handleVideoMouseEnter}
               onMouseLeave={handleVideoMouseLeave}
@@ -158,12 +159,12 @@ const MasonryTile: React.FC<MasonryTileProps> = ({ id, mediaUrl, mediaType = 'im
                   </div>
                 </div>
               )}
-              <video 
+              <video
                 ref={videoRef}
-                src={mediaUrl} 
-                className="w-full h-auto rounded-2xl block" 
-                muted 
-                playsInline 
+                src={mediaUrl}
+                className="w-full h-auto rounded-2xl block"
+                muted
+                playsInline
                 preload="metadata"
                 style={{ maxHeight: '80vh' }}
                 onLoadedMetadata={handleVideoLoadedMetadata}
@@ -193,7 +194,7 @@ const MasonryTile: React.FC<MasonryTileProps> = ({ id, mediaUrl, mediaType = 'im
         ) : (
           <div className={`bg-gray-100 rounded-2xl ${imgLoaded ? '' : 'animate-pulse'}`}>
             {!imgError ? (
-              <img 
+              <Image
                 src={mediaUrl}
                 alt={title || 'post image'}
                 className="w-full h-auto object-cover rounded-2xl"

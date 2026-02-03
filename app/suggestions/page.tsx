@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../contexts/AuthContext'
@@ -109,10 +110,10 @@ export default function SuggestionsPage() {
             {suggestions.map(u => (
               <div key={u.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/profile/${u.id}`)}>
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <img 
-                    src={u.profile_image || '/uploads/DefaultProfile.jpg'} 
-                    alt={u.name} 
-                    className="w-12 h-12 rounded-full object-cover" 
+                  <Image
+                    src={u.profile_image || '/uploads/DefaultProfile.jpg'}
+                    alt={u.name}
+                    className="w-12 h-12 rounded-full object-cover"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                   />
                   <div className="min-w-0 flex-1">
@@ -134,8 +135,8 @@ export default function SuggestionsPage() {
                   </div>
                 </div>
                 <div onClick={(e) => e.stopPropagation()}>
-                  <FollowButton 
-                    userId={u.id} 
+                  <FollowButton
+                    userId={u.id}
                     isFollowing={false}
                     size="md"
                     onFollowChange={(isFollowing) => { if (isFollowing) removeOnFollow(u.id) }}

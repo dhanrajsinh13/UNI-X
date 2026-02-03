@@ -1,0 +1,573 @@
+﻿
+C:\Projects\UNI-X\__tests__\lib\auth.test.ts
+  64:19  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Projects\UNI-X\__tests__\lib\validation.test.ts
+  6:3  warning  'validateInteger' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\app\messages\page.tsx
+     4:78  warning  'memo' is defined but never used                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+    57:19  warning  'isConnected' is assigned a value but never used                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+    57:50  warning  'leaveConversation' is assigned a value but never used                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+    62:58  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+    66:10  warning  'messagesLoading' is assigned a value but never used                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+    78:9   warning  'lastRefreshAtRef' is assigned a value but never used                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+   115:40  warning  The ref value 'refreshTimeoutRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'refreshTimeoutRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+   121:6   warning  React Hook useEffect has a missing dependency: 'loadConversations'. Either include it or remove the dependency array                                                                                                                                                               react-hooks/exhaustive-deps
+   134:51  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   134:74  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   143:51  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   239:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                                                                                                              @typescript-eslint/no-unused-expressions
+   240:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                                                                                                              @typescript-eslint/no-unused-expressions
+   241:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                                                                                                              @typescript-eslint/no-unused-expressions
+   242:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                                                                                                              @typescript-eslint/no-unused-expressions
+   243:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                                                                                                              @typescript-eslint/no-unused-expressions
+   245:6   warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array                                                                                                                                                                            react-hooks/exhaustive-deps
+   317:6   warning  React Hook useEffect has missing dependencies: 'handleConversationClick' and 'startNewConversation'. Either include them or remove the dependency array                                                                                                                            react-hooks/exhaustive-deps
+   334:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   355:47  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   357:22  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   360:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   361:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   363:33  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   364:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   364:57  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   372:46  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   372:60  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   375:53  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   388:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   405:23  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   428:45  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   538:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   728:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   764:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   794:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   825:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+  1129:48  warning  'index' is defined but never used                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\app\notifications\page.tsx
+   17:10  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   40:10  warning  'loadingRequests' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   64:21  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   75:51  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+   90:56  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  134:19  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
+  294:70  warning  'index' is defined but never used                     @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\app\profile\[id]\page.tsx
+   59:52   error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+   68:6    warning  React Hook useEffect has a missing dependency: 'fetchUserProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   80:21   error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  452:43   warning  'postData' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  460:104  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                      react/no-unescaped-entities
+
+C:\Projects\UNI-X\app\profile\me\page.tsx
+  157:27  warning  'e' is defined but never used                                                                                        @typescript-eslint/no-unused-vars
+  192:9   warning  'router' is assigned a value but never used                                                                          @typescript-eslint/no-unused-vars
+  236:67  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  251:39  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  300:21  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  347:9   warning  'handleTabChange' is assigned a value but never used                                                                 @typescript-eslint/no-unused-vars
+  358:63  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  359:79  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  360:6   warning  React Hook useEffect has a missing dependency: 'fetchUserProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  406:22  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  419:21  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  486:21  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  499:9   warning  'handlePostClick' is assigned a value but never used                                                                 @typescript-eslint/no-unused-vars
+  561:12  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  606:21  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  640:21  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\app\settings\page.tsx
+   26:9   warning  'router' is assigned a value but never used                      @typescript-eslint/no-unused-vars
+   29:10  warning  'saving' is assigned a value but never used                      @typescript-eslint/no-unused-vars
+   66:45  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   82:21  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  102:21  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  126:19  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  167:19  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  180:43  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  201:29  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  202:29  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  228:22  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  243:21  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  275:21  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  597:54  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  623:54  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Projects\UNI-X\app\suggestions\page.tsx
+  41:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:82  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\app\swipe\page.tsx
+  32:10  warning  'swipeDirection' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  54:52  error    Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  65:25  error    Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  69:22  error    Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+  91:19  error    Unexpected any. Specify a different type             @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\app\uniwall\page.tsx
+  62:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\components\AuthModal.tsx
+  64:14  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\components\ContactsList.tsx
+  30:6   warning  React Hook useEffect has a missing dependency: 'loadContacts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  51:19  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\components\CreatePostModal.tsx
+  189:6   warning  React Hook React.useEffect has missing dependencies: 'clampOffsets', 'offsetX', and 'offsetY'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  231:21  error    Unexpected any. Specify a different type                                                                                                           @typescript-eslint/no-explicit-any
+  495:49  error    Unexpected any. Specify a different type                                                                                                           @typescript-eslint/no-explicit-any
+  496:49  error    Unexpected any. Specify a different type                                                                                                           @typescript-eslint/no-explicit-any
+  499:50  error    Unexpected any. Specify a different type                                                                                                           @typescript-eslint/no-explicit-any
+  500:49  error    Unexpected any. Specify a different type                                                                                                           @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\components\FollowButton.tsx
+  47:35  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  74:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  86:6   warning  React Hook useCallback has missing dependencies: 'requestState' and 'requested'. Either include them or remove the dependency array. If 'setRequestState' needs the current value of 'requested', you can also switch to useReducer instead of useState and read 'requested' in the reducer  react-hooks/exhaustive-deps
+
+C:\Projects\UNI-X\components\FollowersListModal.tsx
+  109:17  error    Unexpected any. Specify a different type                                                                                                 @typescript-eslint/no-explicit-any
+  117:6   warning  React Hook useCallback has missing dependencies: 'hasMore', 'loading', and 'offset'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  137:17  error    Unexpected any. Specify a different type                                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\components\MasonryTile.tsx
+   2:59  warning  'useMemo' is defined but never used       @typescript-eslint/no-unused-vars
+  32:25  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:29  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\components\Messages.tsx
+   60:10  warning  'conversationId' is assigned a value but never used                                                                                                                                     @typescript-eslint/no-unused-vars
+   78:6   warning  React Hook useEffect has missing dependencies: 'joinConversation', 'leaveConversation', and 'loadInitialMessages'. Either include them or remove the dependency array                   react-hooks/exhaustive-deps
+  103:54  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  110:57  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  110:80  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  120:49  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  155:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                   @typescript-eslint/no-unused-expressions
+  156:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                   @typescript-eslint/no-unused-expressions
+  157:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                   @typescript-eslint/no-unused-expressions
+  159:6   warning  React Hook useEffect has missing dependencies: 'confirmMessageReceived', 'onNewMessage', 'onStoppedTyping', 'onTyping', and 'user'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  168:21  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  178:50  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  196:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                   @typescript-eslint/no-unused-expressions
+  197:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                   @typescript-eslint/no-unused-expressions
+  198:7   warning  Expected an assignment or function call and instead saw an expression                                                                                                                   @typescript-eslint/no-unused-expressions
+  205:6   warning  React Hook useEffect has a missing dependency: 'scrollToBottom'. Either include it or remove the dependency array                                                                       react-hooks/exhaustive-deps
+  229:22  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  232:44  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  233:33  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  234:21  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  234:57  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  236:38  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  237:33  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  242:46  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  246:53  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  270:12  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  288:23  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  306:45  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  323:50  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  335:12  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  454:38  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  457:38  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  460:38  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  463:38  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+  467:39  error    Unexpected any. Specify a different type                                                                                                                                                @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\components\MessagesSimple.tsx
+  11:46  warning  'otherUserId' is defined but never used    @typescript-eslint/no-unused-vars
+  12:11  warning  'user' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\components\MiniChatWindow.tsx
+   68:24  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   71:46  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   72:35  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   73:23  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   73:59  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   75:40  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   76:35  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   81:48  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+   84:55  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+  126:51  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+  126:74  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+  134:51  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+  148:20  warning  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+  160:23  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+  171:45  error    Unexpected any. Specify a different type                               @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\components\PostCard.tsx
+   60:10  warning  'showOptions' is assigned a value but never used                                                                 @typescript-eslint/no-unused-vars
+   76:39  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  158:21  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  230:6   warning  React Hook useCallback has a missing dependency: 'authorName'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  297:21  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  305:9   warning  'handleDelete' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+  323:21  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  330:6   warning  React Hook useCallback has a missing dependency: 'isDeleting'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Projects\UNI-X\components\PostModal.tsx
+    73:10   warning  'videoDuration' is assigned a value but never used               @typescript-eslint/no-unused-vars
+   110:39   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   364:90   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   373:25   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   374:29   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   379:14   warning  'e' is defined but never used                                    @typescript-eslint/no-unused-vars
+   408:10   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   493:48   warning  'mediaUrl' is defined but never used                             @typescript-eslint/no-unused-vars
+   505:9    warning  'getAspectRatio' is assigned a value but never used              @typescript-eslint/no-unused-vars
+   737:80   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   740:36   warning  'e' is defined but never used                                    @typescript-eslint/no-unused-vars
+   954:45   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   955:49   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  1157:99   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  1157:112  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Projects\UNI-X\components\SuggestedUsers.tsx
+  26:9   warning  'error' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  41:48  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  49:78  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  63:16  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\contexts\AuthContext.tsx
+  165:6   warning  React Hook useEffect has missing dependencies: 'logout' and 'user'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  228:16  warning  '_' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\contexts\SocketContext.tsx
+   14:38  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+   15:52  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+   16:45  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+   28:31  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+   29:38  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  159:45  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  223:6   warning  React Hook useEffect has a missing dependency: 'user'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  281:45  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  283:27  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  288:59  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  290:25  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  295:52  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  329:38  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  331:25  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  336:45  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  338:25  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  346:25  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  354:25  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+  362:25  error    Unexpected any. Specify a different type                                                                 @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\diagnose-mongo.js
+  2:25  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Projects\UNI-X\hooks\useInfiniteScroll.ts
+  25:24  warning  React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead  react-hooks/exhaustive-deps
+
+C:\Projects\UNI-X\hooks\usePosts.ts
+   81:19  error    Unexpected any. Specify a different type                                                                       @typescript-eslint/no-explicit-any
+  108:6   warning  React Hook useEffect has a missing dependency: 'fetchPosts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Projects\UNI-X\hooks\useSearch.ts
+  65:19  error    Unexpected any. Specify a different type                                                                    @typescript-eslint/no-explicit-any
+  76:27  warning  React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead  react-hooks/exhaustive-deps
+
+C:\Projects\UNI-X\hooks\useUserProfile.ts
+  67:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\jest.setup.js
+  1:1  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Projects\UNI-X\lib\dataFetcher.ts
+   27:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   28:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  207:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  325:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  325:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  339:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  339:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\lib\mongodb.ts
+   30:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+   56:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  285:26  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  295:18  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  300:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  419:74  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  422:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  439:71  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\lib\redis.ts
+  129:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  184:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  202:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  218:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\lib\socialGraph.ts
+   15:20  warning  'Document' is defined but never used       @typescript-eslint/no-unused-vars
+   15:30  warning  'WithId' is defined but never used         @typescript-eslint/no-unused-vars
+   15:38  warning  'Collection' is defined but never used     @typescript-eslint/no-unused-vars
+   16:17  warning  'getCollection' is defined but never used  @typescript-eslint/no-unused-vars
+   16:51  warning  'withRetry' is defined but never used      @typescript-eslint/no-unused-vars
+  232:27  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\lib\upload.ts
+   75:17  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:50  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:11  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  178:31  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:12  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\lib\validation.ts
+   94:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  222:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  238:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\auth\forgot-password.ts
+  50:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\auth\login.ts
+  35:43  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:28  warning  '_' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\pages\api\auth\register.ts
+  92:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\comments.ts
+    2:94  warning  'serializeDoc' is defined but never used  @typescript-eslint/no-unused-vars
+   44:69  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:77  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:70  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   64:61  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:43  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:46  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  179:72  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  180:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\comments\like.ts
+  42:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\db\test.ts
+   7:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\debug\test-post.ts
+  41:11  warning  'userCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\pages\api\graph\follow.ts
+  107:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\graph\followers.ts
+  108:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\graph\following.ts
+  101:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\graph\interaction.ts
+  107:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\graph\mutual.ts
+  92:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\graph\relationship.ts
+  82:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\graph\stats.ts
+  84:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\graph\suggestions.ts
+  106:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\messages\[messageId]\unsend.ts
+  79:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\messages\conversation\[userId].ts
+  89:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\messages\conversations.ts
+  49:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\messages\conversations\[id]\archive.ts
+  3:10  warning  'getCollection' is defined but never used  @typescript-eslint/no-unused-vars
+  3:25  warning  'Collections' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\pages\api\messages\index.ts
+   62:83  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+   85:51  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  109:49  warning  'isMeta' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  154:44  error    Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\messages\send.ts
+   7:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\posts\aura.ts
+  65:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  91:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  92:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\posts\index.ts
+   54:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:91  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:59  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  347:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  349:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  354:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  377:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\search\index.ts
+  79:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  83:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users.ts
+  21:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\[userId].ts
+  115:92  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:79  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  212:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\[userId]\follow.ts
+   69:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\[userId]\followers.ts
+  55:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\[userId]\following.ts
+  55:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  62:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\block\[blockedUserId].ts
+  47:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\blocked.ts
+  55:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\deactivate.ts
+   2:55  warning  'Post' is defined but never used           @typescript-eslint/no-unused-vars
+   2:61  warning  'Message' is defined but never used        @typescript-eslint/no-unused-vars
+   2:70  warning  'Comment' is defined but never used        @typescript-eslint/no-unused-vars
+   2:79  warning  'Aura' is defined but never used           @typescript-eslint/no-unused-vars
+   2:85  warning  'Follower' is defined but never used       @typescript-eslint/no-unused-vars
+   2:95  warning  'FollowRequest' is defined but never used  @typescript-eslint/no-unused-vars
+  72:19  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\delete.ts
+  83:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\export-data.ts
+  52:13  warning  'password_hash' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  75:19  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\follow.ts
+  60:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  65:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\me.ts
+   40:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   43:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   51:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   75:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\me\tagged.ts
+  17:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\privacy.ts
+    2:55  warning  'serializeDoc' is defined but never used  @typescript-eslint/no-unused-vars
+   51:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:36  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   53:33  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   54:33  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   58:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   77:22  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:35  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\requests.ts
+  38:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  76:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\pages\api\users\suggestions.ts
+    2:38  warning  'withRetry' is defined but never used     @typescript-eslint/no-unused-vars
+   70:50  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:10  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  110:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:10  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\scripts\init-social-graph.js
+  9:25  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Projects\UNI-X\scripts\migrate-categories.ts
+  22:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Projects\UNI-X\scripts\test-mongodb-connection.js
+  8:25  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  9:1   error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Projects\UNI-X\server.js
+  1:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:19  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  5:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Projects\UNI-X\socket-server.js
+  1:26  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:20  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:17  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Projects\UNI-X\socket-server\health-check.js
+   1:14  error    A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+   2:15  error    A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  41:20  warning  'error' is defined but never used        @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\socket-server\keep-alive.js
+  16:15  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  17:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Projects\UNI-X\socket-server\server.js
+   2:1   error    A `require()` style import is forbidden          @typescript-eslint/no-require-imports
+   4:17  error    A `require()` style import is forbidden          @typescript-eslint/no-require-imports
+   5:26  error    A `require()` style import is forbidden          @typescript-eslint/no-require-imports
+   6:20  error    A `require()` style import is forbidden          @typescript-eslint/no-require-imports
+   7:13  error    A `require()` style import is forbidden          @typescript-eslint/no-require-imports
+   8:14  error    A `require()` style import is forbidden          @typescript-eslint/no-require-imports
+  62:32  warning  'senderId' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  62:42  warning  'receiverId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Projects\UNI-X\test-mongo-connection.js
+  2:25  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  3:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  4:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 400 problems (312 errors, 88 warnings)
+

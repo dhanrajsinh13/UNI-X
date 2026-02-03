@@ -4,7 +4,6 @@ import Navbar from '../components/Navbar';
 import MainContainer from '../components/MainContainer';
 import ClientProviders from '../components/ClientProviders';
 import SocketStatus from '../components/SocketStatus';
-// @ts-ignore - allow importing global CSS without type declarations
 import '../styles/globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });

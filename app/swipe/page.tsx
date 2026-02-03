@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '../../contexts/AuthContext'
 import { fetchAPI, dataFetcher } from '../../lib/dataFetcher'
+import Image from 'next/image'
 
 interface SwipeUser {
   id: number
@@ -52,7 +53,7 @@ export default function SwipePage() {
       try {
         const data = await fetchAPI<{ suggestions: any[] }>(
           '/api/users/suggestions?limit=20&algorithm=advanced',
-          { 
+          {
             token,
             cacheTTL: 300000
           }
@@ -61,8 +62,8 @@ export default function SwipePage() {
         if (!isCancelled) {
           // Filter for users with mutual connections or interests
           const eligibleUsers: SwipeUser[] = (data.suggestions || [])
-            .filter((s: any) => 
-              (s.mutualFriends && s.mutualFriends > 0) || 
+            .filter((s: any) =>
+              (s.mutualFriends && s.mutualFriends > 0) ||
               (s.interests && s.interests.length > 0)
             )
             .map((s: any) => ({
@@ -332,7 +333,7 @@ export default function SwipePage() {
 
             {/* Profile Image */}
             <div className="relative h-96">
-              <img
+              <Image
                 src={currentUser.profile_image || '/default-avatar.png'}
                 alt={currentUser.name}
                 className="w-full h-full object-cover"

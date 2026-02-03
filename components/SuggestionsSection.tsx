@@ -28,17 +28,17 @@ const SuggestionsSection: React.FC = () => {
 
   const loadSuggestions = useCallback(async () => {
     if (!token) return;
-    
+
     setLoading(true);
     try {
       const data = await fetchAPI<{ suggestions: SuggestedUser[] }>(
         '/api/users/suggestions?limit=5&algorithm=advanced',
-        { 
+        {
           token,
           cacheTTL: 300000 // Cache for 5 minutes
         }
       );
-      
+
       setSuggestions(data.suggestions || []);
     } catch (error) {
       console.error('Error loading suggestions:', error);
@@ -53,10 +53,10 @@ const SuggestionsSection: React.FC = () => {
 
   const handleFollow = async (userId: number) => {
     if (!token) return;
-    
+
     // Optimistic update
     setFollowingStates(prev => ({ ...prev, [userId]: true }));
-    
+
     try {
       await fetchAPI('/api/users/follow', {
         method: 'POST',
@@ -64,10 +64,10 @@ const SuggestionsSection: React.FC = () => {
         body: JSON.stringify({ userId }),
         skipCache: true
       });
-      
+
       // Remove from suggestions after successful follow
       setSuggestions(prev => prev.filter(s => s.id !== userId));
-      
+
       // Clear suggestion cache to get fresh data
       dataFetcher.clearCache('/api/users/suggestions');
     } catch (error) {
@@ -91,14 +91,14 @@ const SuggestionsSection: React.FC = () => {
     <div className="bg-white rounded-lg mb-4">
       <div className="flex items-center justify-between px-4 py-3">
         <h3 className="text-sm font-semibold text-gray-500">Suggestions For You</h3>
-        <button 
+        <button
           onClick={() => router.push('/suggestions')}
           className="text-xs font-semibold text-black hover:text-gray-600"
         >
           See All
         </button>
       </div>
-      
+
       <div className="space-y-1">
         {loading ? (
           <div className="px-4 py-8 text-center">
@@ -114,8 +114,8 @@ const SuggestionsSection: React.FC = () => {
                 >
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[#02fa97] to-teal-400">
                     {suggestion.profile_image ? (
-                      <img 
-                        src={suggestion.profile_image} 
+                      <Image
+                        src={suggestion.profile_image}
                         alt={suggestion.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -129,7 +129,7 @@ const SuggestionsSection: React.FC = () => {
                     )}
                   </div>
                 </button>
-                
+
                 <button
                   onClick={() => navigateToProfile(suggestion.id)}
                   className="flex-1 min-w-0 text-left"
@@ -138,8 +138,8 @@ const SuggestionsSection: React.FC = () => {
                     {suggestion.username || suggestion.name}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
-                    {suggestion.reason || 
-                      (suggestion.department && suggestion.year 
+                    {suggestion.reason ||
+                      (suggestion.department && suggestion.year
                         ? `${suggestion.department} • ${suggestion.year}${getYearSuffix(suggestion.year)} Year`
                         : 'Suggested for you'
                       )
@@ -147,7 +147,7 @@ const SuggestionsSection: React.FC = () => {
                   </p>
                 </button>
               </div>
-              
+
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => handleFollow(suggestion.id)}
@@ -162,7 +162,7 @@ const SuggestionsSection: React.FC = () => {
                   aria-label="Dismiss"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
               </div>

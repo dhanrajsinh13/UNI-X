@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { dataFetcher } from '../../lib/dataFetcher';
+import Image from 'next/image'
 
 export default function CreatePostPage() {
   const [caption, setCaption] = useState('');
@@ -14,7 +15,7 @@ export default function CreatePostPage() {
   const [captionTouched, setCaptionTouched] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const router = useRouter();
   const { user, token } = useAuth();
 
@@ -37,7 +38,7 @@ export default function CreatePostPage() {
       }
 
       setMediaFile(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -57,7 +58,7 @@ export default function CreatePostPage() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
+
     if (!caption.trim()) {
       setCaptionTouched(true);
       return;
@@ -69,7 +70,7 @@ export default function CreatePostPage() {
       const formData = new FormData();
       formData.append('caption', caption);
       formData.append('category', category);
-      
+
       if (mediaFile) {
         formData.append('media', mediaFile);
       }
@@ -84,16 +85,16 @@ export default function CreatePostPage() {
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // Clear posts cache after creating a new post
         dataFetcher.clearCache('/api/posts');
-        
+
         // Dispatch custom event to update posts in other components
         window.dispatchEvent(new CustomEvent('postCreated', { detail: result.post }));
-        
+
         // Show success message
         setShowSuccess(true);
-        
+
         // Reset form
         setCaption('');
         setCategory('academic');
@@ -103,7 +104,7 @@ export default function CreatePostPage() {
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
         }
-        
+
         // Redirect to home after a short delay
         setTimeout(() => {
           router.push('/');
@@ -128,7 +129,7 @@ export default function CreatePostPage() {
             <div className="text-6xl mb-4">🔒</div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Login Required</h2>
             <p className="text-gray-600 mb-6">You need to be logged in to create a post.</p>
-            <button 
+            <button
               onClick={() => router.push('/')}
               className="bg-[#02fa97] text-black px-6 py-3 rounded-full font-semibold hover:bg-teal-500 transition-colors"
             >
@@ -147,7 +148,7 @@ export default function CreatePostPage() {
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in-up">
           <div className="bg-green-500 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span className="font-medium">Post created successfully!</span>
           </div>
@@ -159,13 +160,13 @@ export default function CreatePostPage() {
         <div className="mb-4 md:mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <button 
+              <button
                 onClick={() => router.back()}
                 className="p-2 hover:bg-white/80 rounded-full transition-all active:scale-95"
                 disabled={isSubmitting}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">Create Post</h1>
@@ -208,7 +209,7 @@ export default function CreatePostPage() {
                 maxLength={500}
                 disabled={isSubmitting}
               />
-              
+
               <div className="flex items-center justify-between mb-4">
                 <div className={`text-sm font-medium ${caption.length > 450 ? 'text-orange-500' : 'text-gray-400'}`}>
                   {caption.length}/500
@@ -226,7 +227,7 @@ export default function CreatePostPage() {
               {captionTouched && !caption.trim() && (
                 <div className="flex items-center gap-2 text-sm text-red-600 mb-4 bg-red-50 p-3 rounded-lg">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>Caption is required</span>
                 </div>
@@ -237,15 +238,15 @@ export default function CreatePostPage() {
                 <div className="relative mb-6 animate-fade-in-up">
                   <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-50">
                     {mediaFile?.type.startsWith('image/') ? (
-                      <img 
-                        src={mediaPreview} 
-                        alt="Preview" 
+                      <Image
+                        src={mediaPreview}
+                        alt="Preview"
                         className="w-full max-h-[400px] md:max-h-[500px] object-contain bg-gray-900"
                       />
                     ) : (
-                      <video 
-                        src={mediaPreview} 
-                        controls 
+                      <video
+                        src={mediaPreview}
+                        controls
                         className="w-full max-h-[400px] md:max-h-[500px]"
                       />
                     )}
@@ -257,7 +258,7 @@ export default function CreatePostPage() {
                     disabled={isSubmitting}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
                   <div className="absolute bottom-3 left-3 bg-black bg-opacity-60 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
@@ -270,7 +271,7 @@ export default function CreatePostPage() {
               <div className="mb-6">
                 <label className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7 7H17M7 12H17M7 17H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <path d="M7 7H17M7 12H17M7 17H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                   </svg>
                   Choose a Category
                 </label>
@@ -281,11 +282,10 @@ export default function CreatePostPage() {
                       type="button"
                       onClick={() => setCategory(cat.id)}
                       disabled={isSubmitting}
-                      className={`p-3 md:p-4 rounded-xl border-2 transition-all text-sm font-medium relative overflow-hidden group ${
-                        category === cat.id
-                          ? 'border-[#02fa97] bg-gradient-to-br from-[#02fa97]/20 to-teal-100 shadow-md scale-105'
-                          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm bg-white'
-                      }`}
+                      className={`p-3 md:p-4 rounded-xl border-2 transition-all text-sm font-medium relative overflow-hidden group ${category === cat.id
+                        ? 'border-[#02fa97] bg-gradient-to-br from-[#02fa97]/20 to-teal-100 shadow-md scale-105'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-sm bg-white'
+                        }`}
                     >
                       <span className="text-2xl md:text-3xl mb-1 block">{cat.emoji}</span>
                       <span className={category === cat.id ? 'text-gray-900 font-semibold' : 'text-gray-700'}>
@@ -294,7 +294,7 @@ export default function CreatePostPage() {
                       {category === cat.id && (
                         <div className="absolute top-2 right-2">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 6L9 17L4 12" stroke="#02fa97" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M20 6L9 17L4 12" stroke="#02fa97" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </div>
                       )}
@@ -305,19 +305,17 @@ export default function CreatePostPage() {
 
               {/* Media Upload */}
               <div className="mb-6">
-                <label className={`flex items-center justify-center gap-3 px-6 py-4 border-2 border-dashed rounded-xl cursor-pointer transition-all group ${
-                  mediaPreview 
-                    ? 'border-[#02fa97] bg-[#02fa97]/5' 
-                    : 'border-gray-300 hover:border-[#02fa97] hover:bg-gray-50'
-                }`}>
+                <label className={`flex items-center justify-center gap-3 px-6 py-4 border-2 border-dashed rounded-xl cursor-pointer transition-all group ${mediaPreview
+                  ? 'border-[#02fa97] bg-[#02fa97]/5'
+                  : 'border-gray-300 hover:border-[#02fa97] hover:bg-gray-50'
+                  }`}>
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg transition-colors ${
-                      mediaPreview 
-                        ? 'bg-[#02fa97] text-white' 
-                        : 'bg-gray-100 text-gray-600 group-hover:bg-[#02fa97] group-hover:text-white'
-                    }`}>
+                    <div className={`p-2 rounded-lg transition-colors ${mediaPreview
+                      ? 'bg-[#02fa97] text-white'
+                      : 'bg-gray-100 text-gray-600 group-hover:bg-[#02fa97] group-hover:text-white'
+                      }`}>
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor"/>
+                        <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="currentColor" />
                       </svg>
                     </div>
                     <div className="text-left">
@@ -364,7 +362,7 @@ export default function CreatePostPage() {
                   ) : (
                     <>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                       <span>Publish Post</span>
                     </>
@@ -379,7 +377,7 @@ export default function CreatePostPage() {
         <div className="mt-6 bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-4 border border-blue-100">
           <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             Quick Tips
           </h3>

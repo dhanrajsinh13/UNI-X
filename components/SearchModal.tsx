@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchAPI } from '../lib/dataFetcher'
 import FollowButton from './FollowButton'
+import Image from 'next/image'
 
 interface SearchResult {
   users: SearchUser[]
@@ -121,7 +122,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   if (!isOpen) return null
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-start justify-center pt-16 px-4"
       onClick={handleBackdropClick}
     >
@@ -159,11 +160,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         <div className="flex border-b border-border-light bg-white sticky top-0 z-10">
           <button
             onClick={() => setActiveTab('people')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'people' 
-                ? 'text-text' 
-                : 'text-text-tertiary hover:text-text-secondary'
-            }`}
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'people'
+              ? 'text-text'
+              : 'text-text-tertiary hover:text-text-secondary'
+              }`}
           >
             People
             {activeTab === 'people' && (
@@ -172,11 +172,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           </button>
           <button
             onClick={() => setActiveTab('posts')}
-            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${
-              activeTab === 'posts' 
-                ? 'text-text' 
-                : 'text-text-tertiary hover:text-text-secondary'
-            }`}
+            className={`flex-1 py-3 text-sm font-medium transition-colors relative ${activeTab === 'posts'
+              ? 'text-text'
+              : 'text-text-tertiary hover:text-text-secondary'
+              }`}
           >
             Posts
             {activeTab === 'posts' && (
@@ -212,7 +211,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative flex-shrink-0">
-                        <img
+                        <Image
                           src={user.profile_image || '/default-avatar.png'}
                           alt={user.name}
                           className="w-12 h-12 rounded-full object-cover border-2 border-border-light"
@@ -277,7 +276,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     onClick={() => handlePostClick(post.id)}
                   >
                     <div className="flex items-start gap-3">
-                      <img
+                      <Image
                         src={post.user.profile_image || '/default-avatar.png'}
                         alt={post.user.name}
                         className="w-10 h-10 rounded-full object-cover border-2 border-border-light flex-shrink-0"

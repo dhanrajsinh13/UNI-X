@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image'
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -88,7 +89,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
 
   const applyEditsToImage = async (imageUrl: string): Promise<Blob | null> => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = new window.Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         const naturalWidth = img.naturalWidth || img.width;
@@ -500,7 +501,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                   onTouchEnd={onPointerUp}
                 >
                   {selectedMedia?.type.startsWith('image/') ? (
-                    <img
+                    <Image
                       ref={imageRef}
                       src={previewUrl}
                       alt="Preview"
@@ -556,7 +557,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                             className={`border rounded-lg p-2 text-xs text-gray-700 hover:bg-gray-50 ${activePreset === preset.name ? 'ring-2 ring-[#02fa97]' : ''}`}
                           >
                             <div className="h-20 w-full bg-gray-200 rounded mb-2 overflow-hidden flex items-center justify-center">
-                              <img src={previewUrl} alt={preset.name} className="h-full w-full object-cover" style={{ filter: preset.css }} />
+                              <Image src={previewUrl} alt={preset.name} className="h-full w-full object-cover" style={{ filter: preset.css }} />
                             </div>
                             {preset.name}
                           </button>
@@ -664,7 +665,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
               {/* Preview */}
               <div className="aspect-square md:w-1/2 bg-black flex items-center justify-center rounded-2xl shadow-lg overflow-hidden">
                 {selectedMedia?.type.startsWith('image/') ? (
-                  <img
+                  <Image
                     src={editedPreviewUrl || previewUrl}
                     alt="Preview"
                     className="max-w-full max-h-full object-contain"

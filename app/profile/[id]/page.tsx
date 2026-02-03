@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import PostCard from '../../../components/PostCard';
@@ -162,8 +163,8 @@ const ProfilePage = () => {
         <div className="text-center max-w-md mx-auto p-8">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-              <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+              <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">User Not Accessible</h2>
@@ -192,9 +193,9 @@ const ProfilePage = () => {
             {/* Avatar */}
             <div className="mx-auto md:mx-0">
               <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden ring-4 ring-white shadow-xl">
-                <img 
-                  src={userProfile.profile_image || '/uploads/DefaultProfile.jpg'} 
-                  alt={userProfile.name} 
+                <Image
+                  src={userProfile.profile_image || '/uploads/DefaultProfile.jpg'}
+                  alt={userProfile.name}
                   className="w-full h-full object-cover rounded-full"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                 />
@@ -208,7 +209,7 @@ const ProfilePage = () => {
                 <div className="flex items-center justify-center md:justify-start gap-2">
                   <h1 className="text-xl md:text-2xl font-light">{userProfile.username || userProfile.name}</h1>
                 </div>
-                
+
                 {/* Action Buttons - only show if not own profile and user is logged in */}
                 {!isOwnProfile && user && (
                   <div className="flex items-center justify-center md:justify-start gap-3">
@@ -226,10 +227,10 @@ const ProfilePage = () => {
                         className="flex items-center gap-2 px-4 py-2 bg-[#02fa97] hover:bg-teal-400 text-black font-medium text-sm rounded-lg transition-all duration-200 hover:shadow-md active:scale-95"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M8.5 19H8C4 19 2 17 2 13V8C2 4 4 2 8 2H16C20 2 22 4 22 8V13C22 17 20 19 16 19H15.5C15.19 19 14.89 19.15 14.7 19.4L13.2 21.4C12.54 22.28 11.46 22.28 10.8 21.4L9.3 19.4C9.14 19.18 8.77 19 8.5 19Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M15.9965 11H16.0054" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M11.9955 11H12.0045" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M7.99451 11H8.00349" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M8.5 19H8C4 19 2 17 2 13V8C2 4 4 2 8 2H16C20 2 22 4 22 8V13C22 17 20 19 16 19H15.5C15.19 19 14.89 19.15 14.7 19.4L13.2 21.4C12.54 22.28 11.46 22.28 10.8 21.4L9.3 19.4C9.14 19.18 8.77 19 8.5 19Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M15.9965 11H16.0054" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M11.9955 11H12.0045" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M7.99451 11H8.00349" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         Message
                       </button>
@@ -244,14 +245,14 @@ const ProfilePage = () => {
                   <span className="font-semibold text-gray-900">{userProfile.post_count || userProfile.posts?.length || 0}</span>
                   <span className="text-gray-600 ml-1">posts</span>
                 </div>
-                <button 
+                <button
                   onClick={() => setShowFollowModal({ open: true, type: 'followers' })}
                   className="text-center md:text-left hover:underline"
                 >
                   <span className="font-semibold text-gray-900">{userProfile.follower_count || 0}</span>
                   <span className="text-gray-600 ml-1">followers</span>
                 </button>
-                <button 
+                <button
                   onClick={() => setShowFollowModal({ open: true, type: 'following' })}
                   className="text-center md:text-left hover:underline"
                 >
@@ -278,8 +279,8 @@ const ProfilePage = () => {
             <button
               onClick={() => { setActiveTab('posts'); setViewMode('grid'); }}
               className={`flex items-center gap-2 pb-3 px-1 text-xs font-medium uppercase tracking-wide ${activeTab === 'posts'
-                  ? 'border-t-2 border-gray-900 text-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
+                ? 'border-t-2 border-gray-900 text-gray-900'
+                : 'text-gray-500 hover:text-gray-700'
                 }`}
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -297,8 +298,8 @@ const ProfilePage = () => {
                 <button
                   onClick={() => setActiveTab('saved')}
                   className={`flex items-center gap-2 pb-3 px-1 text-xs font-medium uppercase tracking-wide ${activeTab === 'saved'
-                      ? 'border-t-2 border-gray-900 text-gray-900'
-                      : 'text-gray-500 hover:text-gray-700'
+                    ? 'border-t-2 border-gray-900 text-gray-900'
+                    : 'text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -310,8 +311,8 @@ const ProfilePage = () => {
                 <button
                   onClick={() => setActiveTab('tagged')}
                   className={`flex items-center gap-2 pb-3 px-1 text-xs font-medium uppercase tracking-wide ${activeTab === 'tagged'
-                      ? 'border-t-2 border-gray-900 text-gray-900'
-                      : 'text-gray-500 hover:text-gray-700'
+                    ? 'border-t-2 border-gray-900 text-gray-900'
+                    : 'text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -372,8 +373,8 @@ const ProfilePage = () => {
                     viewMode === 'grid' ? (
                       <div className="grid grid-cols-3 gap-1 md:gap-4">
                         {userProfile.posts.map(post => (
-                          <div 
-                            key={post.id} 
+                          <div
+                            key={post.id}
                             className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-none md:rounded-lg overflow-hidden group cursor-pointer relative"
                             onClick={() => handlePostClick(post)}
                           >
@@ -390,7 +391,7 @@ const ProfilePage = () => {
                                   }}
                                 />
                               ) : (
-                                <img
+                                <Image
                                   src={post.media_url}
                                   alt={post.content}
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -432,8 +433,8 @@ const ProfilePage = () => {
                     ) : (
                       <div className="space-y-6">
                         {userProfile.posts.map(post => (
-                          <PostCard 
-                            key={post.id} 
+                          <PostCard
+                            key={post.id}
                             id={post.id}
                             authorId={userProfile.id}
                             authorName={userProfile.name}

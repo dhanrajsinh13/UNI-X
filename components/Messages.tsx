@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
+import Image from 'next/image'
 
 interface Message {
   id: number;
@@ -423,7 +424,7 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
                   {message.mediaUrl && (
                     <div className="mb-2">
                       {message.mediaUrl.includes('image') ? (
-                        <img
+                        <Image
                           src={message.mediaUrl}
                           alt="Shared image"
                           className="rounded max-w-full h-auto"

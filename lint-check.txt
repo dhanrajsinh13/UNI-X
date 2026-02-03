@@ -1,0 +1,534 @@
+﻿node.exe : `next lint` is 
+deprecated and will be 
+removed in Next.js 16.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpecified: (`next  
+   lint` is ... in Next.j   
+ s 16.:String) [], Remot    
+eException
+    + FullyQualifiedErrorId 
+    : NativeCommandError
+ 
+For new projects, use 
+create-next-app to choose 
+your preferred linter.
+For existing projects, 
+migrate to the ESLint CLI:
+npx @next/codemod@canary 
+next-lint-to-eslint-cli .
+
+
+./app/messages/page.tsx
+4:78  Warning: 'memo' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+57:19  Warning: 
+'isConnected' is assigned a 
+value but never used.  @type
+script-eslint/no-unused-vars
+57:50  Warning: 
+'leaveConversation' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+66:10  Warning: 
+'messagesLoading' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+78:9  Warning: 
+'lastRefreshAtRef' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+115:40  Warning: The ref 
+value 
+'refreshTimeoutRef.current' 
+will likely have changed by 
+the time this effect 
+cleanup function runs. If 
+this ref points to a node 
+rendered by React, copy 
+'refreshTimeoutRef.current' 
+to a variable inside the 
+effect, and use that 
+variable in the cleanup 
+function.  
+react-hooks/exhaustive-deps
+121:6  Warning: React Hook 
+useEffect has a missing 
+dependency: 
+'loadConversations'. Either 
+include it or remove the 
+dependency array.  
+react-hooks/exhaustive-deps
+239:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+240:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+241:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+242:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+243:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+245:6  Warning: React Hook 
+useEffect has a missing 
+dependency: 'user'. Either 
+include it or remove the 
+dependency array.  
+react-hooks/exhaustive-deps
+317:6  Warning: React Hook 
+useEffect has missing 
+dependencies: 
+'handleConversationClick' 
+and 'startNewConversation'. 
+Either include them or 
+remove the dependency 
+array.  
+react-hooks/exhaustive-deps
+1129:48  Warning: 'index' 
+is defined but never used.  
+@typescript-eslint/no-unused
+-vars
+
+./app/notifications/page.tsx
+40:10  Warning: 
+'loadingRequests' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+294:70  Warning: 'index' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+
+./app/profile/me/page.tsx
+157:27  Warning: 'e' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+192:9  Warning: 'router' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+347:9  Warning: 
+'handleTabChange' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+360:6  Warning: React Hook 
+useEffect has a missing 
+dependency: 
+'fetchUserProfile'. Either 
+include it or remove the 
+dependency array.  
+react-hooks/exhaustive-deps
+499:9  Warning: 
+'handlePostClick' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+
+./app/profile/[id]/page.tsx
+68:6  Warning: React Hook 
+useEffect has a missing 
+dependency: 
+'fetchUserProfile'. Either 
+include it or remove the 
+dependency array.  
+react-hooks/exhaustive-deps
+452:43  Warning: 'postData' 
+is defined but never used.  
+@typescript-eslint/no-unused
+-vars
+460:104  Error: `'` can be 
+escaped with `&apos;`, 
+`&lsquo;`, `&#39;`, 
+`&rsquo;`.  
+react/no-unescaped-entities
+
+./app/settings/page.tsx
+26:9  Warning: 'router' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+29:10  Warning: 'saving' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+597:54  Error: `'` can be 
+escaped with `&apos;`, 
+`&lsquo;`, `&#39;`, 
+`&rsquo;`.  
+react/no-unescaped-entities
+623:54  Error: `'` can be 
+escaped with `&apos;`, 
+`&lsquo;`, `&#39;`, 
+`&rsquo;`.  
+react/no-unescaped-entities
+
+./app/swipe/page.tsx
+32:10  Warning: 
+'swipeDirection' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+
+./pages/api/auth/login.ts
+38:28  Warning: '_' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+
+./pages/api/comments.ts
+2:94  Warning: 
+'serializeDoc' is defined 
+but never used.  @typescript
+-eslint/no-unused-vars
+
+./pages/api/debug/test-post.
+ts
+41:11  Warning: 'userCount' 
+is assigned a value but 
+never used.  @typescript-esl
+int/no-unused-vars
+
+./pages/api/messages/convers
+ations/[id]/archive.ts
+3:10  Warning: 
+'getCollection' is defined 
+but never used.  @typescript
+-eslint/no-unused-vars
+3:25  Warning: 
+'Collections' is defined 
+but never used.  @typescript
+-eslint/no-unused-vars
+
+./pages/api/messages/index.t
+s
+109:49  Warning: 'isMeta' 
+is assigned a value but 
+never used.  @typescript-esl
+int/no-unused-vars
+
+./pages/api/users/deactivate
+.ts
+2:55  Warning: 'Post' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+2:61  Warning: 'Message' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+2:70  Warning: 'Comment' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+2:79  Warning: 'Aura' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+2:85  Warning: 'Follower' 
+is defined but never used.  
+@typescript-eslint/no-unused
+-vars
+2:95  Warning: 
+'FollowRequest' is defined 
+but never used.  @typescript
+-eslint/no-unused-vars
+
+./pages/api/users/export-dat
+a.ts
+52:13  Warning: 
+'password_hash' is assigned 
+a value but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+
+./pages/api/users/privacy.ts
+2:55  Warning: 
+'serializeDoc' is defined 
+but never used.  @typescript
+-eslint/no-unused-vars
+
+./pages/api/users/suggestion
+s.ts
+2:38  Warning: 'withRetry' 
+is defined but never used.  
+@typescript-eslint/no-unused
+-vars
+
+./components/AuthModal.tsx
+64:14  Warning: 'error' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+
+./components/ContactsList.ts
+x
+30:6  Warning: React Hook 
+useEffect has a missing 
+dependency: 'loadContacts'. 
+Either include it or remove 
+the dependency array.  
+react-hooks/exhaustive-deps
+
+./components/CreatePostModal
+.tsx
+189:6  Warning: React Hook 
+React.useEffect has missing 
+dependencies: 
+'clampOffsets', 'offsetX', 
+and 'offsetY'. Either 
+include them or remove the 
+dependency array.  
+react-hooks/exhaustive-deps
+
+./components/FollowButton.ts
+x
+86:6  Warning: React Hook 
+useCallback has missing 
+dependencies: 
+'requestState' and 
+'requested'. Either include 
+them or remove the 
+dependency array. If 
+'setRequestState' needs the 
+current value of 
+'requested', you can also 
+switch to useReducer 
+instead of useState and 
+read 'requested' in the 
+reducer.  
+react-hooks/exhaustive-deps
+
+./components/FollowersListMo
+dal.tsx
+117:6  Warning: React Hook 
+useCallback has missing 
+dependencies: 'hasMore', 
+'loading', and 'offset'. 
+Either include them or 
+remove the dependency 
+array.  
+react-hooks/exhaustive-deps
+
+./components/MasonryTile.tsx
+2:59  Warning: 'useMemo' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+
+./components/Messages.tsx
+60:10  Warning: 
+'conversationId' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+78:6  Warning: React Hook 
+useEffect has missing 
+dependencies: 
+'joinConversation', 
+'leaveConversation', and 
+'loadInitialMessages'. 
+Either include them or 
+remove the dependency 
+array.  
+react-hooks/exhaustive-deps
+155:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+156:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+157:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+159:6  Warning: React Hook 
+useEffect has missing 
+dependencies: 
+'confirmMessageReceived', 
+'onNewMessage', 
+'onStoppedTyping', 
+'onTyping', and 'user'. 
+Either include them or 
+remove the dependency 
+array.  
+react-hooks/exhaustive-deps
+196:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+197:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+198:7  Warning: Expected an 
+assignment or function call 
+and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+205:6  Warning: React Hook 
+useEffect has a missing 
+dependency: 
+'scrollToBottom'. Either 
+include it or remove the 
+dependency array.  
+react-hooks/exhaustive-deps
+
+./components/MessagesSimple.
+tsx
+11:46  Warning: 
+'otherUserId' is defined 
+but never used.  @typescript
+-eslint/no-unused-vars
+12:11  Warning: 'user' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+
+./components/MiniChatWindow.
+tsx
+148:20  Warning: Expected 
+an assignment or function 
+call and instead saw an 
+expression.  @typescript-esl
+int/no-unused-expressions
+
+./components/PostCard.tsx
+60:10  Warning: 
+'showOptions' is assigned a 
+value but never used.  @type
+script-eslint/no-unused-vars
+230:6  Warning: React Hook 
+useCallback has a missing 
+dependency: 'authorName'. 
+Either include it or remove 
+the dependency array.  
+react-hooks/exhaustive-deps
+305:9  Warning: 
+'handleDelete' is assigned 
+a value but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+330:6  Warning: React Hook 
+useCallback has a missing 
+dependency: 'isDeleting'. 
+Either include it or remove 
+the dependency array.  
+react-hooks/exhaustive-deps
+
+./components/PostModal.tsx
+73:10  Warning: 
+'videoDuration' is assigned 
+a value but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+379:14  Warning: 'e' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+493:48  Warning: 'mediaUrl' 
+is defined but never used.  
+@typescript-eslint/no-unused
+-vars
+505:9  Warning: 
+'getAspectRatio' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+740:36  Warning: 'e' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+1157:99  Error: `"` can be 
+escaped with `&quot;`, 
+`&ldquo;`, `&#34;`, 
+`&rdquo;`.  
+react/no-unescaped-entities
+1157:112  Error: `"` can be 
+escaped with `&quot;`, 
+`&ldquo;`, `&#34;`, 
+`&rdquo;`.  
+react/no-unescaped-entities
+
+./components/SuggestedUsers.
+tsx
+26:9  Warning: 'error' is 
+assigned a value but never 
+used.  @typescript-eslint/no
+-unused-vars
+
+./lib/mongodb.ts
+30:14  Warning: 'error' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+
+./lib/socialGraph.ts
+15:20  Warning: 'Document' 
+is defined but never used.  
+@typescript-eslint/no-unused
+-vars
+15:30  Warning: 'WithId' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+15:38  Warning: 
+'Collection' is defined but 
+never used.  @typescript-esl
+int/no-unused-vars
+16:17  Warning: 
+'getCollection' is defined 
+but never used.  @typescript
+-eslint/no-unused-vars
+16:51  Warning: 'withRetry' 
+is defined but never used.  
+@typescript-eslint/no-unused
+-vars
+
+./lib/upload.ts
+226:12  Warning: 'e' is 
+defined but never used.  @ty
+pescript-eslint/no-unused-va
+rs
+
+info  - Need to disable 
+some ESLint rules? Learn 
+more here: https://nextjs.or
+g/docs/app/api-reference/con
+fig/eslint#disabling-rules

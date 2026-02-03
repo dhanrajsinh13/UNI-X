@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import Image from 'next/image'
 
 interface FollowersListModalProps {
   isOpen: boolean;
@@ -33,12 +34,12 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
   const [hasMore, setHasMore] = useState(true);
   const [isActing, setIsActing] = useState<number | null>(null);
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
-  
+
   // Use refs to avoid dependency issues
   const loadingRef = React.useRef(loading);
   const hasMoreRef = React.useRef(hasMore);
   const offsetRef = React.useRef(offset);
-  
+
   // Keep refs in sync with state
   React.useEffect(() => {
     loadingRef.current = loading;
@@ -58,26 +59,26 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
     if (!token) return;
     if (loading) return;
     if (!hasMore && append) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     const currentOffset = append ? offset : 0;
     console.log(`[FollowersListModal] Fetching ${type} for userId ${userId}, append=${append}, offset=${currentOffset}`);
-    
+
     try {
       const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(currentOffset) });
       const endpoint = type === 'followers' ? 'followers' : 'following';
       const url = `/api/users/${userId}/${endpoint}?${params.toString()}`;
-      
+
       console.log(`[FollowersListModal] Fetching: ${url}`);
-      
+
       const resp = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       console.log(`[FollowersListModal] Response status: ${resp.status}`);
-      
+
       if (!resp.ok) {
         const data = await resp.json().catch(() => ({}));
         console.error(`[FollowersListModal] Error response:`, data);
@@ -85,9 +86,9 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
       }
       const data = await resp.json();
       const newUsers: LiteUser[] = data.users || [];
-      
+
       console.log(`[FollowersListModal] Received ${newUsers.length} users`);
-      
+
       setUsers(prev => {
         if (append) {
           // When appending, filter out any duplicates to prevent duplicate keys
@@ -96,13 +97,13 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
           return [...prev, ...uniqueNewUsers];
         } else {
           // When not appending (fresh load), remove any potential duplicates
-          const uniqueUsers = newUsers.filter((user, index, arr) => 
+          const uniqueUsers = newUsers.filter((user, index, arr) =>
             arr.findIndex(u => u.id === user.id) === index
           );
           return uniqueUsers;
         }
       });
-      
+
       setHasMore(newUsers.length === PAGE_SIZE);
       setOffset(prev => append ? prev + newUsers.length : newUsers.length);
     } catch (e: any) {
@@ -196,14 +197,14 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
             <>
               {users.map((u, index) => (
                 <div key={`user-${u.id}-${index}`} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
-                  <div 
+                  <div
                     className="flex items-center gap-3 flex-1 cursor-pointer"
                     onClick={() => handleUserClick(u.id)}
                   >
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
-                      <img 
-                        src={u.profile_image || '/uploads/DefaultProfile.jpg'} 
-                        alt={u.name} 
+                      <Image
+                        src={u.profile_image || '/uploads/DefaultProfile.jpg'}
+                        alt={u.name}
                         className="w-full h-full object-cover"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                       />
@@ -222,9 +223,8 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
                       toggleFollow(u.id);
                     }}
                     disabled={isActing === u.id}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                      u.is_following ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-[#02fa97] text-black bg-[#02fa97] hover:bg-teal-500'
-                    } disabled:opacity-50`}
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${u.is_following ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-[#02fa97] text-black bg-[#02fa97] hover:bg-teal-500'
+                      } disabled:opacity-50`}
                   >
                     {u.is_following ? 'Following' : 'Follow'}
                   </button>

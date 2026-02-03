@@ -1,16 +1,18 @@
 'use client'
 
+import Image, { ImageProps } from 'next/image'
 import { useState } from 'react'
 
-interface SafeImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface SafeImageProps extends Omit<ImageProps, 'src'> {
+  src?: string
   fallback?: string
 }
 
-export default function SafeImage({ 
-  src, 
+export default function SafeImage({
+  src,
   fallback = '/uploads/DefaultProfile.jpg',
   alt,
-  ...props 
+  ...props
 }: SafeImageProps) {
   const [imgSrc, setImgSrc] = useState(src || fallback)
   const [hasError, setHasError] = useState(false)
@@ -23,10 +25,10 @@ export default function SafeImage({
   }
 
   return (
-    <img
+    <Image
       {...props}
-      src={imgSrc}
-      alt={alt}
+      src={imgSrc as string}
+      alt={alt || ''}
       onError={handleError}
     />
   )

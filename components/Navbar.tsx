@@ -5,6 +5,7 @@ import CreatePostModal from './CreatePostModal';
 import AuthModal from './AuthModal';
 import SearchModal from './SearchModal';
 import { useAuth } from '../contexts/AuthContext';
+import Image from 'next/image'
 
 const Navbar = () => {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
@@ -50,23 +51,23 @@ const Navbar = () => {
   const handleSearchOpen = useCallback(() => {
     setIsSearchOpen(true);
   }, []);
-  
+
   // Don't show navbar on landing page or when user is not authenticated
   if (!user) {
     return null;
   }
-  
+
   return (
     <>
       {/* Desktop Sidebar - Instagram Style */}
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-border-light z-fixed flex-col justify-between py-8 px-4">
         <div>
           <Link href="/" className="flex items-center px-4 mb-8">
-            <img src="/uni-x_logo.png" alt="UNI-X" className="w-10 h-10 mr-3" />
+            <Image src="/uni-x_logo.png" alt="UNI-X" className="w-10 h-10 mr-3" />
             <span className="font-bold text-2xl bg-gradient-to-r from-text to-accent bg-clip-text text-transparent">UNI-X</span>
           </Link>
           {user ? (
-          <nav className="space-y-2">
+            <nav className="space-y-2">
               <SidebarItem href="/" icon="/SVG/home.svg" label="Home" />
               <SidebarItem href="/uniwall" icon="/SVG/uniwall.svg" label="UniWall" />
               <SidebarButton icon="/SVG/search.svg" label="Search" onClick={handleSearchOpen} />
@@ -74,7 +75,7 @@ const Navbar = () => {
               <SidebarItem href="/messages" icon="/SVG/messages.svg" label="Messages" />
               <SidebarItem href="/notifications" icon="/SVG/notifications.svg" label="Notifications" />
               <SidebarItem href="/profile/me" icon="/SVG/profile.svg" label="Profile" />
-          </nav>
+            </nav>
           ) : (
             <div className="px-2">
               <button
@@ -88,33 +89,32 @@ const Navbar = () => {
         </div>
         {user && (
           <div className="space-y-2 border-t border-border-light pt-4">
-            <Link 
+            <Link
               href="/settings"
               className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200"
             >
-              <img src="/SVG/settings.svg" alt="Settings" className="w-5 h-5" />
+              <Image src="/SVG/settings.svg" alt="Settings" className="w-5 h-5" />
               <span className="text-sm font-medium text-text">Settings</span>
             </Link>
-            <button 
+            <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 w-full ${
-                isLoggingOut 
-                  ? 'bg-gray-100 text-text-tertiary cursor-not-allowed'
-                  : logoutClicked
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 w-full ${isLoggingOut
+                ? 'bg-gray-100 text-text-tertiary cursor-not-allowed'
+                : logoutClicked
                   ? 'bg-error/10 text-error hover:bg-error/20'
                   : 'hover:bg-gray-50 text-text'
-              }`}
+                }`}
             >
               <span className="text-xl">
                 {isLoggingOut ? '⏳' : logoutClicked ? '❗' : '🚪'}
               </span>
               <span className="text-sm font-medium">
-                {isLoggingOut 
-                  ? 'Logging out...' 
-                  : logoutClicked 
-                  ? 'Click again to confirm' 
-                  : 'Logout'
+                {isLoggingOut
+                  ? 'Logging out...'
+                  : logoutClicked
+                    ? 'Click again to confirm'
+                    : 'Logout'
                 }
               </span>
             </button>
@@ -156,12 +156,12 @@ const Navbar = () => {
 
 // Nav item components with SVG icon support
 const SidebarItem = ({ href, icon, label }: { href: string; icon: string; label: string }) => (
-  <Link 
-    href={href} 
+  <Link
+    href={href}
     className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
   >
     {icon.startsWith('/') ? (
-      <img src={icon} alt={label} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
+      <Image src={icon} alt={label} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}
@@ -173,7 +173,7 @@ const SidebarButton = ({ href, icon, label, onClick }: { href?: string; icon: st
   const content = (
     <>
       {icon.startsWith('/') ? (
-        <img src={icon} alt={label || 'icon'} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
+        <Image src={icon} alt={label || 'icon'} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
       ) : (
         <span className="text-2xl">{icon}</span>
       )}
@@ -204,12 +204,12 @@ const SidebarButton = ({ href, icon, label, onClick }: { href?: string; icon: st
 };
 
 const MobileNavItem = ({ href, icon }: { href: string; icon: string }) => (
-  <Link 
-    href={href} 
+  <Link
+    href={href}
     className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"
   >
     {icon.startsWith('/') ? (
-      <img src={icon} alt="Navigation icon" className="w-7 h-7" />
+      <Image src={icon} alt="Navigation icon" className="w-7 h-7" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}
@@ -217,12 +217,12 @@ const MobileNavItem = ({ href, icon }: { href: string; icon: string }) => (
 );
 
 const MobilePostNavItem = ({ icon, onClick }: { icon: string; onClick: () => void }) => (
-  <button 
+  <button
     onClick={onClick}
     className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"
   >
     {icon.startsWith('/') ? (
-      <img src={icon} alt="Post icon" className="w-7 h-7" />
+      <Image src={icon} alt="Post icon" className="w-7 h-7" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}

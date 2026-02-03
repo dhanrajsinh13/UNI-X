@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image'
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -30,17 +31,17 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<SettingsSection>('account-privacy');
-  
+
   // Additional privacy settings
   const [showOnlineStatus, setShowOnlineStatus] = useState<boolean>(true);
   const [showReadReceipts, setShowReadReceipts] = useState<boolean>(true);
   const [whoCanMessage, setWhoCanMessage] = useState<'everyone' | 'followers'>('everyone');
   const [whoCanComment, setWhoCanComment] = useState<'everyone' | 'followers'>('everyone');
-  
+
   // Blocked users
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [loadingBlocked, setLoadingBlocked] = useState(false);
-  
+
   // Edit Profile Modal States
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -66,9 +67,9 @@ export default function SettingsPage() {
           '/api/users/me',
           { token, cacheTTL: 30000 }
         );
-        
+
         setIsPrivate(!!data.user?.is_private);
-        
+
         // Load additional privacy settings from localStorage (since they're not in DB yet)
         const savedSettings = localStorage.getItem('privacySettings');
         if (savedSettings) {
@@ -115,11 +116,11 @@ export default function SettingsPage() {
         token,
         skipCache: true
       });
-      
+
       setBlockedUsers(prev => prev.filter(blocked => blocked.blocked_user_id !== blockedUserId));
       setMessage('User unblocked successfully');
       setTimeout(() => setMessage(null), 3000);
-      
+
       // Clear cache
       dataFetcher.clearCache('/api/users/blocked');
     } catch (err: any) {
@@ -158,7 +159,7 @@ export default function SettingsPage() {
         body: JSON.stringify({ is_private: isPrivate }),
         skipCache: true
       });
-      
+
       savePrivacySettings(); // Save other privacy settings
       dataFetcher.clearCache('/api/users/me'); // Clear user cache
       setMessage('Settings saved');
@@ -173,20 +174,20 @@ export default function SettingsPage() {
   // Edit Profile Functions
   const resetEditForm = async () => {
     if (!token) return;
-    
+
     try {
       // Fetch latest user data
       const data = await fetchAPI<{ user: any }>(
         '/api/users/me',
         { token, skipCache: true } // Skip cache to get fresh data
       );
-      
+
       const latestUser = data.user;
-      
-      setEditForm({ 
-        name: latestUser.name || '', 
-        department: latestUser.department || '', 
-        year: latestUser.year || 1 
+
+      setEditForm({
+        name: latestUser.name || '',
+        department: latestUser.department || '',
+        year: latestUser.year || 1
       });
       setEditUsername(latestUser.username || '');
       setEditBio(latestUser.bio || '');
@@ -201,7 +202,7 @@ export default function SettingsPage() {
         setEditPfp((user as any).profile_image || null);
       }
     }
-    
+
     setHasUnsavedChanges(false);
   };
 
@@ -296,11 +297,11 @@ export default function SettingsPage() {
               {/* Account Section */}
               <div className="mb-4">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Account</p>
-                
-                <button 
-                  onClick={async () => { 
-                    setIsEditing(true); 
-                    await resetEditForm(); 
+
+                <button
+                  onClick={async () => {
+                    setIsEditing(true);
+                    await resetEditForm();
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 group"
                 >
@@ -318,20 +319,17 @@ export default function SettingsPage() {
                   </svg>
                 </button>
 
-                <button 
+                <button
                   onClick={() => setActiveSection('notifications')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-                    activeSection === 'notifications' 
-                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm' 
-                      : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
-                  } group`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${activeSection === 'notifications'
+                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm'
+                    : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                    } group`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${
-                    activeSection === 'notifications' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
-                  }`}>
-                    <svg className={`w-5 h-5 ${
-                      activeSection === 'notifications' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
-                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'notifications' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                    }`}>
+                    <svg className={`w-5 h-5 ${activeSection === 'notifications' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                   </div>
@@ -341,9 +339,8 @@ export default function SettingsPage() {
                     </span>
                     <p className="text-xs text-gray-500">Manage alerts</p>
                   </div>
-                  <svg className={`w-5 h-5 ${
-                    activeSection === 'notifications' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-5 h-5 ${activeSection === 'notifications' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -352,21 +349,18 @@ export default function SettingsPage() {
               {/* Privacy Section */}
               <div className="mb-4">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2">Privacy & Security</p>
-                
-                <button 
+
+                <button
                   onClick={() => setActiveSection('account-privacy')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-                    activeSection === 'account-privacy' 
-                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm' 
-                      : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
-                  } group`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${activeSection === 'account-privacy'
+                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm'
+                    : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                    } group`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${
-                    activeSection === 'account-privacy' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
-                  }`}>
-                    <svg className={`w-5 h-5 ${
-                      activeSection === 'account-privacy' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
-                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'account-privacy' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                    }`}>
+                    <svg className={`w-5 h-5 ${activeSection === 'account-privacy' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
@@ -381,27 +375,23 @@ export default function SettingsPage() {
                       Private
                     </span>
                   )}
-                  <svg className={`w-5 h-5 ${
-                    activeSection === 'account-privacy' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-5 h-5 ${activeSection === 'account-privacy' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
 
-                <button 
+                <button
                   onClick={() => setActiveSection('password')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${
-                    activeSection === 'password' 
-                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm' 
-                      : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
-                  } group`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${activeSection === 'password'
+                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm'
+                    : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                    } group`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${
-                    activeSection === 'password' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
-                  }`}>
-                    <svg className={`w-5 h-5 ${
-                      activeSection === 'password' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
-                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'password' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                    }`}>
+                    <svg className={`w-5 h-5 ${activeSection === 'password' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                      }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                     </svg>
                   </div>
@@ -411,9 +401,8 @@ export default function SettingsPage() {
                     </span>
                     <p className="text-xs text-gray-500">Manage lists</p>
                   </div>
-                  <svg className={`w-5 h-5 ${
-                    activeSection === 'password' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
-                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-5 h-5 ${activeSection === 'password' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                    }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -421,7 +410,7 @@ export default function SettingsPage() {
 
               {/* Logout Button */}
               <div className="pt-4 border-t border-gray-100">
-                <button 
+                <button
                   onClick={logout}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left hover:bg-red-50 group"
                 >
@@ -453,7 +442,7 @@ export default function SettingsPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-2">Account Privacy</h2>
                     <p className="text-gray-600">Control who can see your content and interact with you</p>
                   </div>
-                  
+
                   {/* Alerts */}
                   {error && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
@@ -490,7 +479,7 @@ export default function SettingsPage() {
                           Account Visibility
                         </h3>
                       </div>
-                      
+
                       {/* Private Account Toggle */}
                       <div className="p-6">
                         <div className="flex items-start justify-between gap-6">
@@ -504,15 +493,15 @@ export default function SettingsPage() {
                               )}
                             </div>
                             <div className="text-sm text-gray-600 leading-relaxed">
-                              When your account is public, your profile and posts can be seen by anyone. 
+                              When your account is public, your profile and posts can be seen by anyone.
                               When private, only approved followers can see what you share.
                             </div>
                           </div>
                           <div className="flex-shrink-0">
                             <label className="relative inline-flex items-center cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                checked={isPrivate} 
+                              <input
+                                type="checkbox"
+                                checked={isPrivate}
                                 onChange={(e) => {
                                   setIsPrivate(e.target.checked);
                                   setTimeout(() => onSave(), 100);
@@ -536,7 +525,7 @@ export default function SettingsPage() {
                           Interactions
                         </h3>
                       </div>
-                      
+
                       <div className="p-6 space-y-6">
                         {/* Who Can Comment */}
                         <div className="flex items-start justify-between gap-6">
@@ -598,7 +587,7 @@ export default function SettingsPage() {
                           Activity Status
                         </h3>
                       </div>
-                      
+
                       <div className="p-6 space-y-6">
                         {/* Show Online Status */}
                         <div className="flex items-start justify-between gap-6">
@@ -610,9 +599,9 @@ export default function SettingsPage() {
                           </div>
                           <div className="flex-shrink-0">
                             <label className="relative inline-flex items-center cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                checked={showOnlineStatus} 
+                              <input
+                                type="checkbox"
+                                checked={showOnlineStatus}
                                 onChange={(e) => {
                                   setShowOnlineStatus(e.target.checked);
                                   savePrivacySettings();
@@ -636,9 +625,9 @@ export default function SettingsPage() {
                           </div>
                           <div className="flex-shrink-0">
                             <label className="relative inline-flex items-center cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                checked={showReadReceipts} 
+                              <input
+                                type="checkbox"
+                                checked={showReadReceipts}
                                 onChange={(e) => {
                                   setShowReadReceipts(e.target.checked);
                                   savePrivacySettings();
@@ -657,8 +646,8 @@ export default function SettingsPage() {
                       <div className="p-6 border-b border-gray-100">
                         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                            <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                            <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                           </svg>
                           Blocked Users
                           {blockedUsers.length > 0 && (
@@ -668,7 +657,7 @@ export default function SettingsPage() {
                           )}
                         </h3>
                       </div>
-                      
+
                       <div className="p-6">
                         {loadingBlocked ? (
                           <div className="flex items-center justify-center py-12">
@@ -677,8 +666,8 @@ export default function SettingsPage() {
                         ) : blockedUsers.length === 0 ? (
                           <div className="text-center py-12">
                             <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                              <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                              <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                             </svg>
                             <p className="text-gray-500 font-medium">No blocked users</p>
                             <p className="text-sm text-gray-400 mt-1">Users you block will appear here</p>
@@ -688,7 +677,7 @@ export default function SettingsPage() {
                             {blockedUsers.map((blocked) => (
                               <div key={blocked.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                                  <img 
+                                  <Image
                                     src={blocked.blocked_user?.profile_image || '/uploads/DefaultProfile.jpg'}
                                     alt={blocked.blocked_user?.name}
                                     className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm grayscale"
@@ -726,7 +715,7 @@ export default function SettingsPage() {
                           Data & History
                         </h3>
                       </div>
-                      
+
                       <div className="p-6 space-y-3">
                         <button className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left border border-gray-200">
                           <div>
@@ -764,9 +753,9 @@ export default function SettingsPage() {
                           Danger Zone
                         </h3>
                       </div>
-                      
+
                       <div className="p-6 space-y-3">
-                        <button 
+                        <button
                           onClick={() => {
                             if (confirm('Are you sure you want to deactivate your account? You can reactivate it anytime by logging in.')) {
                               // Implement deactivation logic
@@ -786,7 +775,7 @@ export default function SettingsPage() {
                           </svg>
                         </button>
 
-                        <button 
+                        <button
                           onClick={() => {
                             if (confirm('⚠️ WARNING: This will permanently delete your account and all your data. This action cannot be undone. Are you absolutely sure?')) {
                               // Implement deletion logic
@@ -843,9 +832,9 @@ export default function SettingsPage() {
                 {/* Profile Picture */}
                 <div className="flex flex-col items-center gap-4">
                   <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
-                    <img 
-                      src={editPfp || '/uploads/DefaultProfile.jpg'} 
-                      alt="Preview" 
+                    <Image
+                      src={editPfp || '/uploads/DefaultProfile.jpg'}
+                      alt="Preview"
                       className="w-full h-full object-cover"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                     />
@@ -861,11 +850,10 @@ export default function SettingsPage() {
                     />
                     <label
                       htmlFor="profile-pic-upload"
-                      className={`inline-block px-4 py-2 rounded-lg text-sm font-medium cursor-pointer ${
-                        uploadingPfp 
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      }`}
+                      className={`inline-block px-4 py-2 rounded-lg text-sm font-medium cursor-pointer ${uploadingPfp
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        }`}
                     >
                       {uploadingPfp ? (
                         <span className="flex items-center gap-2">
@@ -886,32 +874,32 @@ export default function SettingsPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <input 
-                      value={editForm.name} 
-                      onChange={(e) => { setEditForm({ ...editForm, name: e.target.value }); handleFormChange(); }} 
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent" 
+                    <input
+                      value={editForm.name}
+                      onChange={(e) => { setEditForm({ ...editForm, name: e.target.value }); handleFormChange(); }}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
                       placeholder="Enter your name"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                    <input 
-                      value={editUsername} 
-                      onChange={(e) => { setEditUsername(e.target.value); handleFormChange(); }} 
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent" 
+                    <input
+                      value={editUsername}
+                      onChange={(e) => { setEditUsername(e.target.value); handleFormChange(); }}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
                       placeholder="Enter your username"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-                    <textarea 
-                      value={editBio} 
-                      onChange={(e) => { setEditBio(e.target.value); handleFormChange(); }} 
-                      rows={4} 
+                    <textarea
+                      value={editBio}
+                      onChange={(e) => { setEditBio(e.target.value); handleFormChange(); }}
+                      rows={4}
                       maxLength={150}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent resize-none" 
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent resize-none"
                       placeholder="Tell us about yourself"
                     />
                     <div className="text-xs text-gray-500 mt-1 text-right">
@@ -922,19 +910,19 @@ export default function SettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                      <input 
-                        value={editForm.department} 
-                        onChange={(e) => { setEditForm({ ...editForm, department: e.target.value }); handleFormChange(); }} 
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent" 
+                      <input
+                        value={editForm.department}
+                        onChange={(e) => { setEditForm({ ...editForm, department: e.target.value }); handleFormChange(); }}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
                         placeholder="Your department"
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                      <select 
-                        value={editForm.year} 
-                        onChange={(e) => { setEditForm({ ...editForm, year: parseInt(e.target.value) }); handleFormChange(); }} 
+                      <select
+                        value={editForm.year}
+                        onChange={(e) => { setEditForm({ ...editForm, year: parseInt(e.target.value) }); handleFormChange(); }}
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent bg-white"
                       >
                         <option value={1}>1st Year</option>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import FollowButton from './FollowButton'
 import { useAuth } from '../contexts/AuthContext'
 import { fetchAPI } from '../lib/dataFetcher'
+import Image from 'next/image'
 
 interface SuggestedUser {
 	id: number
@@ -39,7 +40,7 @@ export default function SuggestedUsers() {
 				// Use the new intelligent suggestions API with caching
 				const data = await fetchAPI<{ suggestions: any[] }>(
 					'/api/users/suggestions?limit=10&algorithm=advanced',
-					{ 
+					{
 						token,
 						cacheTTL: 300000 // Cache for 5 minutes
 					}
@@ -112,10 +113,10 @@ export default function SuggestedUsers() {
 					{!loading && visible.map(u => (
 						<div key={u.id} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => router.push(`/profile/${u.id}`)}>
 							<div className="flex items-center gap-3 min-w-0">
-								<img 
-									src={u.profile_image || '/uploads/DefaultProfile.jpg'} 
-									alt={u.name} 
-									className="avatar avatar-md object-cover" 
+								<Image
+									src={u.profile_image || '/uploads/DefaultProfile.jpg'}
+									alt={u.name}
+									className="avatar avatar-md object-cover"
 									onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
 								/>
 								<div className="min-w-0">
@@ -126,8 +127,8 @@ export default function SuggestedUsers() {
 								</div>
 							</div>
 							<div onClick={(e) => e.stopPropagation()}>
-								<FollowButton 
-									userId={u.id} 
+								<FollowButton
+									userId={u.id}
 									isFollowing={false}
 									size="sm"
 									onFollowChange={(isFollowing) => { if (isFollowing) removeOnFollow(u.id) }}

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchAPI } from '../lib/dataFetcher';
+import Image from 'next/image'
 
 interface User {
   id: number;
@@ -31,7 +32,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
   const loadContacts = useCallback(async () => {
     setIsLoading(true);
     setError('');
-    
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -55,7 +56,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
     }
   }, [user?.id]);
 
-  const filteredContacts = useMemo(() => 
+  const filteredContacts = useMemo(() =>
     contacts.filter(contact =>
       contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,8 +120,8 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
           <div className="p-6 text-center text-gray-500">
             <div className="text-4xl mb-2">👥</div>
             <p>
-              {searchTerm 
-                ? `No contacts found for "${searchTerm}"` 
+              {searchTerm
+                ? `No contacts found for "${searchTerm}"`
                 : 'No contacts available'
               }
             </p>
@@ -131,11 +132,10 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
               <button
                 key={contact.id}
                 onClick={() => onSelectUser(contact)}
-                className={`w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3 ${
-                  selectedUserId === contact.id ? 'bg-teal-50 border-r-4 border-[#02fa97]' : ''
-                }`}
+                className={`w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3 ${selectedUserId === contact.id ? 'bg-teal-50 border-r-4 border-[#02fa97]' : ''
+                  }`}
               >
-                <img
+                <Image
                   src={contact.profileImageUrl || '/uploads/DefaultProfile.jpg'}
                   alt={contact.name}
                   className="w-10 h-10 rounded-full object-cover"

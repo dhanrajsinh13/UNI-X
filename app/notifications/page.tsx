@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { fetchAPI, dataFetcher } from '../../lib/dataFetcher';
+import Image from 'next/image'
 
 interface Notification {
   id: string;
@@ -33,7 +34,7 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const { user, token } = useAuth();
   const { onNotification, onMessageNotification } = useSocket();
-  
+
   // Follow requests state
   const [followRequests, setFollowRequests] = useState<FollowRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -46,7 +47,7 @@ export default function NotificationsPage() {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) setNotifications(parsed);
       }
-    } catch {}
+    } catch { }
   }, []);
 
   // Load follow requests
@@ -81,7 +82,7 @@ export default function NotificationsPage() {
           read: false,
           meta: notif.meta,
         } as Notification, ...prev].slice(0, 200);
-        try { localStorage.setItem('notifications', JSON.stringify(next)); } catch {}
+        try { localStorage.setItem('notifications', JSON.stringify(next)); } catch { }
         return next;
       });
     });
@@ -96,7 +97,7 @@ export default function NotificationsPage() {
           read: false,
           meta: { conversationId: msg.conversationId, senderId: msg.senderId },
         } as Notification, ...prev].slice(0, 200);
-        try { localStorage.setItem('notifications', JSON.stringify(next)); } catch {}
+        try { localStorage.setItem('notifications', JSON.stringify(next)); } catch { }
         return next;
       });
     });
@@ -109,7 +110,7 @@ export default function NotificationsPage() {
 
   // Move useMemo before early return to follow Rules of Hooks
   const filteredNotifications = useMemo(() => (
-    filter === 'unread' 
+    filter === 'unread'
       ? notifications.filter(n => !n.read)
       : notifications
   ), [filter, notifications]);
@@ -125,9 +126,9 @@ export default function NotificationsPage() {
         body: JSON.stringify({ requestId, action }),
         skipCache: true
       });
-      
+
       setFollowRequests(prev => prev.filter(req => req.id !== requestId));
-      
+
       // Clear cache after approval/rejection
       dataFetcher.clearCache('/api/users/requests');
     } catch (err: any) {
@@ -137,15 +138,15 @@ export default function NotificationsPage() {
   };
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notif => 
+    setNotifications(prev =>
+      prev.map(notif =>
         notif.id === id ? { ...notif, read: true } : notif
       )
     );
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
+    setNotifications(prev =>
       prev.map(notif => ({ ...notif, read: true }))
     );
   };
@@ -189,27 +190,25 @@ export default function NotificationsPage() {
               <p className="text-gray-600 mt-1">{unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}</p>
             )}
           </div>
-          
+
           <div className="flex items-center gap-4">
             {/* Filter */}
             <div className="flex bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  filter === 'all' 
-                    ? 'bg-[#02fa97] text-black' 
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === 'all'
+                    ? 'bg-[#02fa97] text-black'
                     : 'text-gray-600 hover:text-gray-900'
-                }`}
+                  }`}
               >
                 All
               </button>
               <button
                 onClick={() => setFilter('unread')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  filter === 'unread' 
-                    ? 'bg-[#02fa97] text-black' 
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === 'unread'
+                    ? 'bg-[#02fa97] text-black'
                     : 'text-gray-600 hover:text-gray-900'
-                }`}
+                  }`}
               >
                 Unread ({unreadCount})
               </button>
@@ -241,13 +240,13 @@ export default function NotificationsPage() {
                 </span>
               </h2>
             </div>
-            
+
             <div className="divide-y divide-gray-100">
               {followRequests.map((request) => (
                 <div key={request.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <img 
+                      <Image
                         src={request.requester?.profile_image || '/uploads/DefaultProfile.jpg'}
                         alt={request.requester?.name}
                         className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm"
@@ -258,8 +257,8 @@ export default function NotificationsPage() {
                           <div className="text-sm text-gray-500 truncate">@{request.requester.username}</div>
                         )}
                         <div className="text-xs text-gray-400 mt-0.5">
-                          {new Date(request.created_at).toLocaleDateString('en-US', { 
-                            month: 'short', 
+                          {new Date(request.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
                             day: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit'
@@ -295,9 +294,8 @@ export default function NotificationsPage() {
               {filteredNotifications.slice(0, 50).map((notification, index) => (
                 <div
                   key={notification.id}
-                  className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${
-                    !notification.read ? 'bg-blue-50' : ''
-                  }`}
+                  className={`p-6 hover:bg-gray-50 transition-colors cursor-pointer ${!notification.read ? 'bg-blue-50' : ''
+                    }`}
                   onClick={() => markAsRead(notification.id)}
                 >
                   <div className="flex items-start gap-4">
@@ -339,7 +337,7 @@ export default function NotificationsPage() {
                 {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
               </h3>
               <p className="text-gray-600">
-                {filter === 'unread' 
+                {filter === 'unread'
                   ? 'You\'re all caught up!'
                   : 'Notifications about likes, comments, and follows will appear here'
                 }

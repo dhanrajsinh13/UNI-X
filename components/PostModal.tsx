@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import Image from 'next/image'
 
 interface PostModalProps {
   isOpen: boolean;
@@ -64,6 +65,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showOptions, setShowOptions] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
+  const [showFullCaption, setShowFullCaption] = useState(false);
 
   // Video progress and playback state for Instagram-like experience
   const [videoProgress, setVideoProgress] = useState(0);
@@ -449,6 +451,42 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
     }
   };
 
+  // Handle emoji selection
+  const handleEmojiSelect = (emoji: string) => {
+    console.log('Emoji selected:', emoji); // Debug log
+    const currentValue = newComment;
+    const newValue = currentValue + emoji;
+    console.log('Current value:', currentValue);
+    console.log('New value:', newValue);
+    setNewComment(newValue);
+    setShowEmojiPicker(false);
+  };
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showEmojiPicker) {
+        const target = event.target as Element;
+        // Check if click is inside emoji picker or emoji button
+        const emojiButton = target.closest('.emoji-picker-container');
+        const emojiPicker = target.closest('.emoji-picker-dropdown');
+
+        if (!emojiButton && !emojiPicker) {
+          console.log('Clicking outside emoji picker, closing...');
+          setShowEmojiPicker(false);
+        }
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   if (!isOpen) return null;
 
   // Determine aspect ratio for media display based on Instagram specs
@@ -491,7 +529,6 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   };
 
   // Truncate caption if longer than 125 characters
-  const [showFullCaption, setShowFullCaption] = useState(false);
   const contentText = typeof post?.content === 'string' ? post.content : '';
   const shouldTruncate = contentText.length > 125;
   const displayContent = shouldTruncate && !showFullCaption
@@ -518,42 +555,6 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
     '🖕', '👇', '☝️', '👋', '🤚', '🖐️', '✋', '🖖', '💪', '🦾'
   ];
 
-  // Handle emoji selection
-  const handleEmojiSelect = (emoji: string) => {
-    console.log('Emoji selected:', emoji); // Debug log
-    const currentValue = newComment;
-    const newValue = currentValue + emoji;
-    console.log('Current value:', currentValue);
-    console.log('New value:', newValue);
-    setNewComment(newValue);
-    setShowEmojiPicker(false);
-  };
-
-  // Close emoji picker when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showEmojiPicker) {
-        const target = event.target as Element;
-        // Check if click is inside emoji picker or emoji button
-        const emojiButton = target.closest('.emoji-picker-container');
-        const emojiPicker = target.closest('.emoji-picker-dropdown');
-
-        if (!emojiButton && !emojiPicker) {
-          console.log('Clicking outside emoji picker, closing...');
-          setShowEmojiPicker(false);
-        }
-      }
-    };
-
-    if (showEmojiPicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showEmojiPicker]);
-
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-modal p-4">
       <div className="bg-white rounded-2xl max-w-6xl w-full h-[90vh] flex overflow-hidden shadow-2xl">
@@ -563,7 +564,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
             <div className="w-full h-full flex items-center justify-center relative">
               {/* Current Media */}
               {mediaItems[currentMediaIndex].type === 'image' ? (
-                <img
+                <Image
                   src={mediaItems[currentMediaIndex].url}
                   alt="Post media"
                   className={getMediaClasses(mediaItems[currentMediaIndex].type, mediaItems[currentMediaIndex].url)}
@@ -694,7 +695,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden">
-                <img
+                <Image
                   src={post.profilePic || '/uploads/DefaultProfile.jpg'}
                   alt={post.authorName || 'User'}
                   className="w-full h-full object-cover rounded-full"
@@ -853,7 +854,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
               <div key={comment.id} className="flex space-x-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs flex-shrink-0 overflow-hidden bg-gray-200">
                   {comment.user.profile_image ? (
-                    <img src={comment.user.profile_image} alt={comment.user.name} className="w-full h-full object-cover" />
+                    <Image src={comment.user.profile_image} alt={comment.user.name} className="w-full h-full object-cover" />
                   ) : (
                     comment.user.name.charAt(0)
                   )}
