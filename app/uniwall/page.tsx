@@ -44,6 +44,7 @@ interface Post {
     name: string;
     department: string;
     year: number;
+    profile_image?: string;
   };
 }
 
@@ -84,7 +85,7 @@ export default function UniWallPage() {
   }, [selectedPost]);
 
   // Filter posts that have media only
-  const mediaOnlyPosts = useMemo(() => 
+  const mediaOnlyPosts = useMemo(() =>
     posts.filter((post: Post) => post.media_url),
     [posts]
   );
@@ -100,7 +101,7 @@ export default function UniWallPage() {
       auraCount: post.aura_count,
       commentCount: 0,
       timestamp: new Date(post.created_at).toLocaleDateString(),
-      profilePic: undefined,
+      profilePic: post.author.profile_image,
       mediaUrl: post.media_url,
       mediaType: post.media_type as 'image' | 'video',
       userLiked: post.user_liked,
@@ -146,11 +147,10 @@ export default function UniWallPage() {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-3 py-1 rounded-full border transition-colors ${
-                  selectedCategory === category.id 
-                    ? 'border-gray-900 text-gray-900 bg-gray-50' 
+                className={`px-3 py-1 rounded-full border transition-colors ${selectedCategory === category.id
+                    ? 'border-gray-900 text-gray-900 bg-gray-50'
                     : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 <span className="mr-1">{category.emoji}</span>
                 {category.name}
@@ -166,7 +166,7 @@ export default function UniWallPage() {
         ) : error ? (
           <div className="text-center py-12">
             <p className="text-gray-600 mb-4">Unable to load posts</p>
-            <button 
+            <button
               onClick={refetch}
               className="text-[#02fa97] font-semibold hover:text-teal-600"
             >

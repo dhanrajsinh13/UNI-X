@@ -238,6 +238,8 @@ const MiniChatWindow: React.FC<MiniChatWindowProps> = ({ isOpen, onClose, otherU
               <Image
                 src={otherUser.profile_image || '/uploads/DefaultProfile.jpg'}
                 alt={otherUser.name}
+                width={32}
+                height={32}
                 className="w-full h-full object-cover rounded-full"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
               />

@@ -61,6 +61,11 @@ const MessagesPageInner = () => {
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [activeOtherUser, setActiveOtherUser] = useState<any>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+
+  // Debug log for conversations state
+  useEffect(() => {
+    console.log('[State] Conversations updated:', conversations.length, conversations);
+  }, [conversations]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -99,8 +104,15 @@ const MessagesPageInner = () => {
 
   // Load conversations on mount
   useEffect(() => {
+    console.log('[Mount] useEffect triggered', { hasUser: !!user, hasToken: !!token });
+    
+    // Clear cache on mount to ensure fresh data
+    dataFetcher.clearCache('/api/messages/conversations');
+    
     if (user && token) {
       loadConversations();
+    } else {
+      console.log('[Mount] Skipping loadConversations - missing user or token');
     }
 
     // Cleanup function
@@ -118,6 +130,7 @@ const MessagesPageInner = () => {
         clearTimeout(typingTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, token]);
 
   // Socket event listeners
@@ -317,7 +330,11 @@ const MessagesPageInner = () => {
   }, [searchParams, user, conversations, isMobileView]);
 
   const loadConversations = useCallback(async (isBackground: boolean = false) => {
-    if (!token) return;
+    if (!token) {
+      console.log('[Conversations] No token available');
+      return;
+    }
+    console.log('[Conversations] Loading conversations...', { isBackground, hasToken: !!token });
     if (convFetchControllerRef.current) {
       try { convFetchControllerRef.current.abort(); } catch { }
     }
@@ -330,10 +347,11 @@ const MessagesPageInner = () => {
         signal: controller.signal
       }) as { conversations: Conversation[] };
 
+      console.log('[Conversations] Loaded conversations:', data);
       setConversations(data.conversations || []);
     } catch (error: any) {
       if (error?.name === 'AbortError') return;
-      console.error('Error loading conversations:', error);
+      console.error('[Conversations] Error loading conversations:', error);
     } finally {
       if (!isBackground) setIsLoading(false);
     }
@@ -741,6 +759,15 @@ const MessagesPageInner = () => {
       return;
     }
 
+    // If the message has a negative ID, it's an optimistic message that wasn't saved
+    // Just remove it from the UI
+    if (messageId < 0) {
+      console.log('Removing optimistic message from UI');
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      setSelectedMessageId(null);
+      return;
+    }
+
     try {
       await fetchAPI(`/api/messages/${messageId}`, {
         method: 'DELETE',
@@ -763,6 +790,11 @@ const MessagesPageInner = () => {
       }
     } catch (error: any) {
       console.error('Error deleting message:', error);
+      // If message not found, just remove it from UI
+      if (error?.message?.includes('not found') || error?.message?.includes('404')) {
+        setMessages(prev => prev.filter(msg => msg.id !== messageId));
+        setSelectedMessageId(null);
+      }
     }
   };
 
@@ -915,7 +947,16 @@ const MessagesPageInner = () => {
 
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto">
-            {conversations.length === 0 ? (
+            {isLoading ? (
+              <div className="p-8 text-center">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <p className="text-gray-900 font-semibold mb-1">Loading conversations...</p>
+              </div>
+            ) : conversations.length === 0 ? (
               <div className="p-8 text-center">
                 <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -947,6 +988,8 @@ const MessagesPageInner = () => {
                           <Image
                             src={conversation.otherUser.profile_image || '/uploads/DefaultProfile.jpg'}
                             alt={conversation.otherUser.name}
+                            width={56}
+                            height={56}
                             className="w-full h-full object-cover"
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                           />
@@ -1085,6 +1128,8 @@ const MessagesPageInner = () => {
                     <Image
                       src={currentConversation?.otherUser?.profile_image || '/uploads/DefaultProfile.jpg'}
                       alt={currentConversation?.otherUser?.name || 'User'}
+                      width={48}
+                      height={48}
                       className="w-full h-full object-cover"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                     />

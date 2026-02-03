@@ -41,7 +41,9 @@ app.prepare().then(() => {
     handle(req, res, parse(req.url, true));
   });
 
-  // Initialize Socket.io with authentication
+  // Socket.io is handled by separate socket-server.js on port 3001
+  // Disabled here to prevent conflicts
+  /*
   const io = new Server(server, {
     cors: {
       origin: process.env.NODE_ENV === 'production' ? false : "*",
@@ -49,8 +51,10 @@ app.prepare().then(() => {
       credentials: true
     }
   });
+  */
 
-  // Authentication middleware
+  /*
+  // Authentication middlewareā
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth.token;
@@ -212,9 +216,11 @@ app.prepare().then(() => {
       });
     });
   });
+  */
 
-  // Make io available globally for API routes
-  global.io = io;
+  // Socket.io is disabled in Next.js server - using dedicated socket-server.js
+  // global.io will be undefined - socket server runs separately
+  global.io = null;
 
   // Start database connection keeper
   setTimeout(() => {
@@ -228,6 +234,9 @@ app.prepare().then(() => {
     })
     .listen(port, () => {
       console.log(`> Ready on http://${hostname}:${port}`);
-      console.log('> Socket.io server initialized');
+      console.log('> Next.js server ready (Socket.io on separate port 3001)');
     });
+}).catch((err) => {
+  console.error('Error starting server:', err);
+  process.exit(1);
 });

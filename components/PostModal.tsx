@@ -567,6 +567,8 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                 <Image
                   src={mediaItems[currentMediaIndex].url}
                   alt="Post media"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 60vw"
                   className={getMediaClasses(mediaItems[currentMediaIndex].type, mediaItems[currentMediaIndex].url)}
                   onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
                 />
@@ -698,6 +700,8 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                 <Image
                   src={post.profilePic || '/uploads/DefaultProfile.jpg'}
                   alt={post.authorName || 'User'}
+                  width={40}
+                  height={40}
                   className="w-full h-full object-cover rounded-full"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                 />
@@ -764,9 +768,9 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
           {mediaItems.length > 0 && (
             <div className="p-4 border-b border-gray-100">
               <div className="flex items-start space-x-3 mb-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                {/* <div className="w-8 h-8 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                   {post.authorName?.charAt(0) || 'U'}
-                </div>
+                </div> */}
                 <div className="flex-1">
                   <div className="flex items-start">
                     <span className="font-semibold text-sm mr-2">{post.authorName || 'Unknown User'}</span>
@@ -854,7 +858,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
               <div key={comment.id} className="flex space-x-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs flex-shrink-0 overflow-hidden bg-gray-200">
                   {comment.user.profile_image ? (
-                    <Image src={comment.user.profile_image} alt={comment.user.name} className="w-full h-full object-cover" />
+                    <Image src={comment.user.profile_image} alt={comment.user.name} width={32} height={32} className="w-full h-full object-cover" />
                   ) : (
                     comment.user.name.charAt(0)
                   )}

@@ -117,6 +117,8 @@ const SuggestionsSection: React.FC = () => {
                       <Image
                         src={suggestion.profile_image}
                         alt={suggestion.name}
+                        width={32}
+                        height={32}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg';

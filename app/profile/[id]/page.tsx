@@ -196,6 +196,8 @@ const ProfilePage = () => {
                 <Image
                   src={userProfile.profile_image || '/uploads/DefaultProfile.jpg'}
                   alt={userProfile.name}
+                  width={160}
+                  height={160}
                   className="w-full h-full object-cover rounded-full"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                 />
@@ -393,9 +395,10 @@ const ProfilePage = () => {
                               ) : (
                                 <Image
                                   src={post.media_url}
-                                  alt={post.content}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  loading="lazy"
+                                  alt={post.content || 'Post image'}
+                                  fill
+                                  sizes="(max-width: 768px) 33vw, 25vw"
+                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
                                   onError={(e) => {
                                     console.error('Image load error:', e);
                                     e.currentTarget.style.display = 'none';

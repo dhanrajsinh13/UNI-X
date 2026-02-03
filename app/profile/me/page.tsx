@@ -178,7 +178,7 @@ const VideoGridTile: React.FC<VideoGridTileProps> = ({ post, onClick }) => {
             </div>
           )
         ) : (
-          <Image src={post.media_url} alt={post.content?.slice(0, 40)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 rounded-2xl" />
+          <Image src={post.media_url} alt={post.content?.slice(0, 40) || 'Post image'} fill sizes="(max-width: 768px) 33vw, 25vw" className="object-cover group-hover:scale-105 transition-transform duration-300 rounded-2xl" />
         )
       ) : (
         <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm p-4 rounded-2xl">{post.content}</div>
@@ -673,6 +673,8 @@ export default function ProfilePage() {
               <Image
                 src={(userProfile?.profile_image || '/uploads/DefaultProfile.jpg') as string}
                 alt={userProfile?.name || user.name}
+                width={144}
+                height={144}
                 className="w-full h-full object-cover"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
               />
@@ -725,6 +727,8 @@ export default function ProfilePage() {
                         <Image
                           src={editPfp || '/uploads/DefaultProfile.jpg'}
                           alt="Preview"
+                          width={96}
+                          height={96}
                           className="w-full h-full object-cover"
                           onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                         />

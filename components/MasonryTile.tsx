@@ -197,6 +197,9 @@ const MasonryTile: React.FC<MasonryTileProps> = ({ id, mediaUrl, mediaType = 'im
               <Image
                 src={mediaUrl}
                 alt={title || 'post image'}
+                width={0}
+                height={0}
+                sizes="(max-width: 768px) 50vw, 33vw"
                 className="w-full h-auto object-cover rounded-2xl"
                 onLoad={() => setImgLoaded(true)}
                 onError={() => setImgError(true)}

@@ -377,6 +377,8 @@ const PostCard: React.FC<PostCardProps> = memo(({
               <Image
                 src={profilePic || '/uploads/DefaultProfile.jpg'}
                 alt={authorName}
+                width={48}
+                height={48}
                 className="w-full h-full object-cover"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
               />
@@ -416,7 +418,9 @@ const PostCard: React.FC<PostCardProps> = memo(({
                   <Image
                     src={mediaUrl}
                     alt="Post media"
-                    className={`${masonry ? 'w-full h-auto object-cover' : 'absolute inset-0 w-full h-full object-cover'}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className={`${masonry ? 'w-full h-auto object-cover' : 'object-cover'}`}
                     onLoad={() => setMediaLoaded(true)}
                     onError={() => setMediaError(true)}
                   />

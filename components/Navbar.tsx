@@ -63,7 +63,7 @@ const Navbar = () => {
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-border-light z-fixed flex-col justify-between py-8 px-4">
         <div>
           <Link href="/" className="flex items-center px-4 mb-8">
-            <Image src="/uni-x_logo.png" alt="UNI-X" className="w-10 h-10 mr-3" />
+            <Image src="/uni-x_logo.png" alt="UNI-X" width={40} height={40} className="w-10 h-10 mr-3" />
             <span className="font-bold text-2xl bg-gradient-to-r from-text to-accent bg-clip-text text-transparent">UNI-X</span>
           </Link>
           {user ? (
@@ -93,7 +93,7 @@ const Navbar = () => {
               href="/settings"
               className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200"
             >
-              <Image src="/SVG/settings.svg" alt="Settings" className="w-5 h-5" />
+              <Image src="/SVG/settings.svg" alt="Settings" width={20} height={20} className="w-5 h-5" />
               <span className="text-sm font-medium text-text">Settings</span>
             </Link>
             <button
@@ -161,7 +161,7 @@ const SidebarItem = ({ href, icon, label }: { href: string; icon: string; label:
     className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
   >
     {icon.startsWith('/') ? (
-      <Image src={icon} alt={label} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
+      <Image src={icon} alt={label} width={24} height={24} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}
@@ -173,7 +173,7 @@ const SidebarButton = ({ href, icon, label, onClick }: { href?: string; icon: st
   const content = (
     <>
       {icon.startsWith('/') ? (
-        <Image src={icon} alt={label || 'icon'} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
+        <Image src={icon} alt={label || 'icon'} width={24} height={24} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
       ) : (
         <span className="text-2xl">{icon}</span>
       )}
@@ -209,7 +209,7 @@ const MobileNavItem = ({ href, icon }: { href: string; icon: string }) => (
     className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"
   >
     {icon.startsWith('/') ? (
-      <Image src={icon} alt="Navigation icon" className="w-7 h-7" />
+      <Image src={icon} alt="Navigation icon" width={28} height={28} className="w-7 h-7" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}
@@ -222,7 +222,7 @@ const MobilePostNavItem = ({ icon, onClick }: { icon: string; onClick: () => voi
     className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"
   >
     {icon.startsWith('/') ? (
-      <Image src={icon} alt="Post icon" className="w-7 h-7" />
+      <Image src={icon} alt="Post icon" width={28} height={28} className="w-7 h-7" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}

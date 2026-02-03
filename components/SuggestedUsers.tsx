@@ -116,6 +116,8 @@ export default function SuggestedUsers() {
 								<Image
 									src={u.profile_image || '/uploads/DefaultProfile.jpg'}
 									alt={u.name}
+									width={40}
+									height={40}
 									className="avatar avatar-md object-cover"
 									onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
 								/>

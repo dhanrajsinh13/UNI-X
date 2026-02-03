@@ -23,11 +23,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    console.log('[API Conversations] Request received');
     const auth = getUserFromRequest(req)
     if (!auth) {
+      console.log('[API Conversations] Unauthorized - no auth');
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
+    console.log('[API Conversations] User ID:', auth.userId);
     const messages = await getCollection<Message>(Collections.MESSAGES)
     const users = await getCollection<User>(Collections.USERS)
 
@@ -38,6 +41,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         { receiver_id: auth.userId }
       ]
     }).sort({ created_at: -1 }).toArray()
+
+    console.log('[API Conversations] Found messages:', conversations.length);
+    console.log('[API Conversations] User query:', { sender_id: auth.userId, receiver_id: auth.userId });
+    console.log('[API Conversations] Sample messages:', conversations.slice(0, 2).map(m => ({ 
+      id: m.id, 
+      sender: m.sender_id, 
+      receiver: m.receiver_id 
+    })));
 
     // Get unique user IDs
     const userIds = new Set<number>()
@@ -82,11 +93,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Convert map to array
     const conversationList = Array.from(conversationMap.values())
 
+    console.log('[API Conversations] Returning conversations:', conversationList.length);
     res.status(200).json({
       conversations: conversationList
     })
   } catch (error) {
-    console.error('Get conversations error:', error)
+    console.error('[API Conversations] Error:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }

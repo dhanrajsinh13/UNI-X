@@ -145,11 +145,10 @@ export default function HomePage() {
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-                        selectedCategory === category.id
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${selectedCategory === category.id
                           ? 'bg-text text-white shadow-sm'
                           : 'bg-gray-50 text-text hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       <span>{category.emoji}</span>
                       <span>{category.name}</span>
@@ -179,7 +178,7 @@ export default function HomePage() {
               ) : error ? (
                 <div className="text-center py-12 px-4">
                   <p className="text-text-secondary mb-4">Unable to load posts</p>
-                  <button 
+                  <button
                     onClick={refetch}
                     className="btn-secondary"
                   >
@@ -200,6 +199,7 @@ export default function HomePage() {
                     auraCount={post.aura_count}
                     commentCount={0}
                     timestamp={new Date(post.created_at).toLocaleDateString()}
+                    profilePic={post.author.profile_image}
                     mediaUrl={post.media_url}
                     mediaType={post.media_type as 'image' | 'video'}
                     userLiked={post.user_liked}
@@ -211,12 +211,12 @@ export default function HomePage() {
                   <div className="text-6xl mb-4">📱</div>
                   <h3 className="text-xl font-semibold text-text mb-2">No posts yet</h3>
                   <p className="text-text-secondary mb-6">
-                    {selectedCategory === 'all' 
+                    {selectedCategory === 'all'
                       ? 'Be the first to share something!'
                       : `No posts in ${categories.find(c => c.id === selectedCategory)?.name} category yet.`}
                   </p>
                   {user && (
-                    <button 
+                    <button
                       onClick={() => window.dispatchEvent(new CustomEvent('openCreatePost'))}
                       className="btn-primary"
                     >
@@ -254,7 +254,7 @@ export default function HomePage() {
       {/* Floating Messages button - Instagram style */}
       <Link href="/messages" className="fixed bottom-20 md:bottom-6 right-4 md:right-8 bg-white shadow-card hover:shadow-card-hover rounded-full p-4 transition-all hover:scale-105 z-sticky">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-text">
-          <path d="M21 11.5C21 16.75 16.97 21 12 21C10.73 21 9.52 20.75 8.42 20.31L3 21.5L4.19 16.08C3.64 14.83 3.25 13.45 3.25 12C3.25 6.75 7.03 2.5 12 2.5C16.97 2.5 21 6.75 21 11.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M21 11.5C21 16.75 16.97 21 12 21C10.73 21 9.52 20.75 8.42 20.31L3 21.5L4.19 16.08C3.64 14.83 3.25 13.45 3.25 12C3.25 6.75 7.03 2.5 12 2.5C16.97 2.5 21 6.75 21 11.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </Link>
 

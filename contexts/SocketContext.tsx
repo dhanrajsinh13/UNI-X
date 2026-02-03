@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { io, Socket } from 'socket.io-client'
 import { useAuth } from './AuthContext'
 
@@ -41,6 +41,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const { user, token, setSocketDisconnect, logout } = useAuth()
+  const isInitializing = useRef(false)
 
   // Helper function to validate token format and expiration
   const isTokenValid = useCallback((token: string | null): boolean => {
@@ -69,12 +70,14 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
   const disconnect = useCallback(() => {
     if (socket) {
+      console.log('🔌 Manually disconnecting socket...');
       socket.emit('user-offline', user?.id)
       socket.disconnect()
       setSocket(null)
       setIsConnected(false)
+      isInitializing.current = false;
     }
-  }, [socket, user?.id])
+  }, [socket, user?.id, isInitializing])
 
   // Register disconnect function with AuthContext
   useEffect(() => {
@@ -111,12 +114,13 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       return;
     }
 
-    // Prevent multiple connections
-    if (socket) {
-      console.log('Socket already exists, skipping initialization');
+    // Prevent multiple connections - use ref to avoid dependency loop
+    if (socket || isInitializing.current) {
+      console.log('Socket already exists or initializing, skipping initialization');
       return;
     }
 
+    isInitializing.current = true;
     console.log('Initializing new socket connection...');
     setIsConnecting(true);
 
@@ -125,6 +129,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     const baseUrl = (typeof window !== 'undefined' && window.location.origin) || ''
     const url = process.env.NEXT_PUBLIC_SOCKET_URL || baseUrl
+
+    console.log('🔌 Socket URL config:');
+    console.log('   NEXT_PUBLIC_SOCKET_URL:', process.env.NEXT_PUBLIC_SOCKET_URL);
+    console.log('   baseUrl:', baseUrl);
+    console.log('   Using URL:', url);
 
     try {
       newSocket = io(url, {
@@ -209,18 +218,20 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       })
 
       setSocket(newSocket)
+      isInitializing.current = false
     } catch (error) {
       console.error('Failed to initialize socket:', error);
+      isInitializing.current = false
     }
 
     return () => {
-      try {
-        newSocket?.close()
-      } catch (error) {
-        console.warn('Error closing socket:', error);
+      // Only cleanup if we're unmounting or user/token changed
+      // Don't cleanup on socket state change to prevent disconnect loop
+      if (isInitializing.current) {
+        isInitializing.current = false;
       }
     }
-  }, [user?.id, token, socket, disconnect, isTokenValid, logout])
+  }, [user?.id, token, disconnect, isTokenValid, logout])
 
   const joinConversation = useCallback((otherUserId: number) => {
     if (socket && user?.id) {
@@ -263,6 +274,11 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     try {
       const conversationId = [user.id, messageData.receiverId].sort((a, b) => a - b).join('-')
+      console.log('📤 [Socket] Sending message:', { 
+        receiverId: messageData.receiverId, 
+        messageText: messageData.messageText?.substring(0, 30), 
+        conversationId 
+      });
       socket.emit('send-message', {
         ...messageData,
         conversationId,
@@ -270,17 +286,20 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         senderName: user.name,
         createdAt: new Date().toISOString(),
       })
-      console.log(`📤 Sending message to conversation: ${conversationId}`)
+      console.log(`✅ [Socket] Message emitted to conversation: ${conversationId}`)
       return true;
     } catch (error) {
-      console.error('❌ Failed to send message via socket:', error);
+      console.error('❌ [Socket] Failed to send message:', error);
       return false;
     }
   }, [socket, user])
 
   const onNewMessage = (callback: (message: any) => void) => {
     if (!socket) return () => { }
-    const handler = (msg: any) => callback(msg)
+    const handler = (msg: any) => {
+      console.log('📨 [Socket] Received new-message event:', msg);
+      callback(msg);
+    }
     socket.on('new-message', handler)
     return () => socket.off('new-message', handler)
   }

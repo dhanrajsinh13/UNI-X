@@ -18,6 +18,7 @@ interface Post {
     name: string;
     department: string;
     year: number;
+    profile_image?: string;
   };
 }
 
@@ -42,13 +43,13 @@ export function usePosts(category?: string, limit: number = 20): UsePostsReturn 
     try {
       setLoading(true);
       setError(null);
-      
+
       // Don't fetch if auth is still loading
       if (authLoading) {
         setLoading(false);
         return;
       }
-      
+
       // Don't fetch if not authenticated
       if (!token) {
         setError('Authentication required');
@@ -63,18 +64,18 @@ export function usePosts(category?: string, limit: number = 20): UsePostsReturn 
 
       const data = await fetchAPI<{ posts: Post[] }>(
         `/api/posts?${params.toString()}`,
-        { 
+        {
           token,
           cacheTTL: 15000, // Reduced to 15 seconds for faster initial load
         }
       );
-        
+
       if (append) {
         setPosts(prev => [...prev, ...data.posts]);
       } else {
         setPosts(data.posts);
       }
-      
+
       setHasMore(data.posts.length === limit);
       setOffset(prev => append ? prev + data.posts.length : data.posts.length);
       setError(null);
@@ -116,8 +117,8 @@ export function usePosts(category?: string, limit: number = 20): UsePostsReturn 
 
     const handlePostUpdated = (event: CustomEvent) => {
       const { id, content } = event.detail;
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
           post.id === id ? { ...post, content } : post
         )
       );
@@ -131,7 +132,7 @@ export function usePosts(category?: string, limit: number = 20): UsePostsReturn 
     window.addEventListener('postCreated', handleNewPost as EventListener);
     window.addEventListener('postUpdated', handlePostUpdated as EventListener);
     window.addEventListener('postDeleted', handlePostDeleted as EventListener);
-    
+
     return () => {
       window.removeEventListener('postCreated', handleNewPost as EventListener);
       window.removeEventListener('postUpdated', handlePostUpdated as EventListener);
@@ -139,10 +140,10 @@ export function usePosts(category?: string, limit: number = 20): UsePostsReturn 
     };
   }, []);
 
-  return { 
-    posts, 
-    loading, 
-    error, 
+  return {
+    posts,
+    loading,
+    error,
     refetch,
     loadMore,
     hasMore

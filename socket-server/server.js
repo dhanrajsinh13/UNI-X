@@ -16,6 +16,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
 
+// Debug: Log environment configuration at startup
+console.log('🔧 Environment Configuration:');
+console.log('   PORT:', PORT);
+console.log('   JWT_SECRET:', JWT_SECRET ? `${JWT_SECRET.substring(0, 10)}...` : '❌ NOT SET');
+console.log('   FRONTEND_URL:', FRONTEND_URL);
+console.log('   API_BASE_URL:', API_BASE_URL);
+
 // CORS configuration
 app.use(cors({
   origin: [FRONTEND_URL, 'https://uni-x.vercel.app', 'https://uni-x-zeta.vercel.app'],
@@ -104,9 +111,13 @@ const io = new Server(server, {
 
 // Authentication middleware
 io.use(async (socket, next) => {
+  console.log('🔐 Authentication attempt from:', socket.handshake.address);
   try {
     const token = socket.handshake.auth.token;
+    console.log('📝 Token received:', token ? `${token.substring(0, 20)}...` : 'NONE');
+    
     if (!token) {
+      console.error('❌ No token provided');
       return next(new Error('No token provided'));
     }
 
@@ -115,12 +126,14 @@ io.use(async (socket, next) => {
       return next(new Error('Server configuration error'));
     }
 
+    console.log('🔍 Verifying token with issuer/audience checks...');
     // Enhanced JWT verification matching lib/auth.ts
     const decoded = jwt.verify(token, JWT_SECRET, {
       algorithms: ['HS256'],
       issuer: 'unix-social',
       audience: 'unix-api'
     });
+    console.log('✅ Token verified, userId:', decoded.userId);
 
     if (!decoded || !decoded.userId) {
       return next(new Error('Invalid token'));
@@ -193,6 +206,8 @@ io.on('connection', (socket) => {
       }
 
       console.log(`📤 Sending message from ${socket.userId} to ${receiverId}`);
+      console.log(`📡 API URL: ${API_BASE_URL}/api/messages`);
+      console.log(`📝 Message data:`, { receiverId: parseInt(receiverId), messageText: messageText?.trim()?.substring(0, 50) });
 
       // Store message in database via API
       const response = await fetch(`${API_BASE_URL}/api/messages`, {
@@ -208,6 +223,8 @@ io.on('connection', (socket) => {
         })
       });
 
+      console.log(`📊 API Response status: ${response.status}`);
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`❌ API Error (${response.status}):`, errorText);
@@ -215,6 +232,7 @@ io.on('connection', (socket) => {
       }
 
       const result = await response.json();
+      console.log(`✅ Message saved to DB with ID: ${result.message?.id}`);
       const savedMessage = result.message;
 
       // Format for frontend
