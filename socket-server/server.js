@@ -25,7 +25,7 @@ console.log('   API_BASE_URL:', API_BASE_URL);
 
 // CORS configuration
 app.use(cors({
-  origin: [FRONTEND_URL, 'https://uni-x.vercel.app', 'https://uni-x-zeta.vercel.app'],
+  origin: [FRONTEND_URL, 'https://uni-x.vercel.app', 'https://uni-x-zeta.vercel.app', 'https://uni-x-brown.vercel.app'],
   credentials: true
 }));
 
@@ -99,7 +99,7 @@ app.get('/online-users', (req, res) => {
 // Initialize Socket.io with CORS
 const io = new Server(server, {
   cors: {
-    origin: [FRONTEND_URL, 'https://uni-x-zeta.vercel.app'],
+    origin: [FRONTEND_URL, 'https://uni-x.vercel.app', 'https://uni-x-zeta.vercel.app', 'https://uni-x-brown.vercel.app'],
     methods: ["GET", "POST"],
     credentials: true
   },
@@ -115,7 +115,7 @@ io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth.token;
     console.log('📝 Token received:', token ? `${token.substring(0, 20)}...` : 'NONE');
-    
+
     if (!token) {
       console.error('❌ No token provided');
       return next(new Error('No token provided'));
