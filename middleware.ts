@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-  
+
   // Content Security Policy
   const isDev = process.env.NODE_ENV === 'development'
   const csp = [
@@ -49,7 +49,7 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    `connect-src 'self' https://*.cloudinary.com wss://* ws://* ${isDev ? 'http://localhost:* ws://localhost:*' : ''}`,
+    `connect-src 'self' https://*.cloudinary.com https://*.onrender.com wss://* ws://* ${isDev ? 'http://localhost:* ws://localhost:*' : ''}`,
     "media-src 'self' https: blob:",
     "object-src 'none'",
     "base-uri 'self'",
@@ -65,7 +65,7 @@ export function middleware(request: NextRequest) {
     const forwarded = request.headers.get('x-forwarded-for')
     const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown'
     if (!rateLimit(ip, 100, 60000)) {
-      return new NextResponse('Too Many Requests', { 
+      return new NextResponse('Too Many Requests', {
         status: 429,
         headers: {
           'Retry-After': '60',
@@ -87,16 +87,16 @@ export function middleware(request: NextRequest) {
       response.headers.set('Access-Control-Allow-Origin', origin)
       response.headers.set('Access-Control-Allow-Credentials', 'true')
     }
-    
+
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
     response.headers.set('Access-Control-Max-Age', '86400')
-    
+
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
       return new NextResponse(null, { status: 204, headers: response.headers })
     }
-    
+
     return response
   }
 
