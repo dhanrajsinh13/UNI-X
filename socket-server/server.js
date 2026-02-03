@@ -10,11 +10,11 @@ const cors = require('cors');
 const app = express();
 const server = createServer(app);
 
-// Environment variables
+// Environment variables (support both naming conventions)
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+const FRONTEND_URL = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
+const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXTJS_API_URL || 'http://localhost:3000';
 
 // Debug: Log environment configuration at startup
 console.log('🔧 Environment Configuration:');
