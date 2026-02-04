@@ -393,7 +393,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#02fa97] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#FFAF50] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -712,7 +712,7 @@ export default function ProfilePage() {
                   <button
                     onClick={handleSave}
                     disabled={savingProfile}
-                    className="text-[#02fa97] hover:text-[#02fa97]/80 font-semibold text-sm disabled:opacity-50"
+                    className="text-[#FFAF50] hover:text-[#FFAF50]/80 font-semibold text-sm disabled:opacity-50"
                   >
                     {savingProfile ? 'Saving...' : 'Save'}
                   </button>
@@ -771,7 +771,7 @@ export default function ProfilePage() {
                         <input
                           value={editForm.name}
                           onChange={(e) => { setEditForm({ ...editForm, name: e.target.value }); handleFormChange(); }}
-                          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent"
                           placeholder="Enter your name"
                         />
                       </div>
@@ -781,7 +781,7 @@ export default function ProfilePage() {
                         <input
                           value={editUsername}
                           onChange={(e) => { setEditUsername(e.target.value); handleFormChange(); }}
-                          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent"
                           placeholder="Enter your username"
                         />
                       </div>
@@ -792,7 +792,7 @@ export default function ProfilePage() {
                           value={editBio}
                           onChange={(e) => { setEditBio(e.target.value); handleFormChange(); }}
                           rows={4}
-                          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent resize-none"
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent resize-none"
                           placeholder="Tell us about yourself"
                         />
                         <div className="text-xs text-gray-500 mt-1 text-right">
@@ -806,7 +806,7 @@ export default function ProfilePage() {
                           <input
                             value={editForm.department}
                             onChange={(e) => { setEditForm({ ...editForm, department: e.target.value }); handleFormChange(); }}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent"
                             placeholder="Your department"
                           />
                         </div>
@@ -816,7 +816,7 @@ export default function ProfilePage() {
                           <select
                             value={editForm.year}
                             onChange={(e) => { setEditForm({ ...editForm, year: parseInt(e.target.value) }); handleFormChange(); }}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent bg-white"
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent bg-white"
                           >
                             <option value={1}>1st Year</option>
                             <option value={2}>2nd Year</option>
@@ -882,7 +882,7 @@ export default function ProfilePage() {
 
             {tabLoading ? (
               <div className="flex items-center justify-center py-16">
-                <div className="w-8 h-8 border-4 border-gray-200 border-t-[#02fa97] rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-4 border-gray-200 border-t-[#FFAF50] rounded-full animate-spin"></div>
               </div>
             ) : (() => {
               if (displayPosts && displayPosts.length > 0) {

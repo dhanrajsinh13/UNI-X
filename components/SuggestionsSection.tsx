@@ -102,7 +102,7 @@ const SuggestionsSection: React.FC = () => {
       <div className="space-y-1">
         {loading ? (
           <div className="px-4 py-8 text-center">
-            <div className="w-6 h-6 border-2 border-[#02fa97] border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div className="w-6 h-6 border-2 border-[#FFAF50] border-t-transparent rounded-full animate-spin mx-auto"></div>
           </div>
         ) : (
           suggestions.map((suggestion) => (
@@ -112,7 +112,7 @@ const SuggestionsSection: React.FC = () => {
                   onClick={() => navigateToProfile(suggestion.id)}
                   className="flex-shrink-0"
                 >
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[#02fa97] to-teal-400">
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-br from-[#FFAF50] to-orange-400">
                     {suggestion.profile_image ? (
                       <Image
                         src={suggestion.profile_image}

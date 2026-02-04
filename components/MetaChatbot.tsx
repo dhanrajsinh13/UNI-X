@@ -77,7 +77,7 @@ const MetaChatbot: React.FC = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-[#02fa97] text-[#1E1E1E] flex items-center justify-center shadow-lg hover:bg-opacity-90 transition-colors"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-[#FFAF50] text-[#1E1E1E] flex items-center justify-center shadow-lg hover:bg-opacity-90 transition-colors"
       >
         <span className="text-2xl">🤖</span>
       </button>
@@ -87,14 +87,14 @@ const MetaChatbot: React.FC = () => {
   return (
     <div className="fixed bottom-6 right-6 w-96 h-[70vh] bg-white rounded-xl shadow-xl flex flex-col overflow-hidden border border-gray-200">
       {/* Header */}
-      <div className="bg-[#02fa97] px-4 py-3 flex justify-between items-center">
+      <div className="bg-[#FFAF50] px-4 py-3 flex justify-between items-center">
         <div className="flex items-center">
           <span className="text-xl mr-2">🤖</span>
           <h3 className="font-bold text-[#1E1E1E]">Meta Chatbot</h3>
         </div>
         <button
           onClick={() => setIsOpen(false)}
-          className="text-[#1E1E1E] hover:bg-teal-500 rounded-full p-1"
+          className="text-[#1E1E1E] hover:bg-orange-500 rounded-full p-1"
         >
           ✕
         </button>
@@ -111,7 +111,7 @@ const MetaChatbot: React.FC = () => {
               className={`max-w-[80%] rounded-lg px-4 py-2 ${
                 message.sender === 'user'
                   ? 'bg-[#1E1E1E] text-white rounded-tr-none'
-                  : 'bg-[#02fa97] text-[#1E1E1E] rounded-tl-none'
+                  : 'bg-[#FFAF50] text-[#1E1E1E] rounded-tl-none'
               }`}
             >
               <p className="text-sm">{message.text}</p>
@@ -139,7 +139,7 @@ const MetaChatbot: React.FC = () => {
             onClick={handleSendMessage}
             disabled={!input.trim()}
             className={`ml-2 p-2 rounded-full ${
-              input.trim() ? 'text-[#02fa97] hover:bg-gray-200' : 'text-gray-400 cursor-not-allowed'
+              input.trim() ? 'text-[#FFAF50] hover:bg-gray-200' : 'text-gray-400 cursor-not-allowed'
             }`}
           >
             📤

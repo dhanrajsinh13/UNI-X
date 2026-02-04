@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
+import { useVideoVisibility } from '../hooks/useVideoVisibility';
+import { useVideoContext } from '../contexts/VideoContext';
 import Image from 'next/image'
 
 interface PostModalProps {
@@ -50,6 +52,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   const { user, token } = useAuth();
   const { showToast } = useToast();
   const isMobile = useIsMobile();
+  const { setModalOpen } = useVideoContext();
   const [auraCount, setAuraCount] = useState(post.auraCount);
   const [hasAura, setHasAura] = useState(post.userLiked || false);
   const [isLiking, setIsLiking] = useState(false);
@@ -62,7 +65,6 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   const [isEditingCaption, setIsEditingCaption] = useState(false);
   const [editCaption, setEditCaption] = useState(post.content);
   const [isSavingCaption, setIsSavingCaption] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [showOptions, setShowOptions] = useState(false);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const [showFullCaption, setShowFullCaption] = useState(false);
@@ -71,6 +73,23 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   const [videoProgress, setVideoProgress] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(true);
   const [videoDuration, setVideoDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Use video visibility hook for modal video (not a feed video)
+  const videoRef = useVideoVisibility({
+    videoId: `modal-${post.id}`,
+    isFirstVideo: true, // Modal videos should auto-play when opened
+    isFeedVideo: false, // This is a modal video, not affected by modal state
+    threshold: 0.1
+  });
+
+  // Set modal open/close state to pause background videos
+  useEffect(() => {
+    setModalOpen(isOpen);
+    return () => {
+      setModalOpen(false);
+    };
+  }, [isOpen, setModalOpen]);
 
   // Comments pagination state
   const [isLoadingComments, setIsLoadingComments] = useState(false);
@@ -136,19 +155,6 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   }] : []);
 
   const hasMultipleMedia = mediaItems.length > 1;
-
-  // Auto-play video when modal opens (Instagram-like behavior)
-  useEffect(() => {
-    if (isOpen && videoRef.current) {
-      // Small delay to ensure video is loaded
-      const timer = setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.play().catch(e => console.log('Auto-play failed:', e));
-        }
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, currentMediaIndex]);
 
   // Load comments from API
   useEffect(() => {
@@ -556,10 +562,13 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-modal">
-      <div className="bg-white max-w-6xl w-full h-[95vh] flex overflow-hidden">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-modal" onClick={onClose}>
+      <div 
+        className="bg-white max-w-4xl w-full h-[85vh] flex rounded-sm overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Left Side - Media */}
-        <div className="flex-1 bg-black flex items-center justify-center relative">
+        <div className="flex-1 bg-black flex items-center justify-center relative min-w-0.5">
           {mediaItems.length > 0 ? (
             <div className="w-full h-full flex items-center justify-center relative">
               {/* Current Media */}
@@ -607,21 +616,14 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   <video
                     ref={videoRef}
                     src={mediaItems[currentMediaIndex].url}
-                    autoPlay
-                    muted={false}
+                    muted={isMuted}
                     loop
                     playsInline
+                    preload="auto"
                     className={`${getMediaClasses(mediaItems[currentMediaIndex].type, mediaItems[currentMediaIndex].url)} cursor-pointer`}
+                    style={{ objectFit: 'contain' }}
                     onError={(e) => ((e.target as HTMLVideoElement).style.display = 'none')}
-                    onLoadStart={() => console.log('Video loading started')}
                     onClick={handleVideoTap}
-                    onCanPlay={() => {
-                      console.log('Video ready to play');
-                      // Ensure video plays on load like Instagram
-                      if (videoRef.current) {
-                        videoRef.current.play().catch(e => console.log('Auto-play failed:', e));
-                      }
-                    }}
                   >
                     <source src={mediaItems[currentMediaIndex].url} type="video/mp4" />
                     <track kind="captions" />
@@ -638,6 +640,26 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                       </div>
                     </div>
                   )}
+
+                  {/* Mute/Unmute button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMuted(!isMuted);
+                    }}
+                    className="absolute bottom-4 right-4 bg-black/60 text-white p-2 rounded-full hover:bg-black/80 transition-all z-10"
+                  >
+                    {isMuted ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                      </svg>
+                    )}
+                  </button>
                 </div>
               )}
 
@@ -692,10 +714,10 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
         </div>
 
         {/* Right Side - Details & Comments */}
-        <div className="w-96 flex flex-col">
-          {/* Header - Instagram Style */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-            <div className="flex items-center gap-3">
+        <div className="w-[335px] flex flex-col bg-white">
+          {/* Header */}
+          <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
+            <div className="flex items-center gap-2.5">
               <Image
                 src={post.profilePic || '/uploads/DefaultProfile.jpg'}
                 alt={post.authorName || 'User'}
@@ -704,23 +726,27 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                 className="w-8 h-8 rounded-full object-cover"
                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
               />
-              <p className="font-semibold text-sm text-gray-900">{post.authorName || 'Unknown User'}</p>
+              <span className="font-semibold text-sm">{post.authorName || 'Unknown User'}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {canManage && !isMobile && (
                 <div className="relative">
                   <button
                     onClick={() => setShowOptions((v) => !v)}
-                    className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                    className="p-2 hover:bg-gray-50 rounded-full"
                     title="Options"
                   >
-                    <span className="text-xl leading-none">⋮</span>
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                      <circle cx="12" cy="5" r="1.5" />
+                      <circle cx="12" cy="12" r="1.5" />
+                      <circle cx="12" cy="19" r="1.5" />
+                    </svg>
                   </button>
                   {showOptions && (
-                    <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-100 rounded-xl shadow-lg z-20">
+                    <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-100 rounded-lg shadow-xl z-20 overflow-hidden">
                       <button
                         onClick={() => { setIsEditingCaption(true); setShowOptions(false); }}
-                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
+                        className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-100"
                       >
                         Edit caption
                       </button>
@@ -742,7 +768,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                             setShowOptions(false);
                           }
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
                       >
                         Delete post
                       </button>
@@ -750,130 +776,95 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   )}
                 </div>
               )}
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
           </div>
 
-          {/* Caption Section - Instagram Style */}
+          {/* Caption Section */}
           {mediaItems.length > 0 && (
-            <div className="px-4 py-3 border-b border-gray-100">
-              <div className="flex items-start gap-3">
+            <div className="px-3 py-2.5 border-b border-gray-50">
+              <div className="flex gap-2.5">
                 <Image
                   src={post.profilePic || '/uploads/DefaultProfile.jpg'}
                   alt={post.authorName || 'User'}
-                  width={32}
-                  height={32}
-                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                  width={28}
+                  height={28}
+                  className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start">
-                    <span className="font-semibold text-sm mr-2">{post.authorName || 'Unknown User'}</span>
-                    <div className="flex-1">
-                      {!isEditingCaption ? (
-                        <>
-                          <span
-                            className="text-sm text-gray-900 leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: parseCaption(displayContent) }}
-                          />
-                          {shouldTruncate && (
-                            <button
-                              onClick={() => setShowFullCaption(!showFullCaption)}
-                              className="text-gray-500 text-sm ml-1 hover:text-gray-700"
-                            >
-                              {showFullCaption ? ' less' : ' more'}
-                            </button>
-                          )}
-                          {canManage && !isMobile && (
-                            <button
-                              onClick={() => setIsEditingCaption(true)}
-                              className="text-gray-400 hover:text-gray-600 text-xs ml-2"
-                              title="Edit caption"
-                            >
-                              ✏️
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        <div className="w-full">
-                          <textarea
-                            className="w-full border border-gray-200 rounded-lg p-2 text-sm text-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-300"
-                            rows={3}
-                            maxLength={2200}
-                            value={editCaption}
-                            onChange={(e) => setEditCaption(e.target.value)}
-                          />
-                          <div className="flex items-center space-x-2 mt-2">
-                            <button
-                              onClick={handleCaptionSave}
-                              disabled={isSavingCaption || !editCaption.trim()}
-                              className="px-3 py-1 rounded-md bg-[#02fa97] text-white text-sm disabled:opacity-60"
-                            >
-                              {isSavingCaption ? 'Saving...' : 'Save'}
-                            </button>
-                            <button
-                              onClick={() => { setIsEditingCaption(false); setEditCaption(post.content); }}
-                              className="px-3 py-1 rounded-md bg-gray-100 text-gray-700 text-sm"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
+                  {!isEditingCaption ? (
+                    <>
+                      <p className="text-xs">
+                        <span className="font-semibold mr-1.5">{post.authorName || 'Unknown User'}</span>
+                        <span
+                          className="text-gray-900"
+                          dangerouslySetInnerHTML={{ __html: parseCaption(displayContent) }}
+                        />
+                      </p>
+                      {shouldTruncate && (
+                        <button
+                          onClick={() => setShowFullCaption(!showFullCaption)}
+                          className="text-gray-400 text-sm mt-1"
+                        >
+                          {showFullCaption ? 'less' : 'more'}
+                        </button>
                       )}
-                    </div>
-                  </div>
-                  {/* Location */}
-                  {post.location && (
-                    <div className="mt-1 ml-0">
-                      <span className="text-xs text-gray-600">
-                        📍 {post.location}
-                      </span>
-                    </div>
-                  )}
-                  {/* Category/Hashtag */}
-                  {post.category && (
-                    <div className="mt-2">
-                      <span className="text-blue-600 text-sm hover:underline cursor-pointer">
-                        #{formatCategory(post.category)}
-                      </span>
+                      <p className="text-xs text-gray-400 mt-2 uppercase tracking-wide">{post.timestamp}</p>
+                    </>
+                  ) : (
+                    <div className="w-full">
+                      <textarea
+                        className="w-full border border-gray-200 rounded p-2 text-sm focus:outline-none focus:border-gray-300"
+                        rows={3}
+                        maxLength={2200}
+                        value={editCaption}
+                        onChange={(e) => setEditCaption(e.target.value)}
+                      />
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={handleCaptionSave}
+                          disabled={isSavingCaption || !editCaption.trim()}
+                          className="px-4 py-1.5 rounded bg-blue-500 text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSavingCaption ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => { setIsEditingCaption(false); setEditCaption(post.content); }}
+                          className="px-4 py-1.5 rounded bg-gray-100 text-gray-700 text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
-              <p className="text-xs text-gray-500 uppercase mt-1">{post.timestamp}</p>
             </div>
           )}
 
           {/* Comments */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-4 py-3">
             {isLoadingComments && comments.length === 0 && (
-              <div className="text-center text-gray-400 text-sm">Loading comments...</div>
+              <div className="text-center text-gray-400 text-sm py-8">Loading comments...</div>
             )}
             {comments.map((comment) => (
-              <div key={comment.id} className="flex space-x-3">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs flex-shrink-0 overflow-hidden bg-gray-200">
+              <div key={comment.id} className="flex gap-2.5 mb-3">
+                <div className="w-7 h-7 rounded-full flex items-center justify-center text-gray-600 font-bold text-xs flex-shrink-0 overflow-hidden bg-gray-100">
                   {comment.user.profile_image ? (
-                    <Image src={comment.user.profile_image} alt={comment.user.name} width={32} height={32} className="w-full h-full object-cover" />
+                    <Image src={comment.user.profile_image} alt={comment.user.name} width={28} height={28} className="w-full h-full object-cover" />
                   ) : (
                     comment.user.name.charAt(0)
                   )}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-start mb-1">
-                    <span className="font-semibold text-sm mr-2">{comment.user.name}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs">
+                    <span className="font-semibold mr-1.5">{comment.user.name}</span>
                     <span
-                      className="text-sm text-gray-900 leading-relaxed flex-1"
+                      className="text-gray-900"
                       dangerouslySetInnerHTML={{ __html: parseCaption(comment.text) }}
                     />
-                  </div>
-                  <div className="flex items-center space-x-4 text-xs text-gray-400">
+                  </p>
+                  <div className="flex items-center gap-4 text-xs text-gray-400 mt-2">
                     <span>{comment.timestamp}</span>
                     <button
                       onClick={async () => {
@@ -1036,22 +1027,22 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
             )}
           </div>
 
-          {/* Actions - Instagram Style */}
-          <div className="border-t border-gray-100 px-4 pt-3">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-4">
+          {/* Actions & Comment Input */}
+          <div className="border-t border-gray-100">
+            <div className="flex items-center justify-between px-3 py-2.5">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={handleAuraClick}
                   data-aura-button
-                  className="hover:opacity-60 transition-opacity"
+                  className="hover:opacity-60 transition-opacity p-0.5"
                 >
                   <svg
-                    width={24}
-                    height={24}
+                    width={26}
+                    height={26}
                     viewBox="0 0 100 100"
                     style={{
-                      fill: hasAura ? '#02fa97' : 'transparent',
-                      stroke: hasAura ? '#02fa97' : '#262626',
+                      fill: hasAura ? '#FFAF50' : 'transparent',
+                      stroke: hasAura ? '#FFAF50' : '#262626',
                       strokeWidth: '3',
                     }}
                   >
@@ -1061,89 +1052,70 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   </svg>
                 </button>
 
-                <button onClick={handleCommentButtonClick} className="hover:opacity-60 transition-opacity">
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <button onClick={handleCommentButtonClick} className="hover:opacity-60 transition-opacity p-0.5">
+                  <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                   </svg>
                 </button>
 
-                <button onClick={handleShareClick} className="hover:opacity-60 transition-opacity">
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <button onClick={handleShareClick} className="hover:opacity-60 transition-opacity p-0.5">
+                  <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
                   </svg>
                 </button>
               </div>
 
-              <button className="hover:opacity-60 transition-opacity">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button className="hover:opacity-60 transition-opacity p-0.5">
+                <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                 </svg>
               </button>
             </div>
 
-            <div className="text-sm font-semibold text-gray-900 mb-2">
-              {auraCount} {auraCount === 1 ? 'aura' : 'auras'}
+            <div className="px-3 pb-2 border-b border-gray-100">
+              <p className="text-xs font-semibold">{auraCount} {auraCount === 1 ? 'Aura' : 'Auras'}</p>
             </div>
 
-            <p className="text-xs text-gray-400 mb-3">
-              {post.timestamp}
-              {/* Add location if available */}
-              {post.category && (
-                <>
-                  {' • '}
-                  <span className="text-gray-600">#{formatCategory(post.category)}</span>
-                </>
-              )}
-            </p>
-
             {/* Comment Input */}
-            <div className="border-t border-gray-100 pt-3 relative">
-              <form onSubmit={handleCommentSubmit} className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                  {user?.name.charAt(0)}
-                </div>
+            <div className="px-3 py-2.5">
+              <form onSubmit={handleCommentSubmit} className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowEmojiPicker(!showEmojiPicker);
+                  }}
+                  className="text-xl hover:opacity-70 transition-opacity flex-shrink-0"
+                  title="Add emoji"
+                >
+                  😊
+                </button>
                 <input
                   type="text"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Add a comment..."
                   maxLength={2200}
-                  className="flex-1 border-none outline-none text-sm placeholder-gray-400"
+                  className="flex-1 border-none outline-none text-xs bg-transparent"
                   disabled={isPosting}
                   ref={commentInputRef}
                 />
-                <div className="flex items-center space-x-2 emoji-picker-container">
+                {newComment.trim() && (
                   <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('🎯 Emoji button clicked! Current state:', showEmojiPicker);
-                      setShowEmojiPicker(!showEmojiPicker);
-                      console.log('🎯 Set showEmojiPicker to:', !showEmojiPicker);
-                    }}
-                    className="text-gray-400 hover:text-gray-600 relative text-lg"
-                    title="Add emoji"
+                    type="submit"
+                    disabled={isPosting}
+                    className="text-blue-500 font-semibold text-xs hover:text-blue-600 disabled:opacity-50 flex-shrink-0"
                   >
-                    😊
+                    {isPosting ? 'Posting...' : 'Post'}
                   </button>
-                  {newComment.trim() && (
-                    <button
-                      type="submit"
-                      disabled={isPosting}
-                      className="text-[#02fa97] font-semibold text-sm hover:text-teal-600 disabled:opacity-50"
-                    >
-                      {isPosting ? 'Posting...' : 'Post'}
-                    </button>
-                  )}
-                </div>
+                )}
               </form>
 
-              {/* Emoji Picker - Outside the form */}
+              {/* Emoji Picker */}
               {showEmojiPicker && (
-                <div className="absolute bottom-full right-0 mb-2 bg-white border-2 border-orange-100 rounded-lg shadow-xl p-3 w-80 h-48 overflow-y-auto emoji-picker-dropdown" style={{ zIndex: 10000 }}>
-                  <div className="text-xs text-gray-500 mb-2">Click an emoji to add it: (Current: "{newComment}")</div>
+                <div className="absolute bottom-full left-4 right-4 mb-1 bg-white rounded-lg shadow-2xl border border-gray-200 p-3 max-h-48 overflow-y-auto z-[10000]" onClick={(e) => e.stopPropagation()}>
                   <div className="grid grid-cols-8 gap-1">
                     {commonEmojis.map((emoji, index) => (
                       <div

@@ -186,7 +186,7 @@ export default function HomePage() {
                   </button>
                 </div>
               ) : posts.length > 0 ? (
-                posts.map((post) => (
+                posts.map((post, index) => (
                   <PostCard
                     key={post.id}
                     id={post.id}
@@ -205,6 +205,7 @@ export default function HomePage() {
                     userLiked={post.user_liked}
                     isFollowingUser={post.is_following_author}
                     onPostClick={handlePostClick}
+                    isFirstPost={index === 0 && post.media_type === 'video'}
                   />
                 ))
               ) : (

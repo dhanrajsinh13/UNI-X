@@ -227,9 +227,14 @@ function saveToLocalUploads(filePath: string, resourceType: 'image' | 'video'): 
     throw new Error('Failed to create local uploads directory')
   }
 
-  const extFromPath = path.extname(filePath)
+  // Get extension from the original file, but validate it
+  const extFromPath = path.extname(filePath).toLowerCase()
   const defaultExt = resourceType === 'image' ? '.jpg' : '.mp4'
-  const ext = extFromPath && extFromPath.length <= 6 ? extFromPath : defaultExt
+  
+  // Validate extension is in allowed list
+  const isValidExt = ALLOWED_EXTENSIONS.includes(extFromPath)
+  const ext = isValidExt ? extFromPath : defaultExt
+  
   const filename = `local-${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`
   const destPath = path.join(uploadsDir, filename)
 

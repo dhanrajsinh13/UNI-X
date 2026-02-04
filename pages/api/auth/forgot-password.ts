@@ -72,11 +72,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       subject: 'Password Reset Request - UNIX Social Network',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #02fa97;">Password Reset Request</h2>
+          <h2 style="color: #FFAF50;">Password Reset Request</h2>
           <p>Hello ${user.name},</p>
           <p>We received a request to reset your password for your UNIX account.</p>
           <p>Click the button below to reset your password:</p>
-          <a href="${resetUrl}" style="display: inline-block; background-color: #02fa97; color: black; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 16px 0;">Reset Password</a>
+          <a href="${resetUrl}" style="display: inline-block; background-color: #FFAF50; color: black; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 16px 0;">Reset Password</a>
           <p>Or copy and paste this link into your browser:</p>
           <p style="word-break: break-all; color: #666;">${resetUrl}</p>
           <p><strong>This link will expire in 1 hour.</strong></p>

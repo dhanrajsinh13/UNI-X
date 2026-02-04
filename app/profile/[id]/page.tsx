@@ -140,7 +140,7 @@ const ProfilePage = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#02fa97] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#FFAF50] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -192,7 +192,7 @@ const ProfilePage = () => {
           <div className="flex flex-col md:flex-row items-start gap-8 mb-6">
             {/* Avatar */}
             <div className="mx-auto md:mx-0">
-              <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden ring-4 ring-white shadow-xl">
+              <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-[#FFAF50] to-orange-400 rounded-full overflow-hidden ring-4 ring-white shadow-xl">
                 <Image
                   src={userProfile.profile_image || '/uploads/DefaultProfile.jpg'}
                   alt={userProfile.name}
@@ -226,7 +226,7 @@ const ProfilePage = () => {
                     {(!userProfile.is_private || userProfile.is_following) && (
                       <button
                         onClick={handleMessage}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#02fa97] hover:bg-teal-400 text-black font-medium text-sm rounded-lg transition-all duration-200 hover:shadow-md active:scale-95"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#FFAF50] hover:bg-orange-400 text-black font-medium text-sm rounded-lg transition-all duration-200 hover:shadow-md active:scale-95"
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M8.5 19H8C4 19 2 17 2 13V8C2 4 4 2 8 2H16C20 2 22 4 22 8V13C22 17 20 19 16 19H15.5C15.19 19 14.89 19.15 14.7 19.4L13.2 21.4C12.54 22.28 11.46 22.28 10.8 21.4L9.3 19.4C9.14 19.18 8.77 19 8.5 19Z" stroke="currentColor" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round" />
@@ -409,7 +409,7 @@ const ProfilePage = () => {
                                 />
                               )
                             ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-[#02fa97]/20 to-teal-200 flex flex-col items-center justify-center p-4">
+                              <div className="w-full h-full bg-gradient-to-br from-[#FFAF50]/20 to-orange-200 flex flex-col items-center justify-center p-4">
                                 <p className="text-gray-700 text-sm text-center line-clamp-3">{post.content}</p>
                               </div>
                             )}

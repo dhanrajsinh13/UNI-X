@@ -899,7 +899,7 @@ const MessagesPageInner = () => {
   if (isLoading) {
     return (
       <div className="h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -916,7 +916,7 @@ const MessagesPageInner = () => {
                 <h1 className="text-2xl font-bold text-gray-900 mb-1">Messages</h1>
                 <p className="text-sm text-gray-500">{conversations.length} conversation{conversations.length !== 1 ? 's' : ''}</p>
               </div>
-              <button className="p-2.5 hover:bg-green-50 text-gray-600 hover:text-green-600 rounded-xl transition-all hover:shadow-sm">
+              <button className="p-2.5 hover:bg-orange-50 text-gray-600 hover:text-orange-600 rounded-xl transition-all hover:shadow-sm">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
                     stroke="currentColor"
@@ -945,7 +945,7 @@ const MessagesPageInner = () => {
                 name="search"
                 type="text"
                 placeholder="Search conversations..."
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:bg-white transition-all text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all text-sm"
               />
             </div>
           </div>
@@ -976,7 +976,7 @@ const MessagesPageInner = () => {
                 <div
                   key={conversation.conversationId}
                   className={`relative group cursor-pointer transition-all border-b border-gray-100 ${activeConversation === conversation.conversationId
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-l-green-500'
+                    ? 'bg-gradient-to-r from-orange-50 to-yellow-50 border-l-4 border-l-orange-500'
                     : 'hover:bg-gray-50 border-l-4 border-l-transparent'
                     }`}
                 >
@@ -987,7 +987,7 @@ const MessagesPageInner = () => {
                     <div className="flex items-center gap-3">
                       <div className="relative flex-shrink-0">
                         <div className={`w-14 h-14 rounded-full overflow-hidden ring-2 shadow-sm transition-all ${activeConversation === conversation.conversationId
-                          ? 'ring-green-500'
+                          ? 'ring-orange-500'
                           : 'ring-white group-hover:ring-gray-200'
                           }`}>
                           <Image
@@ -1000,7 +1000,7 @@ const MessagesPageInner = () => {
                           />
                         </div>
                         {/* Online status indicator - can be added later */}
-                        {/* <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div> */}
+                        {/* <div className="absolute bottom-0 right-0 w-4 h-4 bg-orange-500 rounded-full border-2 border-white"></div> */}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -1013,7 +1013,7 @@ const MessagesPageInner = () => {
                               {formatTimestamp(conversation.lastMessage.createdAt)}
                             </span>
                             {conversation.unreadCount > 0 && (
-                              <div className="min-w-[20px] h-5 px-1.5 bg-green-600 rounded-full flex items-center justify-center shadow-sm">
+                              <div className="min-w-[20px] h-5 px-1.5 bg-orange-600 rounded-full flex items-center justify-center shadow-sm">
                                 <span className="text-xs font-bold text-white">{conversation.unreadCount}</span>
                               </div>
                             )}
@@ -1129,7 +1129,7 @@ const MessagesPageInner = () => {
                   </button>
                 )}
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-green-500 shadow-sm">
+                  <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-orange-500 shadow-sm">
                     <Image
                       src={currentConversation?.otherUser?.profile_image || activeOtherUser?.profile_image || '/uploads/DefaultProfile.jpg'}
                       alt={currentConversation?.otherUser?.name || activeOtherUser?.name || 'User'}
@@ -1140,14 +1140,14 @@ const MessagesPageInner = () => {
                     />
                   </div>
                   {/* Online status indicator */}
-                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white"></div>
+                  <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-orange-500 rounded-full border-2 border-white"></div>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">
                     {currentConversation?.otherUser?.name || activeOtherUser?.name || 'User'}
                   </h3>
-                  <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                  <p className="text-xs text-orange-600 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span>
                     Active now
                   </p>
                 </div>
@@ -1201,7 +1201,7 @@ const MessagesPageInner = () => {
 
                         <div
                           className={`rounded-2xl px-4 py-3 ${isFromMe
-                            ? 'bg-[#02fa97] text-black'
+                            ? 'bg-[#FFAF50] text-black'
                             : 'bg-gray-100 text-gray-900'
                             }`}
                         >
@@ -1391,7 +1391,7 @@ const MessagesPageInner = () => {
                     onChange={(e) => handleTyping(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Message..."
-                    className="w-full px-4 py-3 bg-gray-100 rounded-2xl border-0 focus:outline-none focus:ring-2 focus:ring-[#02fa97]/20 focus:bg-white transition-all text-gray-900 text-sm resize-none max-h-32"
+                    className="w-full px-4 py-3 bg-gray-100 rounded-2xl border-0 focus:outline-none focus:ring-2 focus:ring-[#FFAF50]/20 focus:bg-white transition-all text-gray-900 text-sm resize-none max-h-32"
                     rows={1}
                     style={{ minHeight: '44px' }}
                   />
@@ -1421,7 +1421,7 @@ const MessagesPageInner = () => {
                 {input.trim() ? (
                   <button
                     onClick={handleSendMessage}
-                    className="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all shadow-sm hover:shadow text-sm flex-shrink-0 flex items-center gap-2"
+                    className="px-5 py-2.5 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 transition-all shadow-sm hover:shadow text-sm flex-shrink-0 flex items-center gap-2"
                   >
                     <span>Send</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1443,8 +1443,8 @@ const MessagesPageInner = () => {
         !activeConversation && !isMobileView && (
           <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="text-center">
-              <div className="w-28 h-28 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-green-600">
+              <div className="w-28 h-28 bg-gradient-to-br from-orange-100 to-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-orange-600">
                   <path d="M8.5 12H8.51M12 12H12.01M15.5 12H15.51M21 12C21 16.418 16.97 20 12 20C10.89 20 9.84 19.79 8.88 19.42L3 21L4.58 15.12C4.21 14.16 4 13.11 4 12C4 7.582 8.03 4 12 4C16.97 4 21 7.582 21 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
@@ -1512,7 +1512,7 @@ const MessagesPageInner = () => {
 
 const MessagesPage = () => {
   return (
-    <Suspense fallback={<div className="h-screen bg-white flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#02fa97]"></div></div>}>
+    <Suspense fallback={<div className="h-screen bg-white flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FFAF50]"></div></div>}>
       <MessagesPageInner />
     </Suspense>
   );

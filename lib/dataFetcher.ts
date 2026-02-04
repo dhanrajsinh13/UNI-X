@@ -202,7 +202,20 @@ class DataFetchManager {
           throw new Error(`HTTP ${response.status}`);
         }
 
-        const data = await response.json();
+        // Handle empty responses (e.g., 204 No Content)
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          // Return empty object for non-JSON responses
+          return {} as T;
+        }
+
+        // Check if response has content before parsing
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+          return {} as T;
+        }
+
+        const data = JSON.parse(text);
         return data;
       } catch (error: any) {
         lastError = error;

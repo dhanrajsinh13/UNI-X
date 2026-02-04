@@ -223,7 +223,7 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
                       toggleFollow(u.id);
                     }}
                     disabled={isActing === u.id}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${u.is_following ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-[#02fa97] text-black bg-[#02fa97] hover:bg-teal-500'
+                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${u.is_following ? 'border-gray-300 text-gray-700 hover:bg-gray-50' : 'border-[#FFAF50] text-black bg-[#FFAF50] hover:bg-orange-500'
                       } disabled:opacity-50`}
                   >
                     {u.is_following ? 'Following' : 'Follow'}
@@ -250,7 +250,7 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
           <button
             onClick={() => fetchPage(true)}
             disabled={loading || !hasMore}
-            className="text-sm font-medium text-[#02fa97] disabled:opacity-50"
+            className="text-sm font-medium text-[#FFAF50] disabled:opacity-50"
           >
             {hasMore ? (loading ? 'Loading…' : 'Load more') : 'No more'}
           </button>

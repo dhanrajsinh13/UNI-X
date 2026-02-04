@@ -285,7 +285,7 @@ export default function SwipePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-lg font-bold bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">
+          <h1 className="text-lg font-bold bg-gradient-to-r from-orange-500 to-emerald-500 bg-clip-text text-transparent">
             Discover
           </h1>
           <div className="w-10"></div>
@@ -334,7 +334,7 @@ export default function SwipePage() {
             )}
 
             {/* Background Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-emerald-50"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-emerald-50"></div>
 
             {/* Profile Picture - Centered & Round */}
             <div className="relative pt-8 pb-4 flex justify-center">
@@ -348,7 +348,7 @@ export default function SwipePage() {
                   />
                 </div>
                 {/* Active indicator */}
-                <div className="absolute bottom-2 right-2 w-8 h-8 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full border-4 border-white shadow-lg"></div>
+                <div className="absolute bottom-2 right-2 w-8 h-8 bg-gradient-to-r from-orange-500 to-emerald-500 rounded-full border-4 border-white shadow-lg"></div>
               </div>
             </div>
 
@@ -377,12 +377,12 @@ export default function SwipePage() {
 
               {/* Mutual Friends */}
               {currentUser.mutualFriends && currentUser.mutualFriends > 0 && (
-                <div className="bg-gradient-to-r from-teal-500/10 to-emerald-500/10 rounded-2xl p-3 border border-teal-200/50">
+                <div className="bg-gradient-to-r from-orange-500/10 to-emerald-500/10 rounded-2xl p-3 border border-orange-200/50">
                   <div className="flex items-center justify-center gap-2 mb-1">
-                    <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
                     </svg>
-                    <p className="text-teal-700 font-bold text-sm">
+                    <p className="text-orange-700 font-bold text-sm">
                       {currentUser.mutualFriends} mutual {currentUser.mutualFriends === 1 ? 'friend' : 'friends'}
                     </p>
                   </div>
@@ -439,7 +439,7 @@ export default function SwipePage() {
 
           <button
             onClick={() => handleSwipe('right')}
-            className="w-16 h-16 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 shadow-lg hover:shadow-xl transition-all hover:scale-110 active:scale-95 flex items-center justify-center text-white"
+            className="w-16 h-16 rounded-full bg-gradient-to-r from-orange-500 to-emerald-500 shadow-lg hover:shadow-xl transition-all hover:scale-110 active:scale-95 flex items-center justify-center text-white"
           >
             <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />

@@ -9,7 +9,7 @@ module.exports = {
       // Instagram-inspired color system
       colors: {
         background: "#FFFFFF",
-        accent: "#02fa97",
+        accent: "#FFAF50",
         text: "#1E1E1E",
         // Semantic colors
         success: "#00BA34",

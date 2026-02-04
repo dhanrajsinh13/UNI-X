@@ -91,7 +91,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
           <p>{error}</p>
           <button
             onClick={loadContacts}
-            className="mt-2 text-[#02fa97] hover:underline"
+            className="mt-2 text-[#FFAF50] hover:underline"
           >
             Try again
           </button>
@@ -103,14 +103,14 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
   return (
     <div className="bg-white rounded-lg shadow-lg">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-[#02fa97] to-teal-400">
+      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-[#FFAF50] to-orange-400">
         <h2 className="text-lg font-semibold text-white mb-3">Contacts</h2>
         <input
           type="text"
           placeholder="Search contacts..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          className="w-full px-3 py-2 rounded-lg border border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
         />
       </div>
 
@@ -132,7 +132,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
               <button
                 key={contact.id}
                 onClick={() => onSelectUser(contact)}
-                className={`w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3 ${selectedUserId === contact.id ? 'bg-teal-50 border-r-4 border-[#02fa97]' : ''
+                className={`w-full p-4 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3 ${selectedUserId === contact.id ? 'bg-orange-50 border-r-4 border-[#FFAF50]' : ''
                   }`}
               >
                 <Image
@@ -147,7 +147,7 @@ const ContactsList: React.FC<ContactsListProps> = ({ onSelectUser, selectedUserI
                       {contact.name}
                     </p>
                     {selectedUserId === contact.id && (
-                      <div className="w-2 h-2 bg-[#02fa97] rounded-full"></div>
+                      <div className="w-2 h-2 bg-[#FFAF50] rounded-full"></div>
                     )}
                   </div>
                   <p className="text-sm text-gray-500 truncate">

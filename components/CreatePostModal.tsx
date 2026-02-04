@@ -414,7 +414,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
           {step === 'edit' && (
             <button
               onClick={handleNext}
-              className="text-[#02fa97] font-semibold hover:text-teal-600 transition-colors"
+              className="text-[#FFAF50] font-semibold hover:text-orange-600 transition-colors"
             >
               Next
             </button>
@@ -424,11 +424,11 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
             <button
               onClick={handleShare}
               disabled={isUploading || !caption.trim()}
-              className="text-[#02fa97] font-semibold hover:text-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="text-[#FFAF50] font-semibold hover:text-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isUploading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-[#02fa97] border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-[#FFAF50] border-t-transparent rounded-full animate-spin"></div>
                   Sharing...
                 </>
               ) : (
@@ -454,7 +454,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
           {step === 'upload' && (
             <div className="p-8 md:p-16">
               <div
-                className="border-2 border-dashed border-gray-300 rounded-xl p-8 md:p-16 text-center hover:border-[#02fa97] transition-colors cursor-pointer"
+                className="border-2 border-dashed border-gray-300 rounded-xl p-8 md:p-16 text-center hover:border-[#FFAF50] transition-colors cursor-pointer"
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
@@ -469,7 +469,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                   <h3 className="text-xl md:text-2xl font-light text-gray-900 mb-2">
                     Drag photos and videos here
                   </h3>
-                  <button className="bg-[#02fa97] text-black px-6 py-2 rounded-lg font-medium hover:bg-teal-500 transition-colors">
+                  <button className="bg-[#FFAF50] text-black px-6 py-2 rounded-lg font-medium hover:bg-orange-500 transition-colors">
                     Select from computer
                   </button>
                 </div>
@@ -556,10 +556,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                           <button
                             key={preset.name}
                             onClick={() => applyPreset(preset)}
-                            className={`border rounded-lg p-2 text-xs text-gray-700 hover:bg-gray-50 ${activePreset === preset.name ? 'ring-2 ring-[#02fa97]' : ''}`}
+                            className={`border rounded-lg p-2 text-xs text-gray-700 hover:bg-gray-50 ${activePreset === preset.name ? 'ring-2 ring-[#FFAF50]' : ''}`}
                           >
                             <div className="h-20 w-full bg-gray-200 rounded mb-2 overflow-hidden flex items-center justify-center">
-                              <Image src={previewUrl} alt={preset.name} className="h-full w-full object-cover" style={{ filter: preset.css }} />
+                              <Image src={previewUrl} alt={preset.name} width={80} height={80} className="h-full w-full object-cover" style={{ filter: preset.css }} />
                             </div>
                             {preset.name}
                           </button>
@@ -581,7 +581,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                             step={0.01}
                             value={brightness}
                             onChange={(e) => setBrightness(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#02fa97]"
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FFAF50]"
                           />
                         </div>
                         <div>
@@ -596,7 +596,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                             step={0.01}
                             value={contrast}
                             onChange={(e) => setContrast(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#02fa97]"
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FFAF50]"
                           />
                         </div>
                         <div>
@@ -611,7 +611,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                             step={0.01}
                             value={saturation}
                             onChange={(e) => setSaturation(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#02fa97]"
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FFAF50]"
                           />
                         </div>
                         <div>
@@ -626,7 +626,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                             step={1}
                             value={hue}
                             onChange={(e) => setHue(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#02fa97]"
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FFAF50]"
                           />
                         </div>
                         <div>
@@ -641,7 +641,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                             step={0.1}
                             value={blur}
                             onChange={(e) => setBlur(parseFloat(e.target.value))}
-                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#02fa97]"
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FFAF50]"
                           />
                         </div>
                         <div className="pt-3 border-t border-gray-100">
@@ -670,6 +670,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                   <Image
                     src={editedPreviewUrl || previewUrl}
                     alt="Preview"
+                    width={600}
+                    height={600}
                     className="max-w-full max-h-full object-contain"
                   />
                 ) : (
@@ -684,7 +686,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
               {/* Caption */}
               <div className="flex-1 p-4 md:pl-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#FFAF50] to-orange-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
                     U
                   </div>
                   <span className="font-semibold text-gray-900">{user?.name || 'Your Username'}</span>
@@ -695,7 +697,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                   onChange={(e) => setCaption(e.target.value)}
                   onBlur={() => setCaptionTouched(true)}
                   placeholder="Write a caption..."
-                  className="w-full h-32 md:h-40 resize-none border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#02fa97] text-sm text-gray-500 placeholder-gray-500"
+                  className="w-full h-32 md:h-40 resize-none border border-gray-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#FFAF50] text-sm text-gray-500 placeholder-gray-500"
                   maxLength={1000}
                 />
 
@@ -712,7 +714,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#02fa97]"
+                      className="text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#FFAF50]"
                     >
                       <option value="general">General</option>
                       <option value="academic">Academic</option>

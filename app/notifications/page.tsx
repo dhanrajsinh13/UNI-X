@@ -155,7 +155,7 @@ export default function NotificationsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#02fa97] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#FFAF50] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -197,7 +197,7 @@ export default function NotificationsPage() {
               <button
                 onClick={() => setFilter('all')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === 'all'
-                    ? 'bg-[#02fa97] text-black'
+                    ? 'bg-[#FFAF50] text-black'
                     : 'text-gray-600 hover:text-gray-900'
                   }`}
               >
@@ -206,7 +206,7 @@ export default function NotificationsPage() {
               <button
                 onClick={() => setFilter('unread')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${filter === 'unread'
-                    ? 'bg-[#02fa97] text-black'
+                    ? 'bg-[#FFAF50] text-black'
                     : 'text-gray-600 hover:text-gray-900'
                   }`}
               >
@@ -218,7 +218,7 @@ export default function NotificationsPage() {
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="text-[#02fa97] hover:text-teal-600 font-semibold text-sm"
+                className="text-[#FFAF50] hover:text-orange-600 font-semibold text-sm"
               >
                 Mark all as read
               </button>
@@ -302,7 +302,7 @@ export default function NotificationsPage() {
                     {/* Avatar or Icon */}
                     <div className="flex-shrink-0">
                       {notification.avatar ? (
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#FFAF50] to-orange-400 rounded-full flex items-center justify-center text-white font-bold text-sm">
                           {notification.avatar}
                         </div>
                       ) : (
@@ -324,7 +324,7 @@ export default function NotificationsPage() {
 
                     {/* Unread indicator */}
                     {!notification.read && (
-                      <div className="w-2 h-2 bg-[#02fa97] rounded-full flex-shrink-0 mt-2"></div>
+                      <div className="w-2 h-2 bg-[#FFAF50] rounded-full flex-shrink-0 mt-2"></div>
                     )}
                   </div>
                 </div>

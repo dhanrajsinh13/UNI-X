@@ -282,9 +282,29 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mobile Header - Instagram Style */}
+      {isMobile && (
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-200">
+          <div className="flex items-center justify-between px-4 py-3">
+            <button
+              onClick={() => router.back()}
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <h1 className="text-lg font-semibold text-gray-900">Settings</h1>
+            <div className="w-10"></div>
+          </div>
+        </div>
+      )}
+
       <div className="flex h-screen overflow-hidden">
-        {/* Modern Sidebar */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm">
+        {/* Modern Sidebar - Hidden on Mobile */}
+        <div className={`${
+          isMobile ? 'hidden' : 'w-80'
+        } bg-white border-r border-gray-200 flex flex-col shadow-sm`}>
           {/* Header */}
           <div className="p-6 border-b border-gray-100">
             <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
@@ -303,10 +323,10 @@ export default function SettingsPage() {
                     setIsEditing(true);
                     await resetEditForm();
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 group"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50 group"
                 >
-                  <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-green-100 transition-colors">
-                    <svg className="w-5 h-5 text-gray-600 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 rounded-lg bg-gray-100 group-hover:bg-orange-100 transition-colors">
+                    <svg className="w-5 h-5 text-gray-600 group-hover:text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
@@ -314,7 +334,7 @@ export default function SettingsPage() {
                     <span className="font-medium text-gray-900">Edit Profile</span>
                     <p className="text-xs text-gray-500">Update your information</p>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400 group-hover:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -322,24 +342,24 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setActiveSection('notifications')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${activeSection === 'notifications'
-                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm'
-                    : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                    ? 'bg-gradient-to-r from-orange-100 to-yellow-100 shadow-sm'
+                    : 'hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50'
                     } group`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'notifications' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'notifications' ? 'bg-orange-200' : 'bg-gray-100 group-hover:bg-orange-100'
                     }`}>
-                    <svg className={`w-5 h-5 ${activeSection === 'notifications' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                    <svg className={`w-5 h-5 ${activeSection === 'notifications' ? 'text-orange-700' : 'text-gray-600 group-hover:text-orange-600'
                       }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <span className={`font-medium ${activeSection === 'notifications' ? 'text-green-700' : 'text-gray-900'}`}>
+                    <span className={`font-medium ${activeSection === 'notifications' ? 'text-orange-700' : 'text-gray-900'}`}>
                       Notifications
                     </span>
                     <p className="text-xs text-gray-500">Manage alerts</p>
                   </div>
-                  <svg className={`w-5 h-5 ${activeSection === 'notifications' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                  <svg className={`w-5 h-5 ${activeSection === 'notifications' ? 'text-orange-600' : 'text-gray-400 group-hover:text-orange-600'
                     }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -353,19 +373,19 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setActiveSection('account-privacy')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${activeSection === 'account-privacy'
-                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm'
-                    : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                    ? 'bg-gradient-to-r from-orange-100 to-yellow-100 shadow-sm'
+                    : 'hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50'
                     } group`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'account-privacy' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'account-privacy' ? 'bg-orange-200' : 'bg-gray-100 group-hover:bg-orange-100'
                     }`}>
-                    <svg className={`w-5 h-5 ${activeSection === 'account-privacy' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                    <svg className={`w-5 h-5 ${activeSection === 'account-privacy' ? 'text-orange-700' : 'text-gray-600 group-hover:text-orange-600'
                       }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <span className={`font-medium ${activeSection === 'account-privacy' ? 'text-green-700' : 'text-gray-900'}`}>
+                    <span className={`font-medium ${activeSection === 'account-privacy' ? 'text-orange-700' : 'text-gray-900'}`}>
                       Account Privacy
                     </span>
                     <p className="text-xs text-gray-500">Control visibility</p>
@@ -375,7 +395,7 @@ export default function SettingsPage() {
                       Private
                     </span>
                   )}
-                  <svg className={`w-5 h-5 ${activeSection === 'account-privacy' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                  <svg className={`w-5 h-5 ${activeSection === 'account-privacy' ? 'text-orange-600' : 'text-gray-400 group-hover:text-orange-600'
                     }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -384,24 +404,24 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setActiveSection('password')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left ${activeSection === 'password'
-                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 shadow-sm'
-                    : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50'
+                    ? 'bg-gradient-to-r from-orange-100 to-yellow-100 shadow-sm'
+                    : 'hover:bg-gradient-to-r hover:from-orange-50 hover:to-yellow-50'
                     } group`}
                 >
-                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'password' ? 'bg-green-200' : 'bg-gray-100 group-hover:bg-green-100'
+                  <div className={`p-2 rounded-lg transition-colors ${activeSection === 'password' ? 'bg-orange-200' : 'bg-gray-100 group-hover:bg-orange-100'
                     }`}>
-                    <svg className={`w-5 h-5 ${activeSection === 'password' ? 'text-green-700' : 'text-gray-600 group-hover:text-green-600'
+                    <svg className={`w-5 h-5 ${activeSection === 'password' ? 'text-orange-700' : 'text-gray-600 group-hover:text-orange-600'
                       }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <span className={`font-medium ${activeSection === 'password' ? 'text-green-700' : 'text-gray-900'}`}>
+                    <span className={`font-medium ${activeSection === 'password' ? 'text-orange-700' : 'text-gray-900'}`}>
                       Close Friends
                     </span>
                     <p className="text-xs text-gray-500">Manage lists</p>
                   </div>
-                  <svg className={`w-5 h-5 ${activeSection === 'password' ? 'text-green-600' : 'text-gray-400 group-hover:text-green-600'
+                  <svg className={`w-5 h-5 ${activeSection === 'password' ? 'text-orange-600' : 'text-gray-400 group-hover:text-orange-600'
                     }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -426,26 +446,32 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Main Content Area */}
+        {/* Main Content Area - Full width on mobile */}
         <div className="flex-1 overflow-y-auto bg-gray-50">
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-orange-500 border-t-transparent"></div>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto px-8 py-10">
+            <div className={`${
+              isMobile ? 'px-0 py-0' : 'max-w-4xl mx-auto px-8 py-10'
+            }`}>
               {/* Account Privacy Section */}
               {activeSection === 'account-privacy' && (
                 <div>
-                  {/* Header */}
-                  <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Account Privacy</h2>
-                    <p className="text-gray-600">Control who can see your content and interact with you</p>
-                  </div>
+                  {/* Header - Hidden on mobile, shown in top bar */}
+                  {!isMobile && (
+                    <div className="mb-8">
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">Account Privacy</h2>
+                      <p className="text-gray-600">Control who can see your content and interact with you</p>
+                    </div>
+                  )}
 
                   {/* Alerts */}
                   {error && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                    <div className={`mb-6 p-4 bg-red-50 border border-red-200 ${
+                      isMobile ? 'rounded-none mx-0' : 'rounded-xl'
+                    } flex items-start gap-3`}>
                       <svg className="w-5 h-5 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -456,22 +482,30 @@ export default function SettingsPage() {
                     </div>
                   )}
                   {message && (
-                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-start gap-3">
-                      <svg className="w-5 h-5 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className={`mb-6 p-4 bg-orange-50 border border-orange-200 ${
+                      isMobile ? 'rounded-none mx-0' : 'rounded-xl'
+                    } flex items-start gap-3`}>
+                      <svg className="w-5 h-5 text-orange-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <div>
-                        <p className="text-sm font-medium text-green-900">Success</p>
-                        <p className="text-sm text-green-700">{message}</p>
+                        <p className="text-sm font-medium text-orange-900">Success</p>
+                        <p className="text-sm text-orange-700">{message}</p>
                       </div>
                     </div>
                   )}
 
-                  <div className="space-y-6">
+                  <div className={isMobile ? 'space-y-0' : 'space-y-6'}>
                     {/* Account Visibility Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                      <div className="p-6 border-b border-gray-100">
-                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <div className={`bg-white ${
+                      isMobile ? 'rounded-none border-b border-gray-200' : 'rounded-2xl shadow-sm border border-gray-200'
+                    } overflow-hidden`}>
+                      <div className={`${
+                        isMobile ? 'p-4' : 'p-6'
+                      } border-b border-gray-100`}>
+                        <h3 className={`${
+                          isMobile ? 'text-base' : 'text-lg'
+                        } font-semibold text-gray-900 flex items-center gap-2`}>
                           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -481,10 +515,14 @@ export default function SettingsPage() {
                       </div>
 
                       {/* Private Account Toggle */}
-                      <div className="p-6">
-                        <div className="flex items-start justify-between gap-6">
+                      <div className={isMobile ? 'p-4' : 'p-6'}>
+                        <div className={`flex items-start justify-between ${
+                          isMobile ? 'gap-4' : 'gap-6'
+                        }`}>
                           <div className="flex-1">
-                            <div className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                            <div className={`font-semibold text-gray-900 mb-2 flex items-center gap-2 ${
+                              isMobile ? 'text-sm' : ''
+                            }`}>
                               Private account
                               {isPrivate && (
                                 <span className="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-700 rounded-full">
@@ -492,7 +530,9 @@ export default function SettingsPage() {
                                 </span>
                               )}
                             </div>
-                            <div className="text-sm text-gray-600 leading-relaxed">
+                            <div className={`text-sm text-gray-600 leading-relaxed ${
+                              isMobile ? 'text-xs' : ''
+                            }`}>
                               When your account is public, your profile and posts can be seen by anyone.
                               When private, only approved followers can see what you share.
                             </div>
@@ -508,7 +548,7 @@ export default function SettingsPage() {
                                 }}
                                 className="sr-only peer"
                               />
-                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-600"></div>
                             </label>
                           </div>
                         </div>
@@ -516,9 +556,15 @@ export default function SettingsPage() {
                     </div>
 
                     {/* Interactions Section */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                      <div className="p-6 border-b border-gray-100">
-                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <div className={`bg-white ${
+                      isMobile ? 'rounded-none border-b border-gray-200 mt-2' : 'rounded-2xl shadow-sm border border-gray-200'
+                    } overflow-hidden`}>
+                      <div className={`${
+                        isMobile ? 'p-4' : 'p-6'
+                      } border-b border-gray-100`}>
+                        <h3 className={`${
+                          isMobile ? 'text-base' : 'text-lg'
+                        } font-semibold text-gray-900 flex items-center gap-2`}>
                           <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
@@ -542,7 +588,7 @@ export default function SettingsPage() {
                                 setWhoCanComment(e.target.value as 'everyone' | 'followers');
                                 savePrivacySettings();
                               }}
-                              className="bg-white text-gray-900 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors"
+                              className="bg-white text-gray-900 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-400 transition-colors"
                             >
                               <option value="everyone">Everyone</option>
                               <option value="followers">Followers only</option>
@@ -567,7 +613,7 @@ export default function SettingsPage() {
                                 setWhoCanMessage(e.target.value as 'everyone' | 'followers');
                                 savePrivacySettings();
                               }}
-                              className="bg-white text-gray-900 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-gray-400 transition-colors"
+                              className="bg-white text-gray-900 border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 hover:border-gray-400 transition-colors"
                             >
                               <option value="everyone">Everyone</option>
                               <option value="followers">Followers only</option>
@@ -608,7 +654,7 @@ export default function SettingsPage() {
                                 }}
                                 className="sr-only peer"
                               />
-                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-600"></div>
                             </label>
                           </div>
                         </div>
@@ -634,7 +680,7 @@ export default function SettingsPage() {
                                 }}
                                 className="sr-only peer"
                               />
-                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-100 rounded-full peer peer-checked:after:translate-x-7 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-600"></div>
                             </label>
                           </div>
                         </div>
@@ -661,7 +707,7 @@ export default function SettingsPage() {
                       <div className="p-6">
                         {loadingBlocked ? (
                           <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-8 w-8 border-4 border-green-500 border-t-transparent"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent"></div>
                           </div>
                         ) : blockedUsers.length === 0 ? (
                           <div className="text-center py-12">
@@ -820,7 +866,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="text-[#02fa97] hover:text-[#02fa97]/80 font-semibold text-sm disabled:opacity-50"
+                className="text-[#FFAF50] hover:text-[#FFAF50]/80 font-semibold text-sm disabled:opacity-50"
               >
                 {savingProfile ? 'Saving...' : 'Save'}
               </button>
@@ -879,7 +925,7 @@ export default function SettingsPage() {
                     <input
                       value={editForm.name}
                       onChange={(e) => { setEditForm({ ...editForm, name: e.target.value }); handleFormChange(); }}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent"
                       placeholder="Enter your name"
                     />
                   </div>
@@ -889,7 +935,7 @@ export default function SettingsPage() {
                     <input
                       value={editUsername}
                       onChange={(e) => { setEditUsername(e.target.value); handleFormChange(); }}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent"
                       placeholder="Enter your username"
                     />
                   </div>
@@ -901,7 +947,7 @@ export default function SettingsPage() {
                       onChange={(e) => { setEditBio(e.target.value); handleFormChange(); }}
                       rows={4}
                       maxLength={150}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent resize-none"
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent resize-none"
                       placeholder="Tell us about yourself"
                     />
                     <div className="text-xs text-gray-500 mt-1 text-right">
@@ -915,7 +961,7 @@ export default function SettingsPage() {
                       <input
                         value={editForm.department}
                         onChange={(e) => { setEditForm({ ...editForm, department: e.target.value }); handleFormChange(); }}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent"
                         placeholder="Your department"
                       />
                     </div>
@@ -925,7 +971,7 @@ export default function SettingsPage() {
                       <select
                         value={editForm.year}
                         onChange={(e) => { setEditForm({ ...editForm, year: parseInt(e.target.value) }); handleFormChange(); }}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent bg-white"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent bg-white"
                       >
                         <option value={1}>1st Year</option>
                         <option value={2}>2nd Year</option>

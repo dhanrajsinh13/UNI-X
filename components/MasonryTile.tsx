@@ -162,7 +162,7 @@ const MasonryTile: React.FC<MasonryTileProps> = ({ id, mediaUrl, mediaType = 'im
               <video
                 ref={videoRef}
                 src={mediaUrl}
-                className="w-full h-auto rounded-2xl block"
+                className="w-full h-max rounded-2xl block"
                 muted
                 playsInline
                 preload="metadata"
@@ -241,13 +241,13 @@ const MasonryTile: React.FC<MasonryTileProps> = ({ id, mediaUrl, mediaType = 'im
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); }}
           />
           <div
-            className="fixed w-44 bg-white border border-gray-100 rounded-xl shadow-lg z-[100]"
+            className="fixed w-44 bg-white border border-gray-100 rounded-xl shadow-lg z-[100] overflow-hidden"
             style={{ top: menuPos.top, left: menuPos.left }}
             onClick={(e) => e.stopPropagation()}
           >
-            <button onClick={share} className="w-full text-zinc-900 text-left px-4 py-2 text-sm hover:bg-gray-50">Share</button>
+            <button onClick={share} className="w-full text-zinc-900 text-left px-4 py-2 text-sm hover:bg-gray-50 rounded-t-xl">Share</button>
             <button onClick={bookmark} className="w-full text-zinc-900 text-left px-4 py-2 text-sm hover:bg-gray-50">Bookmark</button>
-            <button onClick={report} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Report</button>
+            <button onClick={report} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-b-xl">Report</button>
           </div>
         </>
       )}

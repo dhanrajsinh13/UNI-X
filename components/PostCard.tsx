@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useVideoVisibility } from '../hooks/useVideoVisibility';
 import { fetchAPI, dataFetcher } from '../lib/dataFetcher';
 import Image from 'next/image'
 
@@ -26,6 +27,7 @@ interface PostCardProps {
   onPostClick?: (post: PostCardProps) => void;
   edgeToEdge?: boolean;
   masonry?: boolean;
+  isFirstPost?: boolean;
 }
 
 const PostCard: React.FC<PostCardProps> = memo(({
@@ -47,6 +49,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
   onPostClick,
   edgeToEdge,
   masonry,
+  isFirstPost,
 }) => {
   const { token, user } = useAuth();
   const { showToast } = useToast();
@@ -65,10 +68,29 @@ const PostCard: React.FC<PostCardProps> = memo(({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(!isFirstPost);
   const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
   const [isFollowing, setIsFollowing] = useState(isFollowingUser || false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(true);
+  const [showPlayPauseIndicator, setShowPlayPauseIndicator] = useState(false);
+  const [manuallyPaused, setManuallyPaused] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Use video visibility hook for auto-play/pause (feed video)
+  const videoRef = useVideoVisibility({
+    videoId: `post-${id}`,
+    isFirstVideo: isFirstPost,
+    isFeedVideo: true, // Mark as feed video (will pause when modal opens)
+    threshold: 0.5,
+    manuallyPaused,
+    onVisibilityChange: (isVisible) => {
+      // Auto-unmute first video when visible, mute when not
+      if (isFirstPost && !isVisible && !isMuted) {
+        setIsMuted(true);
+      }
+    }
+  });
 
   // Sync aura state when props change (after refresh)
   useEffect(() => {
@@ -169,7 +191,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
       setHasAura(previousHasAura);
       setAuraCount(previousAuraCount);
 
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update like. Please try again.';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update Aura. Please try again.';
       showToast(errorMessage, 'error', 2000);
 
       // Show error feedback
@@ -185,9 +207,28 @@ const PostCard: React.FC<PostCardProps> = memo(({
   }, [token, id, hasAura, auraCount, isLiking, showToast]);
 
   const handleMuteToggle = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering modal
+    e.stopPropagation(); // Prevent triggering play/pause
     setIsMuted(!isMuted);
   }, [isMuted]);
+
+  const handleVideoClick = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.play();
+      setIsVideoPlaying(true);
+      setManuallyPaused(false); // User resumed playback
+    } else {
+      video.pause();
+      setIsVideoPlaying(false);
+      setManuallyPaused(true); // User manually paused
+    }
+
+    // Show play/pause indicator briefly
+    setShowPlayPauseIndicator(true);
+    setTimeout(() => setShowPlayPauseIndicator(false), 500);
+  }, [videoRef]);
 
   const handleCommentClick = useCallback(() => {
     if (onPostClick) {
@@ -404,10 +445,10 @@ const PostCard: React.FC<PostCardProps> = memo(({
   if (isDeleted) return null;
 
   return (
-    <div className={`${edgeToEdge ? 'bg-white rounded-none border-0 shadow-none' : 'bg-white'} mb-4`}>
+    <div ref={containerRef} className={`${edgeToEdge ? 'bg-white rounded-none border-0 shadow-none' : 'bg-white rounded-xl overflow-hidden'} mb-4`}>
       {/* Header - Instagram Style */}
-      <div className="flex items-center justify-between px-3 py-2.5">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-2.5 py-2">
+        <div className="flex items-center gap-2.5">
           <div
             className="cursor-pointer"
             onClick={handleAuthorClick}
@@ -417,7 +458,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
               alt={authorName}
               width={32}
               height={32}
-              className="w-8 h-8 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover border border-gray-300"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
             />
           </div>
@@ -425,7 +466,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
             className="cursor-pointer"
             onClick={handleAuthorClick}
           >
-            <p className="font-semibold text-sm text-gray-900">
+            <p className="font-semibold text-sm p-1 text-gray-900">
               {authorName}
               {user && authorId && user.id !== authorId && !isFollowingUser && (
                 <>
@@ -443,8 +484,8 @@ const PostCard: React.FC<PostCardProps> = memo(({
           </div>
         </div>
 
-        <button className="p-2">
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+        <button className="p-1.5">
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="1.5" />
             <circle cx="6" cy="12" r="1.5" />
             <circle cx="18" cy="12" r="1.5" />
@@ -454,10 +495,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
 
       {/* Media - Instagram Style */}
       {mediaUrl && (
-        <div
-          className="w-full"
-          onClick={!isMobile && inferMediaType(mediaUrl, mediaType) !== 'video' ? handlePostClick : undefined}
-        >
+        <div className="w-full">
           {inferMediaType(mediaUrl, mediaType) === 'image' ? (
             <div className={`relative w-full ${imageAspectRatio && Math.abs(imageAspectRatio - 1) < 0.1 ? 'bg-gray-100' : 'bg-black'}`} style={{ maxHeight: '600px' }}>
               {!mediaError ? (
@@ -487,18 +525,33 @@ const PostCard: React.FC<PostCardProps> = memo(({
               {!mediaError ? (
                 <div className="relative w-full">
                   <video
+                    ref={videoRef}
                     src={mediaUrl}
-                    autoPlay
                     muted={isMuted}
                     loop
                     playsInline
                     preload="metadata"
-                    className="w-full h-auto object-contain"
+                    className="w-full h-auto object-contain cursor-pointer"
                     style={{ maxHeight: '600px' }}
                     onCanPlay={() => setMediaLoaded(true)}
                     onError={() => setMediaError(true)}
-                    onClick={handlePostClick}
+                    onClick={handleVideoClick}
                   />
+
+                  {/* Play/Pause Indicator */}
+                  {showPlayPauseIndicator && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="bg-black/70 rounded-full p-4 animate-fade-in">
+                        <svg className="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          {isVideoPlaying ? (
+                            <path d="M8 5v14l11-7z" />
+                          ) : (
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                          )}
+                        </svg>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Mute/Unmute button */}
                   <button
@@ -528,23 +581,23 @@ const PostCard: React.FC<PostCardProps> = memo(({
       )}
 
       {/* Actions - Instagram Style */}
-      <div className="px-3 pt-2">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-4">
+      <div className="px-2.5 pt-1.5">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-3">
             {/* Aura/Like Button */}
             <button
               id={`aura-btn-${id}`}
               onClick={handleAuraClick}
               data-aura-button
-              className="hover:opacity-60 transition-opacity"
+              className="hover:opacity-60 transition-opacity p-0.5"
             >
               <svg
-                width={24}
-                height={24}
+                width={26}
+                height={26}
                 viewBox="0 0 100 100"
                 style={{
-                  fill: hasAura ? '#02fa97' : 'transparent',
-                  stroke: hasAura ? '#02fa97' : '#262626',
+                  fill: hasAura ? '#FFAF50' : 'transparent',
+                  stroke: hasAura ? '#FFAF50' : '#262626',
                   strokeWidth: '3',
                 }}
               >
@@ -557,9 +610,9 @@ const PostCard: React.FC<PostCardProps> = memo(({
             {/* Comment Button */}
             <button
               onClick={handleCommentClick}
-              className="hover:opacity-60 transition-opacity"
+              className="hover:opacity-60 transition-opacity p-0.5"
             >
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
             </button>
@@ -567,9 +620,9 @@ const PostCard: React.FC<PostCardProps> = memo(({
             {/* Share Button */}
             <button
               onClick={handleShareClick}
-              className="hover:opacity-60 transition-opacity"
+              className="hover:opacity-60 transition-opacity p-0.5"
             >
-              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
@@ -577,8 +630,8 @@ const PostCard: React.FC<PostCardProps> = memo(({
           </div>
 
           {/* Bookmark Button */}
-          <button className="hover:opacity-60 transition-opacity">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button className="hover:opacity-60 transition-opacity p-0.5">
+            <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
           </button>
@@ -586,17 +639,17 @@ const PostCard: React.FC<PostCardProps> = memo(({
 
         {/* Like Count */}
         {auraCount > 0 && (
-          <div className="mb-2">
-            <span className="font-semibold text-sm text-gray-900">{auraCount} {auraCount === 1 ? 'like' : 'likes'}</span>
+          <div className="mb-1.5">
+            <span className="font-semibold text-xs text-gray-900">{auraCount} {auraCount === 1 ? 'Aura' : 'Auras'}</span>
           </div>
         )}
       </div>
 
       {/* Caption - Instagram Style */}
-      <div className="px-3 pb-2">
+      <div className="px-2.5 pb-1.5">
         {!isEditing ? (
           <>
-            <p className="text-sm text-gray-900">
+            <p className="text-xs text-gray-900">
               <span className="font-semibold mr-1">{authorName}</span>
               <span className={!isExpanded && editText && editText.length > 150 ? 'line-clamp-2' : ''}>
                 {editText}
@@ -608,7 +661,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
                   e.stopPropagation();
                   setIsExpanded(!isExpanded);
                 }}
-                className="text-gray-500 text-sm mt-1"
+                className="text-gray-500 text-xs mt-0.5"
               >
                 {isExpanded ? 'less' : 'more'}
               </button>
@@ -642,7 +695,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
         )}
 
         {/* Timestamp */}
-        <div className="mt-2">
+        <div className="mt-1.5">
           <span className="text-xs text-gray-500 uppercase">{timestamp}</span>
         </div>
       </div>

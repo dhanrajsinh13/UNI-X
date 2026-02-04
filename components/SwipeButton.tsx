@@ -75,7 +75,7 @@ export default function SwipeButton() {
   return (
     <button
       onClick={handleClick}
-      className="group fixed top-20 right-6 md:top-6 md:right-6 z-50 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 px-5 py-3"
+      className="group fixed top-20 right-6 md:top-6 md:right-6 z-50 bg-gradient-to-r from-orange-500 to-emerald-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 px-5 py-3"
       aria-label="Discover connections"
     >
       <svg 

@@ -170,14 +170,14 @@ export default function UniWallPage() {
 
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="w-8 h-8 border-4 border-[#02fa97] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-[#FFAF50] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : error ? (
           <div className="text-center py-12">
             <p className="text-gray-600 mb-4">Unable to load posts</p>
             <button
               onClick={refetch}
-              className="text-[#02fa97] font-semibold hover:text-teal-600"
+              className="text-[#FFAF50] font-semibold hover:text-orange-600"
             >
               Try Again
             </button>

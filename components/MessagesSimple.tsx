@@ -23,9 +23,9 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
   return (
     <div className="flex flex-col h-screen max-h-[600px] bg-white rounded-lg shadow-lg">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-[#02fa97] to-teal-400">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-[#FFAF50] to-orange-400">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#02fa97] font-bold">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#FFAF50] font-bold">
             {otherUserName.charAt(0)}
           </div>
           <div>
@@ -57,12 +57,12 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={`Message ${otherUserName}...`}
-            className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+            className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="bg-[#02fa97] text-white px-6 py-2 rounded-full hover:bg-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="bg-[#FFAF50] text-white px-6 py-2 rounded-full hover:bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Send
           </button>

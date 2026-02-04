@@ -234,7 +234,7 @@ const MiniChatWindow: React.FC<MiniChatWindowProps> = ({ isOpen, onClose, otherU
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#FFAF50] to-orange-400 rounded-full overflow-hidden ring-2 ring-white shadow-sm">
               <Image
                 src={otherUser.profile_image || '/uploads/DefaultProfile.jpg'}
                 alt={otherUser.name}
@@ -256,7 +256,7 @@ const MiniChatWindow: React.FC<MiniChatWindowProps> = ({ isOpen, onClose, otherU
             {/* Minimize/Maximize Button */}
             <button
               onClick={toggleMinimized}
-              className="p-1.5 text-gray-600 hover:text-[#02fa97] hover:bg-teal-50 rounded-md transition-colors"
+              className="p-1.5 text-gray-600 hover:text-[#FFAF50] hover:bg-orange-50 rounded-md transition-colors"
               title={isMinimized ? "Expand chat" : "Minimize chat"}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -272,7 +272,7 @@ const MiniChatWindow: React.FC<MiniChatWindowProps> = ({ isOpen, onClose, otherU
             {!isMinimized && (
               <button
                 onClick={expandToFullChat}
-                className="p-1.5 text-gray-600 hover:text-[#02fa97] hover:bg-teal-50 rounded-md transition-colors"
+                className="p-1.5 text-gray-600 hover:text-[#FFAF50] hover:bg-orange-50 rounded-md transition-colors"
                 title="Open full chat"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -299,7 +299,7 @@ const MiniChatWindow: React.FC<MiniChatWindowProps> = ({ isOpen, onClose, otherU
             <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-white">
               {loading ? (
                 <div className="flex items-center justify-center h-full">
-                  <div className="w-6 h-6 border-2 border-[#02fa97] border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-6 h-6 border-2 border-[#FFAF50] border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-center">
@@ -322,7 +322,7 @@ const MiniChatWindow: React.FC<MiniChatWindowProps> = ({ isOpen, onClose, otherU
                     >
                       <div
                         className={`max-w-[80%] rounded-2xl px-3 py-2 ${isFromMe
-                          ? 'bg-[#02fa97] text-black'
+                          ? 'bg-[#FFAF50] text-black'
                           : 'bg-gray-100 text-gray-900'
                           }`}
                       >
@@ -347,12 +347,12 @@ const MiniChatWindow: React.FC<MiniChatWindowProps> = ({ isOpen, onClose, otherU
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={`Message ${otherUser.name}...`}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#02fa97] focus:border-transparent"
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent"
                 />
                 <button
                   onClick={handleSendMessage}
                   disabled={!input.trim()}
-                  className="w-8 h-8 bg-[#02fa97] hover:bg-teal-400 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
+                  className="w-8 h-8 bg-[#FFAF50] hover:bg-orange-400 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

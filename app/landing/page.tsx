@@ -94,7 +94,7 @@ export default function LandingPage() {
   // Show loading while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#02fa97] via-teal-400 to-orange-400 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#FFAF50] via-orange-400 to-orange-400 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Loading...</p>
@@ -104,7 +104,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#02fa97] via-teal-400 to-orange-400">
+    <div className="min-h-screen bg-gradient-to-br from-[#FFAF50] via-orange-400 to-orange-400">
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
         <div className="max-w-6xl w-full flex flex-col lg:flex-row items-center gap-12">
           
@@ -147,7 +147,7 @@ export default function LandingPage() {
                   onClick={() => setShowLogin(true)}
                   className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                     showLogin 
-                      ? 'bg-[#02fa97] text-black' 
+                      ? 'bg-[#FFAF50] text-black' 
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -157,7 +157,7 @@ export default function LandingPage() {
                   onClick={() => setShowLogin(false)}
                   className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                     !showLogin 
-                      ? 'bg-[#02fa97] text-black' 
+                      ? 'bg-[#FFAF50] text-black' 
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -187,7 +187,7 @@ export default function LandingPage() {
                       required
                       value={loginForm.college_id}
                       onChange={(e) => setLoginForm({ ...loginForm, college_id: e.target.value })}
-                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       placeholder="your-college-id"
                     />
                   </div>
@@ -203,7 +203,7 @@ export default function LandingPage() {
                       required
                       value={loginForm.password}
                       onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       placeholder="Enter password"
                     />
                   </div>
@@ -211,7 +211,7 @@ export default function LandingPage() {
                   <button
                     type="submit"
                     disabled={isSubmitLoading}
-                    className="w-full bg-[#02fa97] hover:bg-teal-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#FFAF50] hover:bg-orange-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitLoading ? 'Signing In...' : 'Sign In'}
                   </button>
@@ -232,7 +232,7 @@ export default function LandingPage() {
                       required
                       value={registerForm.name}
                       onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       placeholder="John Doe"
                     />
                   </div>
@@ -248,7 +248,7 @@ export default function LandingPage() {
                       required
                       value={registerForm.username}
                       onChange={(e) => setRegisterForm({ ...registerForm, username: e.target.value })}
-                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       placeholder="johndoe"
                     />
                   </div>
@@ -264,7 +264,7 @@ export default function LandingPage() {
                       required
                       value={registerForm.email}
                       onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -280,7 +280,7 @@ export default function LandingPage() {
                       required
                       value={registerForm.college_id}
                       onChange={(e) => setRegisterForm({ ...registerForm, college_id: e.target.value })}
-                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       placeholder="your-college-id"
                     />
                   </div>
@@ -296,7 +296,7 @@ export default function LandingPage() {
                         required
                         value={registerForm.department}
                         onChange={(e) => setRegisterForm({ ...registerForm, department: e.target.value })}
-                        className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                        className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       >
                         <option value="">Select</option>
                         {departments.map(dept => (
@@ -315,7 +315,7 @@ export default function LandingPage() {
                         required
                         value={registerForm.year}
                         onChange={(e) => setRegisterForm({ ...registerForm, year: parseInt(e.target.value) })}
-                        className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                        className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       >
                         <option value={1}>1st Year</option>
                         <option value={2}>2nd Year</option>
@@ -337,7 +337,7 @@ export default function LandingPage() {
                       required
                       value={registerForm.password}
                       onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       placeholder="Enter password"
                     />
                   </div>
@@ -353,7 +353,7 @@ export default function LandingPage() {
                       required
                       value={registerForm.confirmPassword}
                       onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#02fa97] focus:border-transparent outline-none transition-all"
+                      className="w-full text-gray-500 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFAF50] focus:border-transparent outline-none transition-all"
                       placeholder="Enter password"
                     />
                   </div>
@@ -361,7 +361,7 @@ export default function LandingPage() {
                   <button
                     type="submit"
                     disabled={isSubmitLoading}
-                    className="w-full bg-[#02fa97] hover:bg-teal-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#FFAF50] hover:bg-orange-500 text-black font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmitLoading ? 'Creating Account...' : 'Create Account'}
                   </button>
@@ -375,7 +375,7 @@ export default function LandingPage() {
                     Don&apos;t have an account?{' '}
                     <button
                       onClick={() => setShowLogin(false)}
-                      className="text-[#02fa97] hover:text-teal-600 font-semibold"
+                      className="text-[#FFAF50] hover:text-orange-600 font-semibold"
                     >
                       Sign up here
                     </button>
@@ -385,7 +385,7 @@ export default function LandingPage() {
                     Already have an account?{' '}
                     <button
                       onClick={() => setShowLogin(true)}
-                      className="text-[#02fa97] hover:text-teal-600 font-semibold"
+                      className="text-[#FFAF50] hover:text-orange-600 font-semibold"
                     >
                       Sign in here
                     </button>

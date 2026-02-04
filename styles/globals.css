@@ -11,12 +11,43 @@
   html, body {
     height: 100%;
     @apply antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     min-height: 100vh;
     overflow-x: hidden;
     @apply bg-background text-text;
+  }
+
+  /* Smooth rendering for all elements */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Smooth cursor for all interactive elements */
+  button, a, [role="button"], .cursor-pointer {
+    cursor: pointer;
+  }
+
+  /* Smooth edges for all rounded elements */
+  [class*="rounded"] {
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  /* Smooth image rendering */
+  img, video {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 
   /* Focus styles - Instagram-like accent ring */
@@ -87,13 +118,15 @@
   .card {
     @apply bg-white rounded-2xl border border-border-light shadow-card;
     @apply transition-all duration-200 ease-smooth;
+    @apply overflow-hidden;
   }
 
   /* Interactive Card (hoverable) */
   .card-interactive {
     @apply card;
     @apply hover:shadow-card-hover hover:-translate-y-0.5;
-    @apply cursor-pointer;
+    @apply cursor-pointer overflow-hidden;
+    border-radius: inherit;
   }
 
   /* Card with no border */
@@ -171,7 +204,7 @@
   /* Avatar with gradient ring */
   .avatar-ring {
     @apply p-0.5 rounded-full;
-    @apply bg-gradient-to-br from-accent via-teal-400 to-accent;
+    @apply bg-gradient-to-br from-accent via-orange-400 to-accent;
   }
 
   /* Avatar Sizes */
