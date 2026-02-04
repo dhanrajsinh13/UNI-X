@@ -220,11 +220,15 @@ export default function SwipePage() {
 
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY))
-      document.addEventListener('mouseup', handleEnd)
+      const onMouseMoveGlobal = (e: MouseEvent) => handleMove(e.clientX, e.clientY)
+      const onMouseUpGlobal = () => handleEnd()
+      
+      document.addEventListener('mousemove', onMouseMoveGlobal)
+      document.addEventListener('mouseup', onMouseUpGlobal)
+      
       return () => {
-        document.removeEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY))
-        document.removeEventListener('mouseup', handleEnd)
+        document.removeEventListener('mousemove', onMouseMoveGlobal)
+        document.removeEventListener('mouseup', onMouseUpGlobal)
       }
     }
   }, [isDragging, handleMove, handleEnd])
@@ -289,8 +293,8 @@ export default function SwipePage() {
       </div>
 
       {/* Card Stack */}
-      <div className="max-w-lg mx-auto px-4 pt-8">
-        <div className="relative h-[600px]">
+      <div className="max-w-lg mx-auto px-4 pt-4 pb-4">
+        <div className="relative" style={{ height: 'calc(100vh - 240px)', maxHeight: '600px', minHeight: '500px' }}>
           {/* Next card (preview) */}
           {users[currentIndex + 1] && (
             <div className="absolute inset-0 bg-white rounded-3xl shadow-md scale-95 opacity-50"></div>
@@ -303,12 +307,10 @@ export default function SwipePage() {
             style={{
               transform: `translateX(${dragOffset.x}px) translateY(${dragOffset.y}px) rotate(${rotation}deg)`,
               opacity,
-              transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s'
+              transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s',
+              cursor: isDragging ? 'grabbing' : 'grab'
             }}
             onMouseDown={onMouseDown}
-            onMouseMove={isDragging ? onMouseMove : undefined}
-            onMouseUp={onMouseUp}
-            onMouseLeave={isDragging ? onMouseUp : undefined}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
@@ -331,29 +333,38 @@ export default function SwipePage() {
               </>
             )}
 
-            {/* Profile Image */}
-            <div className="relative h-96">
-              <Image
-                src={currentUser.profile_image || '/default-avatar.png'}
-                alt={currentUser.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60"></div>
+            {/* Background Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-emerald-50"></div>
+
+            {/* Profile Picture - Centered & Round */}
+            <div className="relative pt-8 pb-4 flex justify-center">
+              <div className="relative">
+                <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+                  <Image
+                    src={currentUser.profile_image || '/default-avatar.png'}
+                    alt={currentUser.name}
+                    fill
+                    className="object-cover rounded-full"
+                  />
+                </div>
+                {/* Active indicator */}
+                <div className="absolute bottom-2 right-2 w-8 h-8 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full border-4 border-white shadow-lg"></div>
+              </div>
             </div>
 
             {/* User Info */}
-            <div className="p-6 space-y-4">
-              <div>
-                <h2 className="text-3xl font-bold text-text mb-1">{currentUser.name}</h2>
-                <p className="text-text-secondary">@{currentUser.username}</p>
+            <div className="px-6 pb-6 space-y-3 relative">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-1">{currentUser.name}</h2>
+                <p className="text-sm text-gray-500">@{currentUser.username}</p>
               </div>
 
               {currentUser.department && (
-                <div className="flex items-center gap-2 text-text-secondary">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center justify-center gap-2 text-gray-600 bg-gray-50 rounded-full px-4 py-2 mx-auto w-fit">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
-                  <span>
+                  <span className="text-sm font-medium">
                     {currentUser.department}
                     {currentUser.year && ` • Year ${currentUser.year}`}
                   </span>
@@ -361,19 +372,24 @@ export default function SwipePage() {
               )}
 
               {currentUser.bio && (
-                <p className="text-text-secondary text-sm line-clamp-2">{currentUser.bio}</p>
+                <p className="text-gray-600 text-sm text-center px-4 line-clamp-2 italic">{currentUser.bio}</p>
               )}
 
               {/* Mutual Friends */}
               {currentUser.mutualFriends && currentUser.mutualFriends > 0 && (
-                <div className="bg-accent/10 rounded-xl p-3">
-                  <p className="text-accent font-semibold text-sm">
-                    {currentUser.mutualFriends} mutual {currentUser.mutualFriends === 1 ? 'friend' : 'friends'}
-                  </p>
+                <div className="bg-gradient-to-r from-teal-500/10 to-emerald-500/10 rounded-2xl p-3 border border-teal-200/50">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <svg className="w-5 h-5 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                    </svg>
+                    <p className="text-teal-700 font-bold text-sm">
+                      {currentUser.mutualFriends} mutual {currentUser.mutualFriends === 1 ? 'friend' : 'friends'}
+                    </p>
+                  </div>
                   {currentUser.mutualFriendNames && currentUser.mutualFriendNames.length > 0 && (
-                    <p className="text-text-secondary text-xs mt-1">
-                      {currentUser.mutualFriendNames.slice(0, 3).join(', ')}
-                      {currentUser.mutualFriends > 3 && ` +${currentUser.mutualFriends - 3} more`}
+                    <p className="text-gray-600 text-xs text-center">
+                      {currentUser.mutualFriendNames.slice(0, 2).join(', ')}
+                      {currentUser.mutualFriends > 2 && ` +${currentUser.mutualFriends - 2} more`}
                     </p>
                   )}
                 </div>
@@ -382,12 +398,12 @@ export default function SwipePage() {
               {/* Interests */}
               {currentUser.interests && currentUser.interests.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-text-secondary mb-2">Common Interests</p>
-                  <div className="flex flex-wrap gap-2">
-                    {currentUser.interests.slice(0, 5).map((interest, idx) => (
+                  <p className="text-xs font-semibold text-gray-500 mb-2 text-center uppercase tracking-wide">Common Interests</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {currentUser.interests.slice(0, 4).map((interest, idx) => (
                       <span
                         key={idx}
-                        className="px-3 py-1 bg-bg-secondary rounded-full text-sm text-text"
+                        className="px-4 py-1.5 bg-gradient-to-r from-gray-100 to-gray-50 border border-gray-200 rounded-full text-xs font-medium text-gray-700 shadow-sm"
                       >
                         {interest}
                       </span>
@@ -400,7 +416,7 @@ export default function SwipePage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-center gap-6 mt-8">
+        <div className="flex items-center justify-center gap-6 mt-4">
           <button
             onClick={() => handleSwipe('left')}
             className="w-16 h-16 rounded-full bg-white shadow-lg hover:shadow-xl transition-all hover:scale-110 active:scale-95 flex items-center justify-center border-2 border-error text-error"
@@ -432,7 +448,7 @@ export default function SwipePage() {
         </div>
 
         {/* Progress indicator */}
-        <div className="mt-6 text-center">
+        <div className="mt-4 text-center">
           <p className="text-text-tertiary text-sm">
             {currentIndex + 1} / {users.length}
           </p>

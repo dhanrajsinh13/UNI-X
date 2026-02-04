@@ -113,6 +113,8 @@ export default function SuggestionsPage() {
                   <Image
                     src={u.profile_image || '/uploads/DefaultProfile.jpg'}
                     alt={u.name}
+                    width={48}
+                    height={48}
                     className="w-12 h-12 rounded-full object-cover"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                   />

@@ -200,6 +200,7 @@ async function handleGetPosts(req: NextApiRequest, res: NextApiResponse) {
         aura_count: auraCount,
         comment_count: commentCount,
         user_liked: auth ? likedPostIdSet.has(post.id) : false,
+        is_following_author: auth && author?.id ? followingIdSet.has(author.id) : false,
         recent_comments: postCommentsData,
         comments: postCommentsData,
         _count: {

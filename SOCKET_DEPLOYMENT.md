@@ -46,7 +46,7 @@ The socket server code is in the `socket-server/` folder. This is a standalone E
 
 4. **Deploy** - Render will automatically deploy
 
-5. **Copy your Render URL**: `https://uni-x-socket-server.onrender.com`
+5. **Copy your Render URL**: `https://uni-x-0u99.onrender.com`
 
 #### Option B: Deploy with Render.yaml
 
@@ -75,7 +75,7 @@ Add to your Vercel project:
 1. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
 2. Add new variable:
    - **Name**: `NEXT_PUBLIC_SOCKET_URL`
-   - **Value**: `https://uni-x-socket-server.onrender.com`
+   - **Value**: `https://uni-x-0u99.onrender.com`
    - **Environment**: All (Production, Preview, Development)
 3. Redeploy your Vercel app
 
@@ -98,7 +98,7 @@ npm run dev
 
 1. Check socket server health:
    ```bash
-   curl https://uni-x-socket-server.onrender.com/health
+   curl https://uni-x-0u99.onrender.com/health
    ```
 
 2. Open your Vercel app and check browser console for:

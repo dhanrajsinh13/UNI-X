@@ -451,6 +451,7 @@ const ProfilePage = () => {
                             mediaUrl={post.media_url}
                             mediaType={post.media_type as 'image' | 'video'}
                             userLiked={post.user_liked}
+                            isFollowingUser={!isOwnProfile && userProfile.is_following}
                             profilePic={userProfile.profile_image || undefined}
                             onPostClick={(postData) => handlePostClick(post)}
                           />

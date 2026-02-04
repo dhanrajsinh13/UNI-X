@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import MasonryTile from '../../components/MasonryTile';
 import PostModal from '../../components/PostModal';
+import { EmbeddedSearch } from '../../components/SearchModal';
 import { usePosts } from '../../hooks/usePosts';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -139,21 +140,29 @@ export default function UniWallPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        {/* Mobile Search Bar - Instagram Style (visible only on mobile) */}
+        <div className="md:hidden mb-4">
+          <EmbeddedSearch className="w-full" />
+        </div>
+
+        {/* Header with title and categories */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h1 className="text-xl font-semibold text-gray-900">Uniwall</h1>
-          <div className="flex items-center space-x-2 text-sm">
+
+          {/* Category filters - scrollable on mobile */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
             {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-3 py-1 rounded-full border transition-colors ${selectedCategory === category.id
-                    ? 'border-gray-900 text-gray-900 bg-gray-50'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full border text-sm transition-all duration-200 ${selectedCategory === category.id
+                  ? 'border-gray-900 text-gray-900 bg-gray-50 shadow-sm'
+                  : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                   }`}
               >
                 <span className="mr-1">{category.emoji}</span>
-                {category.name}
+                <span className="hidden sm:inline">{category.name}</span>
               </button>
             ))}
           </div>
@@ -174,19 +183,69 @@ export default function UniWallPage() {
             </button>
           </div>
         ) : mediaOnlyPosts.length > 0 ? (
-          <div className="[column-fill:_balance] gap-4 sm:columns-[14rem] md:columns-[16rem] lg:columns-[18rem] xl:columns-[20rem] 2xl:columns-[22rem]">
-            {mediaOnlyPosts.map((post: Post) => (
-              <div key={post.id} className="mb-4 break-inside-avoid">
-                <MasonryTile
-                  id={post.id}
-                  mediaUrl={post.media_url!}
-                  mediaType={(post.media_type?.toLowerCase() as 'image' | 'video') || 'image'}
-                  title={post.content}
-                  onClick={() => openPost(post)}
-                />
+          <>
+            {/* Mobile Grid - Instagram Style 3-column layout */}
+            <div className="md:hidden">
+              <div className="grid grid-cols-3 gap-0.5">
+                {mediaOnlyPosts.map((post: Post) => (
+                  <button
+                    key={post.id}
+                    onClick={() => openPost(post)}
+                    className="relative aspect-square bg-gray-100 overflow-hidden group focus:outline-none"
+                  >
+                    {post.media_type === 'video' ? (
+                      <>
+                        <video
+                          src={post.media_url}
+                          className="w-full h-full object-cover"
+                          muted
+                          playsInline
+                          preload="metadata"
+                        />
+                        {/* Video indicator */}
+                        <div className="absolute top-1.5 right-1.5">
+                          <svg className="w-4 h-4 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm5.5 12.5L16 12l-5.5-3.5v7z" />
+                          </svg>
+                        </div>
+                      </>
+                    ) : (
+                      <img
+                        src={post.media_url}
+                        alt={post.content || 'Post'}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                    {/* Carousel indicator */}
+                    {/* Hover overlay for desktop */}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex items-center justify-center">
+                      <div className="flex items-center gap-4 text-white">
+                        <span className="flex items-center text-sm font-semibold">
+                          ❤️ {post.aura_count || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+
+            {/* Desktop Masonry Layout */}
+            <div className="hidden md:block [column-fill:_balance] gap-4 columns-[16rem] lg:columns-[18rem] xl:columns-[20rem] 2xl:columns-[22rem]">
+              {mediaOnlyPosts.map((post: Post) => (
+                <div key={post.id} className="mb-4 break-inside-avoid">
+                  <MasonryTile
+                    id={post.id}
+                    mediaUrl={post.media_url!}
+                    mediaType={(post.media_type?.toLowerCase() as 'image' | 'video') || 'image'}
+                    title={post.content}
+                    onClick={() => openPost(post)}
+                  />
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📷</div>

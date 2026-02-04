@@ -2,24 +2,48 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getCollection, Collections, User, Post } from '../../../lib/mongodb'
 
 // Define search results interface
+interface SearchUser {
+  id: number
+  name: string
+  username: string
+  department?: string
+  year?: number
+  profile_image?: string
+  college_name?: string
+  mutualFriends?: number
+  isFollowing?: boolean
+}
+
+interface SearchPost {
+  id: number
+  caption: string
+  media_url?: string
+  media_type?: 'image' | 'video'
+  created_at: string
+  user: {
+    id: number
+    name: string
+    username: string
+    profile_image?: string
+  }
+}
+
+interface SearchHashtag {
+  tag: string
+  count: number
+}
+
+interface SearchLocation {
+  id: string
+  name: string
+  count: number
+}
+
 interface SearchResults {
-  users?: Array<{
-    id: number;
-    name: string;
-    department: string;
-    year: number;
-  }>;
-  posts?: Array<{
-    id: number;
-    content: string;
-    category: string;
-    author: {
-      id: number;
-      name: string;
-      department: string;
-      year: number;
-    };
-  }>;
+  users?: SearchUser[]
+  posts?: SearchPost[]
+  hashtags?: SearchHashtag[]
+  locations?: SearchLocation[]
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -37,67 +61,73 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const searchTerm = q.toLowerCase()
     const results: SearchResults = {}
 
-    // Search users
+    // Search users - Only search by username (like Instagram web)
     if (type === 'all' || type === 'users') {
       const users = await getCollection<User>(Collections.USERS)
       const userResults = await users.find({
         $or: [
-          { name: { $regex: searchTerm, $options: 'i' } },
           { username: { $regex: searchTerm, $options: 'i' } },
-          { department: { $regex: searchTerm, $options: 'i' } },
-          { college_id: { $regex: searchTerm, $options: 'i' } },
+          { name: { $regex: searchTerm, $options: 'i' } }
         ]
       })
-        .limit(10)
+        .limit(15)
         .toArray()
-      
+
       results.users = userResults.map(u => ({
         id: u.id!,
         name: u.name,
-        username: u.username,
+        username: u.username || '',
         department: u.department,
         year: u.year,
+        profile_image: u.profile_image,
       }))
     }
 
-    // Search posts
-    if (type === 'all' || type === 'posts') {
+    // Posts are not searchable (like Instagram web app)
+    // Users can only search for usernames and hashtags
+    results.posts = []
+
+    // Search hashtags (extract from post captions)
+    if (type === 'all' || type === 'hashtags') {
       try {
         const posts = await getCollection<Post>(Collections.POSTS)
-        const users = await getCollection<User>(Collections.USERS)
-        
-        const postResults = await posts.find({
-          caption: { $regex: searchTerm, $options: 'i' }
+
+        // Find posts with hashtags matching the search term
+        const hashtagRegex = new RegExp(`#${searchTerm}\\w*`, 'gi')
+        const postsWithHashtags = await posts.find({
+          caption: { $regex: hashtagRegex }
         })
-          .sort({ created_at: -1 })
-          .limit(20)
+          .limit(100)
           .toArray()
-        
-        // Get user data for posts
-        const userIds = [...new Set(postResults.map(p => p.user_id))].filter(Boolean) as number[]
-        const postUsers = userIds.length > 0
-          ? await users.find({ id: { $in: userIds } as any }).toArray()
-          : []
-        const userMap = new Map(postUsers.map(u => [u.id, u]))
-        
-        results.posts = postResults.map((post: any) => {
-          const author = userMap.get(post.user_id)
-          return {
-            id: post.id,
-            content: post.caption || '',
-            category: post.category,
-            author: {
-              id: author?.id || 0,
-              name: author?.name || '',
-              department: author?.department || '',
-              year: author?.year || 0,
+
+        // Extract and count hashtags
+        const hashtagCounts: Record<string, number> = {}
+        postsWithHashtags.forEach(post => {
+          const hashtags = post.caption?.match(/#\w+/g) || []
+          hashtags.forEach(tag => {
+            const cleanTag = tag.slice(1).toLowerCase()
+            if (cleanTag.includes(searchTerm)) {
+              hashtagCounts[cleanTag] = (hashtagCounts[cleanTag] || 0) + 1
             }
-          }
+          })
         })
+
+        results.hashtags = Object.entries(hashtagCounts)
+          .map(([tag, count]) => ({ tag, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10)
       } catch (error) {
-        console.error('Post search error:', error)
-        // Skip posts if there's an error
+        console.error('Hashtag search error:', error)
+        results.hashtags = []
       }
+    }
+
+    // Search locations (from post locations)
+    // Location search - currently disabled as Post model doesn't have location field
+    // Uncomment when location field is added to the Post model
+    if (type === 'locations') {
+      // Placeholder - return empty array for now
+      results.locations = []
     }
 
     res.status(200).json({ results })

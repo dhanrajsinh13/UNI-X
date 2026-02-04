@@ -505,6 +505,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                       ref={imageRef}
                       src={previewUrl}
                       alt="Preview"
+                      width={800}
+                      height={800}
                       className={`pointer-events-none select-none transition-transform duration-150 ease-out ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                       style={{
                         position: 'absolute',

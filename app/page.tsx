@@ -138,7 +138,7 @@ export default function HomePage() {
           {/* Feed column */}
           <div className="lg:col-span-2">
             {/* Category Filter (sticky) */}
-            <div className="bg-white/95 backdrop-blur-sm supports-[backdrop-filter]:bg-white/95 sticky top-0 z-sticky border-b border-border-light">
+            <div className="bg-white/95 backdrop-blur-sm supports-[backdrop-filter]:bg-white/95 top-0 z-sticky border-b border-border-light">
               <div className="px-4 md:px-0 py-4">
                 <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
                   {categories.map((category) => (
@@ -146,8 +146,8 @@ export default function HomePage() {
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${selectedCategory === category.id
-                          ? 'bg-text text-white shadow-sm'
-                          : 'bg-gray-50 text-text hover:bg-gray-100'
+                        ? 'bg-text text-white shadow-sm'
+                        : 'bg-gray-50 text-text hover:bg-gray-100'
                         }`}
                     >
                       <span>{category.emoji}</span>
@@ -203,6 +203,7 @@ export default function HomePage() {
                     mediaUrl={post.media_url}
                     mediaType={post.media_type as 'image' | 'video'}
                     userLiked={post.user_liked}
+                    isFollowingUser={post.is_following_author}
                     onPostClick={handlePostClick}
                   />
                 ))

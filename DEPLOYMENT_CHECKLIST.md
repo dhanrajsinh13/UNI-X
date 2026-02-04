@@ -45,7 +45,7 @@ Use this checklist to ensure everything is set up correctly.
 - [ ] Manual deploy triggered (or auto-deploy enabled)
 - [ ] Build succeeded (check logs)
 - [ ] Service started successfully
-- [ ] Render URL copied (e.g., https://uni-x-socket-server.onrender.com)
+- [ ] Render URL copied (e.g., https://uni-x-0u99.onrender.com)
 - [ ] Health endpoint accessible: `https://your-service.onrender.com/health`
 
 ## 📱 Vercel Update Checklist

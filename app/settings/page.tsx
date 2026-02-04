@@ -835,6 +835,8 @@ export default function SettingsPage() {
                     <Image
                       src={editPfp || '/uploads/DefaultProfile.jpg'}
                       alt="Preview"
+                      width={96}
+                      height={96}
                       className="w-full h-full object-cover"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                     />

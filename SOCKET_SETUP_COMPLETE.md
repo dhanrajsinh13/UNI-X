@@ -96,7 +96,7 @@
 4. **Deploy** - Render will build and start automatically
 
 5. **Copy your Render URL:**
-   Example: `https://uni-x-socket-server.onrender.com`
+   Example: `https://uni-x-0u99.onrender.com`
 
 #### Method 2: Via render.yaml (Blueprint)
 
@@ -117,7 +117,7 @@
 
 2. **Add new variable:**
    - Name: `NEXT_PUBLIC_SOCKET_URL`
-   - Value: `https://uni-x-socket-server.onrender.com`
+   - Value: `https://uni-x-0u99.onrender.com`
    - Environments: All (Production, Preview, Development)
 
 3. **Redeploy:**
@@ -129,7 +129,7 @@
 
 1. **Check server health:**
    ```bash
-   curl https://uni-x-socket-server.onrender.com/health
+   curl https://uni-x-0u99.onrender.com/health
    ```
    Should return: `{"status":"healthy","connections":0,"uptime":123}`
 
@@ -213,7 +213,7 @@ JWT_SECRET=...
 CLOUDINARY_...=...
 
 # NEW - Add this
-NEXT_PUBLIC_SOCKET_URL=https://uni-x-socket-server.onrender.com
+NEXT_PUBLIC_SOCKET_URL=https://uni-x-0u99.onrender.com
 ```
 
 ### Socket Server (Render)

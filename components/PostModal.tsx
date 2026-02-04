@@ -556,8 +556,8 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-modal p-4">
-      <div className="bg-white rounded-2xl max-w-6xl w-full h-[90vh] flex overflow-hidden shadow-2xl">
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-modal">
+      <div className="bg-white max-w-6xl w-full h-[95vh] flex overflow-hidden">
         {/* Left Side - Media */}
         <div className="flex-1 bg-black flex items-center justify-center relative">
           {mediaItems.length > 0 ? (
@@ -693,23 +693,18 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
 
         {/* Right Side - Details & Comments */}
         <div className="w-96 flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full overflow-hidden">
-                <Image
-                  src={post.profilePic || '/uploads/DefaultProfile.jpg'}
-                  alt={post.authorName || 'User'}
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover rounded-full"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
-                />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{post.authorName || 'Unknown User'}</p>
-                <p className="text-xs text-gray-500">{post.authorDept} • {post.authorYear}rd Year</p>
-              </div>
+          {/* Header - Instagram Style */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <Image
+                src={post.profilePic || '/uploads/DefaultProfile.jpg'}
+                alt={post.authorName || 'User'}
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
+              />
+              <p className="font-semibold text-sm text-gray-900">{post.authorName || 'Unknown User'}</p>
             </div>
             <div className="flex items-center gap-2">
               {canManage && !isMobile && (
@@ -757,21 +752,28 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
               )}
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                ×
+                <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
 
-          {/* Content */}
+          {/* Caption Section - Instagram Style */}
           {mediaItems.length > 0 && (
-            <div className="p-4 border-b border-gray-100">
-              <div className="flex items-start space-x-3 mb-2">
-                {/* <div className="w-8 h-8 bg-gradient-to-br from-[#02fa97] to-teal-400 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                  {post.authorName?.charAt(0) || 'U'}
-                </div> */}
-                <div className="flex-1">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="flex items-start gap-3">
+                <Image
+                  src={post.profilePic || '/uploads/DefaultProfile.jpg'}
+                  alt={post.authorName || 'User'}
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
+                />
+                <div className="flex-1 min-w-0">
                   <div className="flex items-start">
                     <span className="font-semibold text-sm mr-2">{post.authorName || 'Unknown User'}</span>
                     <div className="flex-1">
@@ -845,7 +847,7 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   )}
                 </div>
               </div>
-              <p className="text-xs text-gray-400 ml-11">{post.timestamp}</p>
+              <p className="text-xs text-gray-500 uppercase mt-1">{post.timestamp}</p>
             </div>
           )}
 
@@ -1034,70 +1036,53 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
             )}
           </div>
 
-          {/* Actions */}
-          <div className="border-t border-gray-100 p-4">
-            {!isMobile && (
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={handleAuraClick}
-                    data-aura-button
-                    className="flex items-center space-x-2 group hover:opacity-75 active:opacity-60 cursor-pointer"
-                    style={{ transition: 'transform 0.2s ease-out' }}
+          {/* Actions - Instagram Style */}
+          <div className="border-t border-gray-100 px-4 pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleAuraClick}
+                  data-aura-button
+                  className="hover:opacity-60 transition-opacity"
+                >
+                  <svg
+                    width={24}
+                    height={24}
+                    viewBox="0 0 100 100"
+                    style={{
+                      fill: hasAura ? '#02fa97' : 'transparent',
+                      stroke: hasAura ? '#02fa97' : '#262626',
+                      strokeWidth: '3',
+                    }}
                   >
-                    <svg
-                      width={24}
-                      height={24}
-                      viewBox="0 0 100 100"
-                      style={{
-                        fill: hasAura ? '#02fa97' : 'transparent',
-                        stroke: hasAura ? '#02fa97' : '#000000',
-                        strokeWidth: '2',
-                      }}
-                    >
-                      <polygon
-                        points="77.333,33.31 55.438,33.31 75.43,1.829 47.808,1.829 23.198,51.05 41.882,51.05 21.334,99.808"
-                      />
-                    </svg>
-                  </button>
-
-                  <button onClick={handleCommentButtonClick} className="group transition-all duration-200 hover:scale-105" aria-label="Comment">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8.5 12H8.51M12 12H12.01M15.5 12H15.51M21 12C21 16.418 16.97 20 12 20C10.89 20 9.84 19.79 8.88 19.42L3 21L4.58 15.12C4.21 14.16 4 13.11 4 12C4 7.582 8.03 4 12 4C16.97 4 21 7.582 21 12Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-
-                  <button onClick={handleShareClick} className="group transition-all duration-200 hover:scale-105" aria-label="Share">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 13L10.5 9.5L13.5 12.5L17 9M21 12C21 16.418 16.97 20 12 20C7.03 20 3 16.418 3 12C3 7.582 7.03 4 12 4C16.97 4 21 7.582 21 12Z"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
-
-                <button className="group transition-all duration-200 hover:scale-105" aria-label="Bookmark">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5 7.8C5 6.11984 5 5.27976 5.32698 4.63803C5.6146 4.07354 6.07354 3.6146 6.63803 3.32698C7.27976 3 8.11984 3 9.8 3H14.2C15.8802 3 16.7202 3 17.362 3.32698C17.9265 3.6146 18.3854 4.07354 18.673 4.63803C19 5.27976 19 6.11984 19 7.8V21L12 17L5 21V7.8Z"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                    <polygon
+                      points="77.333,33.31 55.438,33.31 75.43,1.829 47.808,1.829 23.198,51.05 41.882,51.05 21.334,99.808"
                     />
                   </svg>
                 </button>
-              </div>
-            )}
 
-            <div className="text-sm font-semibold mb-1">
+                <button onClick={handleCommentButtonClick} className="hover:opacity-60 transition-opacity">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                  </svg>
+                </button>
+
+                <button onClick={handleShareClick} className="hover:opacity-60 transition-opacity">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                </button>
+              </div>
+
+              <button className="hover:opacity-60 transition-opacity">
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="text-sm font-semibold text-gray-900 mb-2">
               {auraCount} {auraCount === 1 ? 'aura' : 'auras'}
             </div>
 

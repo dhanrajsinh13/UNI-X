@@ -3,7 +3,7 @@ import Link from 'next/link';
 import React, { useState, useCallback } from 'react';
 import CreatePostModal from './CreatePostModal';
 import AuthModal from './AuthModal';
-import SearchModal from './SearchModal';
+import SearchModal, { DesktopSearchPanel } from './SearchModal';
 import { useAuth } from '../contexts/AuthContext';
 import Image from 'next/image'
 
@@ -11,6 +11,7 @@ const Navbar = () => {
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isDesktopSearchOpen, setIsDesktopSearchOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutClicked, setLogoutClicked] = useState(false);
   const { user, logout } = useAuth();
@@ -44,12 +45,22 @@ const Navbar = () => {
     setIsAuthModalOpen(false);
   }, []);
 
+  // Mobile search modal handlers
   const handleSearchClose = useCallback(() => {
     setIsSearchOpen(false);
   }, []);
 
   const handleSearchOpen = useCallback(() => {
     setIsSearchOpen(true);
+  }, []);
+
+  // Desktop search panel handlers
+  const handleDesktopSearchToggle = useCallback(() => {
+    setIsDesktopSearchOpen(prev => !prev);
+  }, []);
+
+  const handleDesktopSearchClose = useCallback(() => {
+    setIsDesktopSearchOpen(false);
   }, []);
 
   // Don't show navbar on landing page or when user is not authenticated
@@ -60,21 +71,29 @@ const Navbar = () => {
   return (
     <>
       {/* Desktop Sidebar - Instagram Style */}
-      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-border-light z-fixed flex-col justify-between py-8 px-4">
+      <aside className={`hidden md:flex fixed left-0 top-0 bottom-0 bg-white border-r border-border-light z-fixed flex-col justify-between py-8 px-4 transition-all duration-300 ${isDesktopSearchOpen ? 'w-20' : 'w-60'}`}>
         <div>
           <Link href="/" className="flex items-center px-4 mb-8">
             <Image src="/uni-x_logo.png" alt="UNI-X" width={40} height={40} className="w-10 h-10 mr-3" />
-            <span className="font-bold text-2xl bg-gradient-to-r from-text to-accent bg-clip-text text-transparent">UNI-X</span>
+            {!isDesktopSearchOpen && (
+              <span className="font-bold text-2xl bg-gradient-to-r from-text to-accent bg-clip-text text-transparent">UNI-X</span>
+            )}
           </Link>
           {user ? (
             <nav className="space-y-2">
-              <SidebarItem href="/" icon="/SVG/home.svg" label="Home" />
-              <SidebarItem href="/uniwall" icon="/SVG/uniwall.svg" label="UniWall" />
-              <SidebarButton icon="/SVG/search.svg" label="Search" onClick={handleSearchOpen} />
-              <SidebarButton icon="/SVG/post.svg" label="Create" onClick={handleCreatePostOpen} />
-              <SidebarItem href="/messages" icon="/SVG/messages.svg" label="Messages" />
-              <SidebarItem href="/notifications" icon="/SVG/notifications.svg" label="Notifications" />
-              <SidebarItem href="/profile/me" icon="/SVG/profile.svg" label="Profile" />
+              <SidebarItem href="/" icon="/SVG/home.svg" label="Home" collapsed={isDesktopSearchOpen} />
+              <SidebarItem href="/uniwall" icon="/SVG/uniwall.svg" label="UniWall" collapsed={isDesktopSearchOpen} />
+              <SidebarButton
+                icon="/SVG/search.svg"
+                label="Search"
+                onClick={handleDesktopSearchToggle}
+                active={isDesktopSearchOpen}
+                collapsed={isDesktopSearchOpen}
+              />
+              <SidebarButton icon="/SVG/post.svg" label="Create" onClick={handleCreatePostOpen} collapsed={isDesktopSearchOpen} />
+              <SidebarItem href="/messages" icon="/SVG/messages.svg" label="Messages" collapsed={isDesktopSearchOpen} />
+              <SidebarItem href="/notifications" icon="/SVG/notifications.svg" label="Notifications" collapsed={isDesktopSearchOpen} />
+              <SidebarItem href="/profile/me" icon="/SVG/profile.svg" label="Profile" collapsed={isDesktopSearchOpen} />
             </nav>
           ) : (
             <div className="px-2">
@@ -91,15 +110,15 @@ const Navbar = () => {
           <div className="space-y-2 border-t border-border-light pt-4">
             <Link
               href="/settings"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200"
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 ${isDesktopSearchOpen ? 'justify-center' : ''}`}
             >
               <Image src="/SVG/settings.svg" alt="Settings" width={20} height={20} className="w-5 h-5" />
-              <span className="text-sm font-medium text-text">Settings</span>
+              {!isDesktopSearchOpen && <span className="text-sm font-medium text-text">Settings</span>}
             </Link>
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 w-full ${isLoggingOut
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 w-full ${isDesktopSearchOpen ? 'justify-center' : ''} ${isLoggingOut
                 ? 'bg-gray-100 text-text-tertiary cursor-not-allowed'
                 : logoutClicked
                   ? 'bg-error/10 text-error hover:bg-error/20'
@@ -109,18 +128,27 @@ const Navbar = () => {
               <span className="text-xl">
                 {isLoggingOut ? '⏳' : logoutClicked ? '❗' : '🚪'}
               </span>
-              <span className="text-sm font-medium">
-                {isLoggingOut
-                  ? 'Logging out...'
-                  : logoutClicked
-                    ? 'Click again to confirm'
-                    : 'Logout'
-                }
-              </span>
+              {!isDesktopSearchOpen && (
+                <span className="text-sm font-medium">
+                  {isLoggingOut
+                    ? 'Logging out...'
+                    : logoutClicked
+                      ? 'Click again to confirm'
+                      : 'Logout'
+                  }
+                </span>
+              )}
             </button>
           </div>
         )}
       </aside>
+
+      {/* Desktop Search Panel - Slides out next to sidebar */}
+      <DesktopSearchPanel
+        isOpen={isDesktopSearchOpen}
+        onClose={handleDesktopSearchClose}
+      />
+
 
       {/* Mobile Bottom Navigation - Instagram Style */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-border-light z-fixed safe-bottom">
@@ -129,7 +157,7 @@ const Navbar = () => {
             <>
               <MobileNavItem href="/" icon="/SVG/home.svg" />
               <MobileNavItem href="/uniwall" icon="/SVG/uniwall.svg" />
-              <MobilePostNavItem icon="/SVG/search.svg" onClick={handleSearchOpen} />
+              <MobilePostNavButton icon="/SVG/post.svg" onClick={handleCreatePostOpen} />
               <MobileNavItem href="/messages" icon="/SVG/messages.svg" />
               <MobileNavItem href="/profile/me" icon="/SVG/profile.svg" />
             </>
@@ -149,56 +177,60 @@ const Navbar = () => {
       {/* Modals */}
       <CreatePostModal isOpen={isCreatePostOpen} onClose={handleCreatePostClose} />
       <AuthModal isOpen={isAuthModalOpen} onClose={handleAuthModalClose} />
-      <SearchModal isOpen={isSearchOpen} onClose={handleSearchClose} />
+      {/* Mobile Search Modal - Only used on mobile when triggered from other places */}
+      <SearchModal isOpen={isSearchOpen} onClose={handleSearchClose} variant="modal" />
     </>
   );
 };
 
 // Nav item components with SVG icon support
-const SidebarItem = ({ href, icon, label }: { href: string; icon: string; label: string }) => (
+const SidebarItem = ({ href, icon, label, collapsed = false }: { href: string; icon: string; label: string; collapsed?: boolean }) => (
   <Link
     href={href}
-    className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group"
+    className={`flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 group ${collapsed ? 'justify-center' : ''}`}
   >
     {icon.startsWith('/') ? (
       <Image src={icon} alt={label} width={24} height={24} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}
-    <span className="text-base font-medium text-text">{label}</span>
+    {!collapsed && <span className="text-base font-medium text-text">{label}</span>}
   </Link>
 );
 
-const SidebarButton = ({ href, icon, label, onClick }: { href?: string; icon: string; label?: string; onClick?: () => void }) => {
-  const content = (
-    <>
-      {icon.startsWith('/') ? (
-        <Image src={icon} alt={label || 'icon'} width={24} height={24} className="w-6 h-6 opacity-80 group-hover:opacity-100 transition-opacity" />
-      ) : (
-        <span className="text-2xl">{icon}</span>
-      )}
-      {label && <span className="text-base font-medium text-text">{label}</span>}
-    </>
-  );
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        onClick={onClick}
-        className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 w-full text-left group"
-      >
-        {content}
-      </Link>
-    );
-  }
-
+const SidebarButton = ({
+  icon,
+  label,
+  onClick,
+  active = false,
+  collapsed = false
+}: {
+  icon: string;
+  label?: string;
+  onClick?: () => void;
+  active?: boolean;
+  collapsed?: boolean;
+}) => {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-gray-50 transition-all duration-200 w-full text-left group"
+      className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 w-full text-left group ${collapsed ? 'justify-center' : ''} ${active
+        ? 'bg-gray-100 font-semibold'
+        : 'hover:bg-gray-50'
+        }`}
     >
-      {content}
+      {icon.startsWith('/') ? (
+        <Image
+          src={icon}
+          alt={label || 'icon'}
+          width={24}
+          height={24}
+          className={`w-6 h-6 transition-all ${active ? 'opacity-100 scale-110' : 'opacity-80 group-hover:opacity-100'}`}
+        />
+      ) : (
+        <span className="text-2xl">{icon}</span>
+      )}
+      {!collapsed && label && <span className="text-base font-medium text-text">{label}</span>}
     </button>
   );
 };
@@ -216,7 +248,7 @@ const MobileNavItem = ({ href, icon }: { href: string; icon: string }) => (
   </Link>
 );
 
-const MobilePostNavItem = ({ icon, onClick }: { icon: string; onClick: () => void }) => (
+const MobilePostNavButton = ({ icon, onClick }: { icon: string; onClick: () => void }) => (
   <button
     onClick={onClick}
     className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"

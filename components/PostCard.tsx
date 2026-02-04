@@ -22,6 +22,7 @@ interface PostCardProps {
   mediaUrl?: string;
   mediaType?: 'image' | 'video';
   userLiked?: boolean;
+  isFollowingUser?: boolean;
   onPostClick?: (post: PostCardProps) => void;
   edgeToEdge?: boolean;
   masonry?: boolean;
@@ -42,6 +43,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
   mediaUrl,
   mediaType,
   userLiked,
+  isFollowingUser,
   onPostClick,
   edgeToEdge,
   masonry,
@@ -64,6 +66,9 @@ const PostCard: React.FC<PostCardProps> = memo(({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [imageAspectRatio, setImageAspectRatio] = useState<number | null>(null);
+  const [isFollowing, setIsFollowing] = useState(isFollowingUser || false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
 
   // Sync aura state when props change (after refresh)
   useEffect(() => {
@@ -83,6 +88,9 @@ const PostCard: React.FC<PostCardProps> = memo(({
     window.addEventListener('auraUpdated', handleAuraUpdated);
     return () => window.removeEventListener('auraUpdated', handleAuraUpdated);
   }, [id]);
+
+  // Note: Follow status is managed optimistically
+  // Initial state is false (not following), updates after user clicks follow
 
   const inferMediaType = useCallback((
     url?: string,
@@ -340,6 +348,37 @@ const PostCard: React.FC<PostCardProps> = memo(({
     }
   }, [authorId, user, router]);
 
+  const handleFollowClick = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!token || !authorId || isFollowLoading) return;
+
+    setIsFollowLoading(true);
+    const previousFollowState = isFollowing;
+
+    // Optimistic update
+    setIsFollowing(!isFollowing);
+
+    try {
+      await fetchAPI('/api/users/follow', {
+        method: 'POST',
+        token,
+        body: JSON.stringify({ userId: authorId }),
+        skipCache: true
+      });
+
+      // Clear relevant caches
+      dataFetcher.clearCache('/api/users/suggestions');
+      dataFetcher.clearCache(`/api/users/${authorId}`);
+    } catch (error: any) {
+      console.error('Follow/unfollow error:', error);
+      // Revert on error
+      setIsFollowing(previousFollowState);
+      showToast(error.message || 'Failed to update follow status', 'error');
+    } finally {
+      setIsFollowLoading(false);
+    }
+  }, [token, authorId, isFollowing, isFollowLoading, showToast]);
+
   const getCategoryColor = useMemo(() => (cat?: string) => {
     switch (cat?.toLowerCase()) {
       case 'event':
@@ -365,133 +404,203 @@ const PostCard: React.FC<PostCardProps> = memo(({
   if (isDeleted) return null;
 
   return (
-    <div className={`${edgeToEdge ? 'bg-white rounded-none border-0 shadow-none' : 'card-interactive'} overflow-hidden`}>
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 pb-2 relative">
-        <div className="flex items-center space-x-3">
+    <div className={`${edgeToEdge ? 'bg-white rounded-none border-0 shadow-none' : 'bg-white'} mb-4`}>
+      {/* Header - Instagram Style */}
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <div className="flex items-center gap-3">
           <div
-            className="relative cursor-pointer"
+            className="cursor-pointer"
             onClick={handleAuthorClick}
           >
-            <div className="avatar avatar-lg avatar-ring">
-              <Image
-                src={profilePic || '/uploads/DefaultProfile.jpg'}
-                alt={authorName}
-                width={48}
-                height={48}
-                className="w-full h-full object-cover"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
-              />
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success rounded-full border-2 border-white"></div>
+            <Image
+              src={profilePic || '/uploads/DefaultProfile.jpg'}
+              alt={authorName}
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-full object-cover"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
+            />
           </div>
           <div
-            className="cursor-pointer hover:opacity-80 transition-opacity"
+            className="cursor-pointer"
             onClick={handleAuthorClick}
           >
-            <p className="font-semibold text-text text-sm hover:underline">{authorName}</p>
-            <p className="text-xs text-text-secondary">{authorDept} • {authorYear}rd Year</p>
+            <p className="font-semibold text-sm text-gray-900">
+              {authorName}
+              {user && authorId && user.id !== authorId && !isFollowingUser && (
+                <>
+                  <span className="text-xs text-gray-500"> •</span>
+                  <button
+                    onClick={handleFollowClick}
+                    disabled={isFollowLoading}
+                    className="text-xs font-semibold text-blue-500 hover:text-blue-600 ml-1 disabled:opacity-50"
+                  >
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                </>
+              )}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {category && (
-            <span className={`badge ${getCategoryColor(category)}`}>
-              {category}
-            </span>
-          )}
-          <span className="text-xs text-text-tertiary">{timestamp}</span>
-          {/* In-feed edit/delete disabled: manage via profile modal only */}
-        </div>
+        <button className="p-2">
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="1.5" />
+            <circle cx="6" cy="12" r="1.5" />
+            <circle cx="18" cy="12" r="1.5" />
+          </svg>
+        </button>
       </div>
 
-      {/* Media - variable height for masonry, square otherwise */}
+      {/* Media - Instagram Style */}
       {mediaUrl && (
         <div
-          className={`${!isMobile ? 'cursor-pointer' : ''}`}
+          className="w-full"
           onClick={!isMobile && inferMediaType(mediaUrl, mediaType) !== 'video' ? handlePostClick : undefined}
         >
           {inferMediaType(mediaUrl, mediaType) === 'image' ? (
-            <div className={`overflow-hidden bg-gray-100 ${mediaLoaded ? '' : 'animate-pulse'}`}>
-              <div className={`${masonry ? '' : 'relative w-full aspect-square'} bg-gray-100`}>
-                {!mediaError ? (
-                  <Image
-                    src={mediaUrl}
-                    alt="Post media"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    className={`${masonry ? 'w-full h-auto object-cover' : 'object-cover'}`}
-                    onLoad={() => setMediaLoaded(true)}
-                    onError={() => setMediaError(true)}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-white">
-                    <span>Media unavailable</span>
-                  </div>
-                )}
-              </div>
+            <div className={`relative w-full ${imageAspectRatio && Math.abs(imageAspectRatio - 1) < 0.1 ? 'bg-gray-100' : 'bg-black'}`} style={{ maxHeight: '600px' }}>
+              {!mediaError ? (
+                <Image
+                  src={mediaUrl}
+                  alt="Post media"
+                  width={600}
+                  height={600}
+                  className="w-full h-auto object-contain"
+                  style={{ maxHeight: '600px' }}
+                  onLoad={(e) => {
+                    setMediaLoaded(true);
+                    const img = e.currentTarget as HTMLImageElement;
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
+                    setImageAspectRatio(aspectRatio);
+                  }}
+                  onError={() => setMediaError(true)}
+                />
+              ) : (
+                <div className="w-full h-96 flex items-center justify-center text-gray-400 bg-gray-100">
+                  <span>Media unavailable</span>
+                </div>
+              )}
             </div>
           ) : inferMediaType(mediaUrl, mediaType) === 'video' ? (
-            <div className="bg-black relative">
-              <div className={`${masonry ? '' : 'relative w-full aspect-square'} bg-black`}>
-                {!mediaError ? (
-                  <div className="relative w-full h-full">
-                    <video
-                      src={mediaUrl}
-                      autoPlay
-                      muted={isMuted}
-                      loop
-                      playsInline
-                      preload="metadata"
-                      className={`${masonry ? 'w-full h-auto' : 'absolute inset-0 w-full h-full object-cover'}`}
-                      onCanPlay={() => setMediaLoaded(true)}
-                      onError={() => setMediaError(true)}
-                      onClick={handlePostClick}
-                    />
+            <div className="relative w-full bg-black" style={{ maxHeight: '600px' }}>
+              {!mediaError ? (
+                <div className="relative w-full">
+                  <video
+                    src={mediaUrl}
+                    autoPlay
+                    muted={isMuted}
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-auto object-contain"
+                    style={{ maxHeight: '600px' }}
+                    onCanPlay={() => setMediaLoaded(true)}
+                    onError={() => setMediaError(true)}
+                    onClick={handlePostClick}
+                  />
 
-                    {/* Mute/Unmute button - only control allowed */}
-                    <button
-                      onClick={handleMuteToggle}
-                      className="absolute top-3 right-3 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-all z-10"
-                      title={isMuted ? 'Unmute' : 'Mute'}
-                    >
-                      {isMuted ? (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-                        </svg>
-                      )}
-                    </button>
-
-                    {/* Click to view modal hint */}
-                    <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                      Tap to view
-                    </div>
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-white">
-                    <span>Video unavailable</span>
-                  </div>
-                )}
-              </div>
+                  {/* Mute/Unmute button */}
+                  <button
+                    onClick={handleMuteToggle}
+                    className="absolute bottom-4 right-4 bg-black/60 text-white p-2 rounded-full hover:bg-black/80 transition-all"
+                    title={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {isMuted ? (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full h-96 flex items-center justify-center text-gray-400 bg-gray-100">
+                  <span>Video unavailable</span>
+                </div>
+              )}
             </div>
           ) : null}
         </div>
       )}
 
-      {/* Caption - Instagram Style: Caption comes after media */}
-      <div
-        className={`px-4 pb-3 ${!isMobile ? 'cursor-pointer' : ''}`}
-        onClick={!isMobile ? handlePostClick : undefined}
-      >
+      {/* Actions - Instagram Style */}
+      <div className="px-3 pt-2">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
+            {/* Aura/Like Button */}
+            <button
+              id={`aura-btn-${id}`}
+              onClick={handleAuraClick}
+              data-aura-button
+              className="hover:opacity-60 transition-opacity"
+            >
+              <svg
+                width={24}
+                height={24}
+                viewBox="0 0 100 100"
+                style={{
+                  fill: hasAura ? '#02fa97' : 'transparent',
+                  stroke: hasAura ? '#02fa97' : '#262626',
+                  strokeWidth: '3',
+                }}
+              >
+                <polygon
+                  points="77.333,33.31 55.438,33.31 75.43,1.829 47.808,1.829 23.198,51.05 41.882,51.05 21.334,99.808"
+                />
+              </svg>
+            </button>
+
+            {/* Comment Button */}
+            <button
+              onClick={handleCommentClick}
+              className="hover:opacity-60 transition-opacity"
+            >
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+              </svg>
+            </button>
+
+            {/* Share Button */}
+            <button
+              onClick={handleShareClick}
+              className="hover:opacity-60 transition-opacity"
+            >
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Bookmark Button */}
+          <button className="hover:opacity-60 transition-opacity">
+            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Like Count */}
+        {auraCount > 0 && (
+          <div className="mb-2">
+            <span className="font-semibold text-sm text-gray-900">{auraCount} {auraCount === 1 ? 'like' : 'likes'}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Caption - Instagram Style */}
+      <div className="px-3 pb-2">
         {!isEditing ? (
           <>
-            <p className={`text-sm text-text leading-relaxed ${!isExpanded && editText && editText.length > 150 ? 'line-clamp-3' : ''}`}>
-              <span className="font-semibold text-text mr-1">{authorName}</span>
-              {editText}
+            <p className="text-sm text-gray-900">
+              <span className="font-semibold mr-1">{authorName}</span>
+              <span className={!isExpanded && editText && editText.length > 150 ? 'line-clamp-2' : ''}>
+                {editText}
+              </span>
             </p>
             {editText && editText.length > 150 && (
               <button
@@ -499,16 +608,16 @@ const PostCard: React.FC<PostCardProps> = memo(({
                   e.stopPropagation();
                   setIsExpanded(!isExpanded);
                 }}
-                className="text-text-secondary text-xs font-medium mt-1 hover:text-text transition-colors"
+                className="text-gray-500 text-sm mt-1"
               >
-                {isExpanded ? 'Show less' : 'more'}
+                {isExpanded ? 'less' : 'more'}
               </button>
             )}
           </>
         ) : (
-          <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+          <div className="space-y-2">
             <textarea
-              className="textarea text-sm"
+              className="w-full p-2 border border-gray-300 rounded text-sm"
               rows={3}
               maxLength={2200}
               value={editText}
@@ -518,102 +627,24 @@ const PostCard: React.FC<PostCardProps> = memo(({
               <button
                 onClick={handleEditSave}
                 disabled={isSaving || !editText.trim()}
-                className="btn-primary btn-sm"
+                className="px-4 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:opacity-50"
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
               <button
                 onClick={() => { setIsEditing(false); setEditText(content); }}
-                className="btn-secondary btn-sm"
+                className="px-4 py-1 bg-gray-200 text-gray-900 text-sm rounded hover:bg-gray-300"
               >
                 Cancel
               </button>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-border-light">
-        <div className="flex items-center gap-4">
-          {/* Aura/Like Button */}
-          <button
-            id={`aura-btn-${id}`}
-            onClick={handleAuraClick}
-            data-aura-button
-            className="flex items-center space-x-2 group hover:opacity-75 active:opacity-60 cursor-pointer"
-            style={{ transition: 'transform 0.2s ease-out' }}
-          >
-            <svg
-              width={20}
-              height={20}
-              viewBox="0 0 100 100"
-              style={{
-                fill: hasAura ? '#02fa97' : 'transparent',
-                stroke: hasAura ? '#02fa97' : '#000000',
-                strokeWidth: '2',
-              }}
-            >
-              <polygon
-                points="77.333,33.31 55.438,33.31 75.43,1.829 47.808,1.829 23.198,51.05 41.882,51.05 21.334,99.808"
-              />
-            </svg>
-            {auraCount > 0 && (
-              <span className={`text-sm font-medium ${hasAura ? 'text-accent' : 'text-text'
-                }`}>
-                {auraCount}
-              </span>
-            )}
-          </button>
-
-          {/* Comment Button */}
-          <button
-            onClick={handleCommentClick}
-            className="flex items-center space-x-2 group transition-all duration-200 hover:scale-105"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform">
-              <path d="M8.5 12H8.51M12 12H12.01M15.5 12H15.51M21 12C21 16.418 16.97 20 12 20C10.89 20 9.84 19.79 8.88 19.42L3 21L4.58 15.12C4.21 14.16 4 13.11 4 12C4 7.582 8.03 4 12 4C16.97 4 21 7.582 21 12Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-black"
-              />
-            </svg>
-            {commentCount > 0 && (
-              <span className="text-sm font-medium text-text">{commentCount}</span>
-            )}
-          </button>
-
-          {/* Share Button */}
-          <button
-            onClick={handleShareClick}
-            className="group transition-all duration-200 hover:scale-105"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform">
-              <path d="M7 13L10.5 9.5L13.5 12.5L17 9M21 12C21 16.418 16.97 20 12 20C7.03 20 3 16.418 3 12C3 7.582 7.03 4 12 4C16.97 4 21 7.582 21 12Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-black"
-              />
-            </svg>
-          </button>
+        {/* Timestamp */}
+        <div className="mt-2">
+          <span className="text-xs text-gray-500 uppercase">{timestamp}</span>
         </div>
-
-        {/* Bookmark Button */}
-        <button className="group transition-all duration-200 hover:scale-105">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="group-hover:scale-110 transition-transform">
-            <path d="M5 7.8C5 6.11984 5 5.27976 5.32698 4.63803C5.6146 4.07354 6.07354 3.6146 6.63803 3.32698C7.27976 3 8.11984 3 9.8 3H14.2C15.8802 3 16.7202 3 17.362 3.32698C17.9265 3.6146 18.3854 4.07354 18.673 4.63803C19 5.27976 19 6.11984 19 7.8V21L12 17L5 21V7.8Z"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-black"
-            />
-          </svg>
-        </button>
       </div>
 
       {/* Share Modal */}

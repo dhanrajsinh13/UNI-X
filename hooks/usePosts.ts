@@ -12,6 +12,7 @@ interface Post {
   media_type?: string;
   aura_count: number;
   user_liked: boolean;
+  is_following_author?: boolean;
   created_at: string;
   author: {
     id: number;

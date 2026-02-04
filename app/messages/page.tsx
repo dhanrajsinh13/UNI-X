@@ -66,6 +66,11 @@ const MessagesPageInner = () => {
   useEffect(() => {
     console.log('[State] Conversations updated:', conversations.length, conversations);
   }, [conversations]);
+
+  // Debug log for messages state
+  useEffect(() => {
+    console.log('[State] Messages updated:', messages.length, messages);
+  }, [messages]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -105,10 +110,10 @@ const MessagesPageInner = () => {
   // Load conversations on mount
   useEffect(() => {
     console.log('[Mount] useEffect triggered', { hasUser: !!user, hasToken: !!token });
-    
+
     // Clear cache on mount to ensure fresh data
     dataFetcher.clearCache('/api/messages/conversations');
-    
+
     if (user && token) {
       loadConversations();
     } else {
@@ -1126,8 +1131,8 @@ const MessagesPageInner = () => {
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-green-500 shadow-sm">
                     <Image
-                      src={currentConversation?.otherUser?.profile_image || '/uploads/DefaultProfile.jpg'}
-                      alt={currentConversation?.otherUser?.name || 'User'}
+                      src={currentConversation?.otherUser?.profile_image || activeOtherUser?.profile_image || '/uploads/DefaultProfile.jpg'}
+                      alt={currentConversation?.otherUser?.name || activeOtherUser?.name || 'User'}
                       width={48}
                       height={48}
                       className="w-full h-full object-cover"
@@ -1139,7 +1144,7 @@ const MessagesPageInner = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">
-                    {currentConversation?.otherUser?.name}
+                    {currentConversation?.otherUser?.name || activeOtherUser?.name || 'User'}
                   </h3>
                   <p className="text-xs text-green-600 font-medium flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
