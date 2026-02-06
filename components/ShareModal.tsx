@@ -15,6 +15,7 @@ interface ShareModalProps {
   postMediaUrl?: string;
   postMediaType?: 'image' | 'video';
   authorName: string;
+  authorId?: number;
 }
 
 interface Friend {
@@ -337,7 +338,7 @@ export default function ShareModal({
               <span className="text-xs text-gray-700">Copy Link</span>
             </button>
 
-            {navigator.share && (
+            {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
               <button
                 onClick={shareViaWebShare}
                 className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-100 transition-colors"

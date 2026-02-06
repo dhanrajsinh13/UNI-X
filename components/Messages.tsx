@@ -449,7 +449,7 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
                       }`}>
                         {/* Post Media */}
                         <div className="relative w-full aspect-square bg-gray-100">
-                          {(message.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || message.mediaUrl.includes('/image/')) ? (
+                          {message.mediaUrl && (message.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || message.mediaUrl.includes('/image/')) ? (
                             <Image
                               src={message.mediaUrl}
                               alt="Shared post"
@@ -459,15 +459,15 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
                                 (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg';
                               }}
                             />
-                          ) : (
+                          ) : message.mediaUrl ? (
                             <video
                               src={message.mediaUrl}
                               className="w-full h-full object-cover"
                               muted
                             />
-                          )}
+                          ) : null}
                           {/* Play icon overlay for videos */}
-                          {(message.mediaUrl.match(/\.(mp4|webm|mov)$/i) || message.mediaUrl.includes('/video/')) && (
+                          {message.mediaUrl && (message.mediaUrl.match(/\.(mp4|webm|mov)$/i) || message.mediaUrl.includes('/video/')) && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
                               <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
                                 <svg className="w-6 h-6 text-gray-900 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -507,7 +507,7 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
                                 (e.currentTarget as HTMLImageElement).style.display = 'none';
                               }}
                             />
-                          ) : (message.mediaUrl.match(/\.(mp4|webm|mov)$/i) || message.mediaUrl.includes('/video/')) ? (
+                          ) : message.mediaUrl && (message.mediaUrl.match(/\.(mp4|webm|mov)$/i) || message.mediaUrl.includes('/video/')) ? (
                             <video
                               src={message.mediaUrl}
                               controls

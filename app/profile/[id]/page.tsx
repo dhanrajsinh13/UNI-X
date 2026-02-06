@@ -70,26 +70,27 @@ const ProfilePage = () => {
 
   // Handle opening post from query parameter
   useEffect(() => {
-    const postIdParam = searchParams.get('post');
+    const postIdParam = searchParams?.get('post');
     if (postIdParam && userProfile?.posts) {
       const post = userProfile.posts.find((p: Post) => p.id === parseInt(postIdParam));
       if (post) {
-        handlePostClick({
+        const modalPost: any = {
           id: post.id,
-          authorId: userProfile.id,
           authorName: userProfile.name,
           authorDept: userProfile.department,
           authorYear: userProfile.year,
           content: post.content,
           category: post.category,
           auraCount: post.aura_count,
-          commentCount: post.comment_count,
-          timestamp: post.created_at,
-          profilePic: userProfile.profile_image,
+          commentCount: post.comment_count || 0,
+          timestamp: new Date(post.created_at).toLocaleDateString(),
+          profilePic: userProfile.profile_image || undefined,
           mediaUrl: post.media_url,
-          mediaType: post.media_type as 'image' | 'video',
-          userLiked: post.user_liked,
-        });
+          mediaType: post.media_type?.toLowerCase() as 'image' | 'video',
+          userLiked: post.user_liked
+        };
+        setSelectedPost(modalPost);
+        setIsModalOpen(true);
         // Remove the post parameter from URL
         const newUrl = `/profile/${id}`;
         window.history.replaceState({}, '', newUrl);
