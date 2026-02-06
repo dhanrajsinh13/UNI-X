@@ -8,17 +8,25 @@
 
 /* Base Styles */
 @layer base {
-  html, body {
+  html {
     height: 100%;
+    scroll-behavior: smooth;
     @apply antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
+    height: 100%;
     min-height: 100vh;
     overflow-x: hidden;
     @apply bg-background text-text;
+  }
+
+  /* Custom text selection */
+  ::selection {
+    background-color: rgba(255, 175, 80, 0.2);
+    color: inherit;
   }
 
   /* Smooth rendering for all elements */
@@ -67,7 +75,7 @@
     @apply hover:bg-accent/90 active:scale-95;
     @apply transition-all duration-200 ease-smooth;
     @apply focus:ring-2 focus:ring-accent focus:ring-offset-2;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale;
   }
 
   /* Secondary Button */
@@ -76,7 +84,7 @@
     @apply hover:bg-gray-200 active:scale-95;
     @apply transition-all duration-200 ease-smooth;
     @apply focus:ring-2 focus:ring-gray-300 focus:ring-offset-2;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale;
   }
 
   /* Ghost Button */
@@ -93,6 +101,7 @@
     @apply hover:bg-error/90 active:scale-95;
     @apply transition-all duration-200 ease-smooth;
     @apply focus:ring-2 focus:ring-error focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale;
   }
 
   /* Small Button Variant */
@@ -124,7 +133,7 @@
   /* Interactive Card (hoverable) */
   .card-interactive {
     @apply card;
-    @apply hover:shadow-card-hover hover:-translate-y-0.5;
+    @apply hover:shadow-card-hover hover:-translate-y-1;
     @apply cursor-pointer overflow-hidden;
     border-radius: inherit;
   }
@@ -141,7 +150,7 @@
   .input {
     @apply w-full px-4 py-2.5 bg-gray-50 border border-border rounded-lg;
     @apply text-sm text-text placeholder:text-text-tertiary;
-    @apply focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent;
+    @apply focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-gray-300;
     @apply transition-all duration-200;
   }
 
@@ -161,7 +170,7 @@
   
   /* Modal Overlay */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/60 backdrop-blur-sm;
+    @apply fixed inset-0 bg-black/65 backdrop-blur-md;
     @apply flex items-center justify-center p-4;
     @apply z-modal-backdrop;
     @apply animate-fade-in;
@@ -258,6 +267,12 @@
 
   .badge-gray {
     @apply bg-gray-100 text-gray-700;
+  }
+
+  .badge-interactive {
+    @apply badge cursor-pointer;
+    @apply hover:opacity-80 active:scale-95;
+    @apply transition-all duration-fast;
   }
 
   
@@ -359,6 +374,26 @@
   100% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
   }
 }
 
@@ -482,11 +517,63 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* Skeleton shimmer loading effect */
+  .skeleton {
+    @apply bg-gray-200 animate-pulse rounded;
+    background: linear-gradient(
+      90deg,
+      #f0f0f0 0%,
+      #e0e0e0 20%,
+      #f0f0f0 40%,
+      #f0f0f0 100%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* Ripple effect for button presses */
+  .ripple {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    animation: ripple 0.6s ease-out;
+  }
+
+  /* Notification dot utility */
+  .notification-dot {
+    @apply absolute top-0 right-0;
+    @apply w-2 h-2 bg-error rounded-full;
+    @apply border-2 border-white;
+  }
+
+  .notification-dot-lg {
+    @apply w-3 h-3;
+  }
+
   /* Truncate text */
   .truncate-multiline {
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-box-orient: vertical;
+  }
+
+  /* Hide navbar when modal is open */
+  body.modal-open nav,
+  body.modal-open aside {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out;
   }
 }

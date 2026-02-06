@@ -37,7 +37,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^6.20.0",
     "multer": "^2.0.2",
-    "next": "^15.5.11",
+    "next": "15.5.7",
     "next-auth": "^4.24.11",
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.1",

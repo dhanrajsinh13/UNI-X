@@ -38,6 +38,7 @@ module.exports = {
       fontSize: {
         'xxs': ['0.625rem', { lineHeight: '0.875rem' }],      // 10px
         'xs': ['0.75rem', { lineHeight: '1rem' }],            // 12px
+        '13': ['0.8125rem', { lineHeight: '1.125rem' }],      // 13px - metadata
         'sm': ['0.875rem', { lineHeight: '1.25rem' }],        // 14px
         'base': ['1rem', { lineHeight: '1.5rem' }],           // 16px
         'lg': ['1.125rem', { lineHeight: '1.75rem' }],        // 18px
@@ -58,6 +59,7 @@ module.exports = {
       },
       // Elevation system (4 levels)
       boxShadow: {
+        'subtle': '0 1px 3px rgba(0, 0, 0, 0.04)',
         'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         'DEFAULT': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
         'md': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
@@ -71,11 +73,15 @@ module.exports = {
       },
       // Animation & transitions
       transitionDuration: {
+        'fast': '150ms',
         '200': '200ms',
+        'normal': '200ms',
         '300': '300ms',
+        'slow': '300ms',
       },
       transitionTimingFunction: {
         'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
+        'bounce': 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
       },
       // Container widths (Instagram-like)
       maxWidth: {
@@ -87,6 +93,7 @@ module.exports = {
       zIndex: {
         'dropdown': '1000',
         'sticky': '1020',
+        'fab': '1025',
         'fixed': '1030',
         'modal-backdrop': '1040',
         'modal': '1050',

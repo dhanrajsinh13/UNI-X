@@ -6,7 +6,9 @@ import { useToast } from '../contexts/ToastContext';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useVideoVisibility } from '../hooks/useVideoVisibility';
 import { fetchAPI, dataFetcher } from '../lib/dataFetcher';
-import Image from 'next/image'
+import Image from 'next/image';
+import MobileCommentsSheet from './MobileCommentsSheet';
+import ShareModal from './ShareModal';
 
 interface PostCardProps {
   id: number;
@@ -75,6 +77,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
   const [isVideoPlaying, setIsVideoPlaying] = useState(true);
   const [showPlayPauseIndicator, setShowPlayPauseIndicator] = useState(false);
   const [manuallyPaused, setManuallyPaused] = useState(false);
+  const [showMobileComments, setShowMobileComments] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Use video visibility hook for auto-play/pause (feed video)
@@ -231,6 +234,13 @@ const PostCard: React.FC<PostCardProps> = memo(({
   }, [videoRef]);
 
   const handleCommentClick = useCallback(() => {
+    // On mobile, open comments sheet instead of full modal
+    if (isMobile) {
+      setShowMobileComments(true);
+      return;
+    }
+
+    // On desktop, open full post modal
     if (onPostClick) {
       onPostClick({
         id,
@@ -246,7 +256,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
         profilePic,
         mediaUrl,
         mediaType,
-        userLiked: hasAura, // Pass current aura status
+        userLiked: hasAura,
         onPostClick,
         edgeToEdge,
         masonry,
@@ -254,37 +264,11 @@ const PostCard: React.FC<PostCardProps> = memo(({
     } else {
       alert('Comments feature is coming soon! 💬');
     }
-  }, [onPostClick, id, authorId, authorName, authorDept, authorYear, editText, category, auraCount, commentCount, timestamp, profilePic, mediaUrl, mediaType, hasAura, edgeToEdge, masonry]);
+  }, [isMobile, onPostClick, id, authorId, authorName, authorDept, authorYear, editText, category, auraCount, commentCount, timestamp, profilePic, mediaUrl, mediaType, hasAura, edgeToEdge, masonry]);
 
   const handleShareClick = useCallback(async () => {
-    const shareUrl = `${window.location.origin}/post/${id}`;
-    const shareText = content?.slice(0, 120) || 'Check out this post';
-    const shareData: ShareData = {
-      title: `${authorName} on UNIX`,
-      text: shareText,
-      url: shareUrl,
-    };
-
-    try {
-      if (navigator.share && typeof navigator.share === 'function') {
-        await navigator.share(shareData);
-        return;
-      }
-    } catch (err) {
-      // If Web Share fails, fall back to modal
-      console.warn('Web Share failed, falling back:', err);
-    }
-
     setShowShareModal(true);
-  }, [content, id]);
-
-  const copyToClipboard = useCallback(() => {
-    const url = `${window.location.origin}/post/${id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      alert('Post link copied to clipboard! 📋');
-      setShowShareModal(false);
-    });
-  }, [id]);
+  }, []);
 
   const handlePostClick = useCallback(() => {
     if (onPostClick) {
@@ -445,10 +429,10 @@ const PostCard: React.FC<PostCardProps> = memo(({
   if (isDeleted) return null;
 
   return (
-    <div ref={containerRef} className={`${edgeToEdge ? 'bg-white rounded-none border-0 shadow-none' : 'bg-white rounded-xl overflow-hidden'} mb-4`}>
+    <div ref={containerRef} className={`${edgeToEdge ? 'bg-white border-b border-border-light' : 'bg-white border border-border-light rounded-xl mb-4'} overflow-hidden`}>
       {/* Header - Instagram Style */}
-      <div className="flex items-center justify-between px-2.5 py-2">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
           <div
             className="cursor-pointer"
             onClick={handleAuthorClick}
@@ -458,7 +442,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
               alt={authorName}
               width={32}
               height={32}
-              className="w-12 h-12 rounded-full object-cover border border-gray-300"
+              className="w-8 h-8 rounded-full object-cover border border-border-light"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
             />
           </div>
@@ -466,15 +450,15 @@ const PostCard: React.FC<PostCardProps> = memo(({
             className="cursor-pointer"
             onClick={handleAuthorClick}
           >
-            <p className="font-semibold text-sm p-1 text-gray-900">
+            <p className="font-semibold text-sm text-gray-900">
               {authorName}
               {user && authorId && user.id !== authorId && !isFollowingUser && (
                 <>
-                  <span className="text-xs text-gray-500"> •</span>
+                  <span className="text-gray-400 mx-1">•</span>
                   <button
                     onClick={handleFollowClick}
                     disabled={isFollowLoading}
-                    className="text-xs font-semibold text-blue-500 hover:text-blue-600 ml-1 disabled:opacity-50"
+                    className="text-info hover:text-info/80 font-semibold transition-colors disabled:opacity-50"
                   >
                     {isFollowing ? 'Following' : 'Follow'}
                   </button>
@@ -484,7 +468,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
           </div>
         </div>
 
-        <button className="p-1.5">
+        <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="1.5" />
             <circle cx="6" cy="12" r="1.5" />
@@ -581,19 +565,19 @@ const PostCard: React.FC<PostCardProps> = memo(({
       )}
 
       {/* Actions - Instagram Style */}
-      <div className="px-2.5 pt-1.5">
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-3">
+      <div className="px-4 pt-2">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-4">
             {/* Aura/Like Button */}
             <button
               id={`aura-btn-${id}`}
               onClick={handleAuraClick}
               data-aura-button
-              className="hover:opacity-60 transition-opacity p-0.5"
+              className="hover:opacity-60 transition-all duration-fast active:scale-110"
             >
               <svg
-                width={26}
-                height={26}
+                width={24}
+                height={24}
                 viewBox="0 0 100 100"
                 style={{
                   fill: hasAura ? '#FFAF50' : 'transparent',
@@ -610,9 +594,9 @@ const PostCard: React.FC<PostCardProps> = memo(({
             {/* Comment Button */}
             <button
               onClick={handleCommentClick}
-              className="hover:opacity-60 transition-opacity p-0.5"
+              className="hover:opacity-60 transition-opacity duration-fast"
             >
-              <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
             </button>
@@ -620,9 +604,9 @@ const PostCard: React.FC<PostCardProps> = memo(({
             {/* Share Button */}
             <button
               onClick={handleShareClick}
-              className="hover:opacity-60 transition-opacity p-0.5"
+              className="hover:opacity-60 transition-opacity duration-fast"
             >
-              <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
               </svg>
@@ -630,8 +614,8 @@ const PostCard: React.FC<PostCardProps> = memo(({
           </div>
 
           {/* Bookmark Button */}
-          <button className="hover:opacity-60 transition-opacity p-0.5">
-            <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button className="hover:opacity-60 transition-opacity duration-fast">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
           </button>
@@ -639,18 +623,18 @@ const PostCard: React.FC<PostCardProps> = memo(({
 
         {/* Like Count */}
         {auraCount > 0 && (
-          <div className="mb-1.5">
-            <span className="font-semibold text-xs text-gray-900">{auraCount} {auraCount === 1 ? 'Aura' : 'Auras'}</span>
+          <div className="mb-2">
+            <span className="font-semibold text-sm text-gray-900">{auraCount} {auraCount === 1 ? 'Aura' : 'Auras'}</span>
           </div>
         )}
       </div>
 
       {/* Caption - Instagram Style */}
-      <div className="px-2.5 pb-1.5">
+      <div className="px-4 pb-2">
         {!isEditing ? (
           <>
-            <p className="text-xs text-gray-900">
-              <span className="font-semibold mr-1">{authorName}</span>
+            <p className="text-sm text-gray-900 leading-tight">
+              <span className="font-semibold mr-1.5">{authorName}</span>
               <span className={!isExpanded && editText && editText.length > 150 ? 'line-clamp-2' : ''}>
                 {editText}
               </span>
@@ -661,7 +645,7 @@ const PostCard: React.FC<PostCardProps> = memo(({
                   e.stopPropagation();
                   setIsExpanded(!isExpanded);
                 }}
-                className="text-gray-500 text-xs mt-0.5"
+                className="text-text-tertiary text-sm mt-1 hover:text-text-secondary transition-colors"
               >
                 {isExpanded ? 'less' : 'more'}
               </button>
@@ -695,51 +679,38 @@ const PostCard: React.FC<PostCardProps> = memo(({
         )}
 
         {/* Timestamp */}
-        <div className="mt-1.5">
-          <span className="text-xs text-gray-500 uppercase">{timestamp}</span>
+        <div className="mt-2">
+          <span className="text-xs text-text-tertiary">{timestamp}</span>
         </div>
       </div>
 
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="modal-overlay">
-          <div className="modal-container max-w-md">
-            <div className="modal-header">
-              <h3 className="text-lg font-semibold">Share Post</h3>
-            </div>
-            <div className="modal-body space-y-2">
-              <button
-                onClick={() => {
-                  const url = `${window.location.origin}/post/${id}`;
-                  window.open(`https://wa.me/?text=${encodeURIComponent(url)}`, '_blank');
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
-              >
-                <span>Share to WhatsApp</span>
-              </button>
-              <button
-                onClick={copyToClipboard}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 2V5L12 9L16 5V2H8Z" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M16 4H20V20H4V4H8" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-                <span>Copy Link</span>
-              </button>
-              <div className="text-xs text-text-secondary px-4 py-2">Tip: You can also use your device share menu.</div>
-            </div>
-            <div className="modal-footer">
-              <button
-                onClick={() => setShowShareModal(false)}
-                className="btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Mobile Comments Sheet */}
+      {showMobileComments && (
+        <MobileCommentsSheet
+          isOpen={showMobileComments}
+          onClose={() => setShowMobileComments(false)}
+          postId={id}
+          authorName={authorName}
+          authorProfilePic={profilePic}
+          content={editText}
+          timestamp={timestamp}
+          auraCount={auraCount}
+          hasAura={hasAura}
+          onAuraClick={handleAuraClick}
+        />
       )}
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        postId={id}
+        postContent={editText}
+        postMediaUrl={mediaUrl}
+        postMediaType={mediaType}
+        authorName={authorName}
+        authorId={authorId}
+      />
     </div>
   );
 });

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image'
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../contexts/AuthContext';
 import PostCard from '../../../components/PostCard';
 import PostModal from '../../../components/PostModal';
@@ -49,6 +49,7 @@ interface Post {
 const ProfilePage = () => {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, token } = useAuth();
   const id = params?.id ? String(params.id) : '';
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -66,6 +67,47 @@ const ProfilePage = () => {
       fetchUserProfile();
     }
   }, [id, token]);
+
+  // Handle opening post from query parameter
+  useEffect(() => {
+    const postIdParam = searchParams.get('post');
+    if (postIdParam && userProfile?.posts) {
+      const post = userProfile.posts.find((p: Post) => p.id === parseInt(postIdParam));
+      if (post) {
+        handlePostClick({
+          id: post.id,
+          authorId: userProfile.id,
+          authorName: userProfile.name,
+          authorDept: userProfile.department,
+          authorYear: userProfile.year,
+          content: post.content,
+          category: post.category,
+          auraCount: post.aura_count,
+          commentCount: post.comment_count,
+          timestamp: post.created_at,
+          profilePic: userProfile.profile_image,
+          mediaUrl: post.media_url,
+          mediaType: post.media_type as 'image' | 'video',
+          userLiked: post.user_liked,
+        });
+        // Remove the post parameter from URL
+        const newUrl = `/profile/${id}`;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [searchParams, userProfile]);
+
+  useEffect(() => {
+    // Hide navbar when modal is open
+    if (isModalOpen) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [isModalOpen]);
 
   const fetchUserProfile = async () => {
     try {
@@ -186,7 +228,7 @@ const ProfilePage = () => {
 
   return (
     <div className='bg-white'>
-      <div className=" bg-white max-w-4xl mx-auto px-4 py-8">
+      <div className={`bg-white max-w-4xl mx-auto px-4 py-8 ${isModalOpen ? 'modal-open' : ''}`}>
         {/* Profile Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row items-start gap-8 mb-6">
@@ -413,20 +455,26 @@ const ProfilePage = () => {
                                 <p className="text-gray-700 text-sm text-center line-clamp-3">{post.content}</p>
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-4 text-white">
-                                <div className="flex items-center gap-1">
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-6 text-white">
+                                <div className="flex items-center gap-1.5">
                                   <svg width="20" height="20" viewBox="0 0 100 100" fill="white">
                                     <polygon points="77.333,33.31 55.438,33.31 75.43,1.829 47.808,1.829 23.198,51.05 41.882,51.05 21.334,99.808" />
                                   </svg>
                                   <span className="font-semibold">{post.aura_count}</span>
                                 </div>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1.5">
                                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                                     <path d="M8.5 12H8.51M12 12H12.01M15.5 12H15.51M21 12C21 16.418 16.97 20 12 20C10.89 20 9.84 19.79 8.88 19.42L3 21L4.58 15.12C4.21 14.16 4 13.11 4 12C4 7.582 8.03 4 12 4C16.97 4 21 7.582 21 12Z"
                                       stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                   </svg>
                                   <span className="font-semibold">{post.comment_count || 0}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M5 7.8C5 6.11984 5 5.27976 5.32698 4.63803C5.6146 4.07354 6.07354 3.6146 6.63803 3.32698C7.27976 3 8.11984 3 9.8 3H14.2C15.8802 3 16.7202 3 17.362 3.32698C17.9265 3.6146 18.3854 4.07354 18.673 4.63803C19 5.27976 19 6.11984 19 7.8V21L12 17L5 21V7.8Z"
+                                      stroke="white" strokeWidth="1.5" fill="none" />
+                                  </svg>
                                 </div>
                               </div>
                             </div>

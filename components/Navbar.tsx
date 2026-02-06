@@ -71,13 +71,13 @@ const Navbar = () => {
   return (
     <>
       {/* Desktop Sidebar - Instagram Style */}
-      <aside className={`hidden md:flex fixed left-0 top-0 bottom-0 bg-white border-r border-border-light z-fixed flex-col justify-between py-8 px-4 transition-all duration-300 ${isDesktopSearchOpen ? 'w-20' : 'w-60'}`}>
+      <aside className={`hidden md:flex fixed left-0 top-0 bottom-0 bg-white border-r border-border-light z-fixed flex-col justify-between py-8 px-4 transition-all duration-300 ease-in-out ${isDesktopSearchOpen ? 'w-20' : 'w-60'}`}>
         <div>
-          <Link href="/" className="flex items-center px-4 mb-8">
+          <Link href="/" className="flex items-center px-4 mb-8 transition-opacity duration-300">
             <Image src="/uni-x_logo.png" alt="UNI-X" width={40} height={40} className="w-10 h-10 mr-3" />
-            {!isDesktopSearchOpen && (
-              <span className="font-bold text-2xl bg-gradient-to-r from-text to-accent bg-clip-text text-transparent">UNI-X</span>
-            )}
+            <span className={`font-bold text-2xl bg-gradient-to-r from-text to-accent bg-clip-text text-transparent transition-opacity duration-300 ${isDesktopSearchOpen ? 'opacity-0 w-0' : 'opacity-100'}`}>
+              UNI-X
+            </span>
           </Link>
           {user ? (
             <nav className="space-y-2">
@@ -125,9 +125,11 @@ const Navbar = () => {
                   : 'hover:bg-gray-50 text-text'
                 }`}
             >
-              <span className="text-xl">
-                {isLoggingOut ? '⏳' : logoutClicked ? '❗' : '🚪'}
-              </span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
               {!isDesktopSearchOpen && (
                 <span className="text-sm font-medium">
                   {isLoggingOut
@@ -152,7 +154,7 @@ const Navbar = () => {
 
       {/* Mobile Bottom Navigation - Instagram Style */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-border-light z-fixed safe-bottom">
-        <div className="flex justify-around items-center py-3 px-2">
+        <div className="flex justify-around items-center py-2 px-2">
           {user ? (
             <>
               <MobileNavItem href="/" icon="/SVG/home.svg" />
@@ -238,10 +240,10 @@ const SidebarButton = ({
 const MobileNavItem = ({ href, icon }: { href: string; icon: string }) => (
   <Link
     href={href}
-    className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"
+    className="flex items-center justify-center w-12 h-12 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-fast"
   >
     {icon.startsWith('/') ? (
-      <Image src={icon} alt="Navigation icon" width={28} height={28} className="w-7 h-7" />
+      <Image src={icon} alt="Navigation icon" width={24} height={24} className="w-6 h-6" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}
@@ -251,10 +253,10 @@ const MobileNavItem = ({ href, icon }: { href: string; icon: string }) => (
 const MobilePostNavButton = ({ icon, onClick }: { icon: string; onClick: () => void }) => (
   <button
     onClick={onClick}
-    className="flex items-center justify-center w-14 h-14 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-200"
+    className="flex items-center justify-center w-12 h-12 rounded-full hover:bg-gray-50 active:scale-95 transition-all duration-fast"
   >
     {icon.startsWith('/') ? (
-      <Image src={icon} alt="Post icon" width={28} height={28} className="w-7 h-7" />
+      <Image src={icon} alt="Post icon" width={24} height={24} className="w-6 h-6" />
     ) : (
       <span className="text-2xl">{icon}</span>
     )}

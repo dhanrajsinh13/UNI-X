@@ -153,6 +153,7 @@ io.on('connection', (socket) => {
         receiverId: savedMessage.receiver_id,
         messageText: savedMessage.message_text,
         mediaUrl: savedMessage.media_url,
+        postId: savedMessage.post_id || null,
         createdAt: savedMessage.created_at,
         sender: savedMessage.sender,
         receiver: savedMessage.receiver,

@@ -1,0 +1,17 @@
+# Instagram-like UI Overhaul
+
+- [ ] Analyze current styles and structure ([tailwind.config.js](file:///c:/Projects/UNI-X/tailwind.config.js), [globals.css](file:///c:/Projects/UNI-X/styles/globals.css), [layout.tsx](file:///c:/Projects/UNI-X/app/layout.tsx)) <!-- id: 0 -->
+- [ ] Create Implementation Plan <!-- id: 1 -->
+- [ ] Global Style Updates <!-- id: 2 -->
+    - [ ] Update Typography and Colors in [tailwind.config.js](file:///c:/Projects/UNI-X/tailwind.config.js)
+    - [ ] Clean up and modernize [globals.css](file:///c:/Projects/UNI-X/styles/globals.css)
+- [ ] Layout & Navigation <!-- id: 3 -->
+    - [ ] Implement responsive layout container
+    - [ ] Update Sidebar/Bottom Navigation for mobile/desktop split
+- [ ] Feed & Home Page <!-- id: 4 -->
+    - [ ] Refactor [app/page.tsx](file:///c:/Projects/UNI-X/app/page.tsx) for minimalist feed look
+    - [ ] Improve Post Component styling (padding, margins, seamless feel)
+- [ ] key Components Polishing <!-- id: 5 -->
+    - [ ] Buttons & Inputs
+    - [ ] Modals (Search, Create Post)
+- [ ] Verification <!-- id: 6 -->

@@ -134,7 +134,7 @@ export default function HomePage() {
 
       {/* Main content area: centered feed + right rail */}
       <div className="max-w-wide mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[630px_1fr] gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[630px_1fr] gap-6">
           {/* Feed column */}
           <div className="lg:col-span-2">
             {/* Category Filter (sticky) */}
@@ -170,7 +170,7 @@ export default function HomePage() {
             </div>
 
             {/* Feed */}
-            <div className="mt-4 md:mt-6 space-y-4 md:space-y-6 px-0">
+            <div className="mt-4 md:mt-6 space-y-4 px-0">
               {loading ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="w-8 h-8 border-4 border-gray-200 border-t-text rounded-full animate-spin"></div>
@@ -254,7 +254,7 @@ export default function HomePage() {
       </div>
 
       {/* Floating Messages button - Instagram style */}
-      <Link href="/messages" className="fixed bottom-20 md:bottom-6 right-4 md:right-8 bg-white shadow-card hover:shadow-card-hover rounded-full p-4 transition-all hover:scale-105 z-sticky">
+      <Link href="/messages" className="fixed bottom-20 md:bottom-6 right-4 md:right-8 bg-white shadow-card hover:shadow-card-hover rounded-full p-4 transition-all duration-fast hover:scale-105 z-fab">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-text">
           <path d="M21 11.5C21 16.75 16.97 21 12 21C10.73 21 9.52 20.75 8.42 20.31L3 21.5L4.19 16.08C3.64 14.83 3.25 13.45 3.25 12C3.25 6.75 7.03 2.5 12 2.5C16.97 2.5 21 6.75 21 11.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

@@ -238,6 +238,17 @@ export default function ProfilePage() {
     }
   }, [isFullscreenListOpen, fullscreenStartPostId]);
 
+  // Hide navbar and lock scroll when fullscreen list opens
+  useEffect(() => {
+    if (isFullscreenListOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+    }
+  }, [isFullscreenListOpen]);
+
   useEffect(() => {
     return () => { isMountedRef.current = false; };
   }, []);
@@ -669,7 +680,7 @@ export default function ProfilePage() {
         {/* Profile Header - compact like Instagram */}
         <div className="bg-white p-4 md:p-6 mb-4">
           <div className="flex items-start gap-8">
-            <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
+            <div className="w-28 h-28 md:w-10 md:h-10 sm:w-10 sm:h-10 flex-shrink-0 rounded-full overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
               <Image
                 src={(userProfile?.profile_image || '/uploads/DefaultProfile.jpg') as string}
                 alt={userProfile?.name || user.name}
@@ -1011,7 +1022,7 @@ export default function ProfilePage() {
                         <button
                           onClick={(e) => { e.stopPropagation(); handleEditCaptionMobile(p.id, p.content); }}
                           disabled={isSavingId === p.id}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
+                          className="w-full text-left px-4 py-2 text-sm text-black hover:bg-gray-50 disabled:opacity-50"
                         >
                           {isSavingId === p.id ? 'Saving...' : 'Edit caption'}
                         </button>

@@ -8,6 +8,7 @@ interface Message {
   receiver_id: number
   message_text: string
   media_url: string | null
+  post_id?: number | null
   reply_to_id?: number | null
   reaction?: string | null
   deleted_for?: number[]
@@ -116,6 +117,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         receiverId: msg.receiver_id,
         messageText: msg.message_text,
         mediaUrl: msg.media_url,
+        postId: msg.post_id || null,
         reaction: msg.reaction || null,
         deleted_for: msg.deleted_for || [],
         createdAt: msg.created_at.toISOString(),

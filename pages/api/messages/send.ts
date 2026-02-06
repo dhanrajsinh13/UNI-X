@@ -13,6 +13,7 @@ interface Message {
   receiver_id: number
   message_text: string
   media_url: string | null
+  post_id?: number | null
   created_at: Date
 }
 
@@ -33,9 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    const { receiverId, messageText, mediaUrl } = req.body
+    const { receiverId, messageText, mediaUrl, postId } = req.body
 
-    if (!receiverId || (!messageText && !mediaUrl)) {
+    if (!receiverId || (!messageText && !mediaUrl && !postId)) {
       return res.status(400).json({ error: 'Receiver ID and message content are required' })
     }
 
@@ -78,6 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       receiver_id: parseInt(receiverId),
       message_text: messageText || '',
       media_url: mediaUrl || null,
+      post_id: postId ? parseInt(postId) : null,
       created_at: new Date()
     }
 
@@ -94,6 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         receiverId: newMessage.receiver_id,
         messageText: newMessage.message_text,
         mediaUrl: newMessage.media_url,
+        postId: newMessage.post_id,
         createdAt: newMessage.created_at.toISOString(),
         sender: sender,
         receiver: receiver,
@@ -118,6 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         receiverId: newMessage.receiver_id,
         messageText: newMessage.message_text,
         mediaUrl: newMessage.media_url,
+        postId: newMessage.post_id,
         createdAt: newMessage.created_at.toISOString(),
         sender: sender,
         receiver: receiver,

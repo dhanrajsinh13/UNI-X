@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import MasonryTile from '../../components/MasonryTile';
 import PostModal from '../../components/PostModal';
+import PostCard from '../../components/PostCard';
 import { EmbeddedSearch } from '../../components/SearchModal';
 import { usePosts } from '../../hooks/usePosts';
 import { useAuth } from '../../contexts/AuthContext';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 // PostModal expected type
 interface PostModalData {
@@ -49,15 +51,133 @@ interface Post {
   };
 }
 
+// Helper to infer media type reliably
+function inferPostType(post: Post): 'image' | 'video' {
+  const declared = (post.media_type || '').toLowerCase();
+  if (declared === 'image' || declared === 'video') return declared as 'image' | 'video';
+  const url = (post.media_url || '').toLowerCase();
+  if (!url) return 'image';
+  if (url.includes('/video/') || /(\.mp4|\.webm|\.mov|\.avi|\.wmv)$/i.test(url)) return 'video';
+  return 'image';
+}
+
+// Video Grid Tile Component with hover-to-play and duration badge
+interface VideoGridTileProps {
+  post: Post;
+  onClick: () => void;
+}
+
+const VideoGridTile: React.FC<VideoGridTileProps> = ({ post, onClick }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoHovered, setIsVideoHovered] = useState(false);
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+  const [videoError, setVideoError] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleVideoMouseEnter = () => {
+    setIsVideoHovered(true);
+    if (videoRef.current) {
+      videoRef.current.play().catch(console.error);
+    }
+  };
+
+  const handleVideoMouseLeave = () => {
+    setIsVideoHovered(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  };
+
+  const handleVideoLoadedMetadata = () => {
+    if (videoRef.current) {
+      setVideoDuration(videoRef.current.duration);
+      setVideoLoaded(true);
+    }
+  };
+
+  const kind = inferPostType(post);
+
+  return (
+    <button onClick={onClick} className="group relative aspect-square bg-gray-100 overflow-hidden">
+      {post.media_url ? (
+        kind === 'video' ? (
+          !videoError ? (
+            <div
+              className="relative w-full h-full"
+              onMouseEnter={handleVideoMouseEnter}
+              onMouseLeave={handleVideoMouseLeave}
+            >
+              {/* Loading state for videos */}
+              {!videoLoaded && (
+                <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🎥</div>
+                    <div className="text-sm text-gray-500">Loading...</div>
+                  </div>
+                </div>
+              )}
+              <video
+                ref={videoRef}
+                src={post.media_url}
+                className="w-full h-full object-cover"
+                muted
+                playsInline
+                preload="metadata"
+                onLoadedMetadata={handleVideoLoadedMetadata}
+                onError={() => setVideoError(true)}
+              />
+              {/* Duration badge - hidden on hover */}
+              {videoDuration && !isVideoHovered && videoLoaded && (
+                <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                  {formatDuration(videoDuration)}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
+              <div className="text-center">
+                <div className="text-2xl mb-2">🎥</div>
+                <div className="text-sm">Video unavailable</div>
+              </div>
+            </div>
+          )
+        ) : (
+          <img
+            src={post.media_url}
+            alt={post.content?.slice(0, 40) || 'Post image'}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+        )
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm p-4">{post.content}</div>
+      )}
+    </button>
+  );
+};
+
 export default function UniWallPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedPost, setSelectedPost] = useState<PostModalData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const { posts, loading, error, refetch } = usePosts(
     selectedCategory === 'all' ? undefined : selectedCategory,
     50
   );
+  
+  // Mobile fullscreen overlay state
+  const [isFullscreenListOpen, setIsFullscreenListOpen] = useState(false);
+  const [fullscreenPostId, setFullscreenPostId] = useState<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // Sync feed with inline updates/deletes
   React.useEffect(() => {
@@ -85,6 +205,22 @@ export default function UniWallPage() {
     };
   }, [selectedPost]);
 
+  // No need for scroll to post in single post view
+  useEffect(() => {
+    // Lock body scroll when fullscreen overlay is open
+    if (isFullscreenListOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
+    };
+  }, [isFullscreenListOpen]);
+
   // Filter posts that have media only
   const mediaOnlyPosts = useMemo(() =>
     posts.filter((post: Post) => post.media_url),
@@ -92,6 +228,14 @@ export default function UniWallPage() {
   );
 
   const openPost = useCallback((post: Post) => {
+    // On mobile, open fullscreen single PostCard
+    if (isMobile) {
+      setFullscreenPostId(post.id);
+      setIsFullscreenListOpen(true);
+      return;
+    }
+
+    // On desktop, open modal
     const modalPost: PostModalData = {
       id: post.id,
       authorName: post.author.name,
@@ -109,7 +253,7 @@ export default function UniWallPage() {
     };
     setSelectedPost(modalPost);
     setIsModalOpen(true);
-  }, []);
+  }, [isMobile]);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
@@ -188,45 +332,11 @@ export default function UniWallPage() {
             <div className="md:hidden">
               <div className="grid grid-cols-3 gap-0.5">
                 {mediaOnlyPosts.map((post: Post) => (
-                  <button
+                  <VideoGridTile
                     key={post.id}
+                    post={post}
                     onClick={() => openPost(post)}
-                    className="relative aspect-square bg-gray-100 overflow-hidden group focus:outline-none"
-                  >
-                    {post.media_type === 'video' ? (
-                      <>
-                        <video
-                          src={post.media_url}
-                          className="w-full h-full object-cover"
-                          muted
-                          playsInline
-                          preload="metadata"
-                        />
-                        {/* Video indicator */}
-                        <div className="absolute top-1.5 right-1.5">
-                          <svg className="w-4 h-4 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm5.5 12.5L16 12l-5.5-3.5v7z" />
-                          </svg>
-                        </div>
-                      </>
-                    ) : (
-                      <img
-                        src={post.media_url}
-                        alt={post.content || 'Post'}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    )}
-                    {/* Carousel indicator */}
-                    {/* Hover overlay for desktop */}
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex items-center justify-center">
-                      <div className="flex items-center gap-4 text-white">
-                        <span className="flex items-center text-sm font-semibold">
-                          ❤️ {post.aura_count || 0}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
+                  />
                 ))}
               </div>
             </div>
@@ -261,6 +371,70 @@ export default function UniWallPage() {
           onClose={handleCloseModal}
           post={selectedPost}
         />
+      )}
+
+      {/* Mobile Fullscreen Single Post View */}
+      {isFullscreenListOpen && isMobile && fullscreenPostId && (
+        <div className="fixed inset-0 z-[60] bg-white overflow-hidden">
+          {/* Header */}
+          <div className="sticky top-0 z-[61] bg-white/90 backdrop-blur px-4 py-3 flex items-center justify-between border-b border-gray-200">
+            <button
+              onClick={() => setIsFullscreenListOpen(false)}
+              className="text-gray-900 text-sm font-medium"
+            >
+              ← Back
+            </button>
+            <div className="text-sm text-gray-600">Post</div>
+            <div className="w-10" />
+          </div>
+
+          {/* Single Post */}
+          <div className="h-[calc(100%-57px)] overflow-y-auto overflow-x-hidden overscroll-contain">
+            {(() => {
+              const post = mediaOnlyPosts.find((p: Post) => p.id === fullscreenPostId);
+              if (!post) return null;
+              
+              return (
+                <PostCard
+                  id={post.id}
+                  authorId={post.author.id}
+                  authorName={post.author.name}
+                  authorDept={post.author.department}
+                  authorYear={post.author.year}
+                  content={post.content}
+                  category={post.category}
+                  auraCount={post.aura_count || 0}
+                  commentCount={0}
+                  timestamp={new Date(post.created_at).toLocaleDateString()}
+                  profilePic={post.author.profile_image || undefined}
+                  mediaUrl={post.media_url}
+                  mediaType={(post.media_type as 'image' | 'video') || undefined}
+                  userLiked={post.user_liked}
+                  onPostClick={(pc) => {
+                    const modalPost: PostModalData = {
+                      id: pc.id,
+                      authorName: pc.authorName,
+                      authorDept: pc.authorDept,
+                      authorYear: pc.authorYear,
+                      content: pc.content,
+                      category: pc.category,
+                      auraCount: pc.auraCount,
+                      commentCount: pc.commentCount,
+                      timestamp: pc.timestamp,
+                      profilePic: pc.profilePic,
+                      mediaUrl: pc.mediaUrl,
+                      mediaType: pc.mediaType,
+                      userLiked: pc.userLiked,
+                    };
+                    setSelectedPost(modalPost);
+                    setIsModalOpen(true);
+                  }}
+                  edgeToEdge
+                />
+              );
+            })()}
+          </div>
+        </div>
       )}
     </div>
   );

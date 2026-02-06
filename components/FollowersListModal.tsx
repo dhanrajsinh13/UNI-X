@@ -205,6 +205,8 @@ const FollowersListModal: React.FC<FollowersListModalProps> = ({ isOpen, onClose
                       <Image
                         src={u.profile_image || '/uploads/DefaultProfile.jpg'}
                         alt={u.name}
+                        width={40}
+                        height={40}
                         className="w-full h-full object-cover"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg'; }}
                       />

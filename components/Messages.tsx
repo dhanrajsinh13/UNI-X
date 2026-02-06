@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
 import Image from 'next/image'
@@ -24,6 +25,16 @@ interface Message {
   clientId?: string;
   // Message status: 'sending' | 'sent' | 'delivered' | 'read'
   status?: 'sending' | 'sent' | 'delivered' | 'read';
+  // Shared post data
+  postId?: number | null;
+  sharedPost?: {
+    id: number;
+    authorId: number;
+    authorName: string;
+    content: string;
+    mediaUrl: string;
+    mediaType: 'image' | 'video';
+  } | null;
 }
 
 interface MessagesProps {
@@ -33,6 +44,7 @@ interface MessagesProps {
 }
 
 const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose }) => {
+  const router = useRouter();
   const { user, token } = useAuth();
   const {
     socket,
@@ -409,6 +421,8 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
         ) : (
           messages.map((message) => {
             const isOwn = user ? message.senderId === user.id : false;
+            // Check if this is a shared post - needs BOTH postId and mediaUrl
+            const isSharedPost = !!(message.postId && message.mediaUrl);
 
             return (
               <div
@@ -416,60 +430,129 @@ const Messages: React.FC<MessagesProps> = ({ otherUserId, otherUserName, onClose
                 className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwn
-                    ? 'bg-[#FFAF50] text-white'
-                    : 'bg-gray-100 text-gray-900'
-                    }`}
+                  className={`max-w-xs lg:max-w-md ${
+                    isSharedPost
+                      ? 'bg-transparent p-0' 
+                      : `px-4 py-2 rounded-lg ${isOwn ? 'bg-[#FFAF50] text-white' : 'bg-gray-100 text-gray-900'}`
+                  }`}
                 >
-                  {message.mediaUrl && (
-                    <div className="mb-2">
-                      {message.mediaUrl.includes('image') ? (
-                        <Image
-                          src={message.mediaUrl}
-                          alt="Shared image"
-                          className="rounded max-w-full h-auto"
-                        />
-                      ) : (
-                        <video
-                          src={message.mediaUrl}
-                          controls
-                          className="rounded max-w-full h-auto"
-                        />
-                      )}
-                    </div>
-                  )}
-                  {message.messageText && (
-                    <p className="text-sm">{message.messageText}</p>
-                  )}
-                  <div className={`flex items-center justify-end gap-1 mt-1`}>
-                    <span
-                      className={`text-xs ${isOwn ? 'text-white/80' : 'text-gray-500'
-                        }`}
+                  {/* Shared Post Card */}
+                  {isSharedPost ? (
+                    <div 
+                      onClick={() => {
+                        router.push(`/profile/${message.sharedPost?.authorId || otherUserId}?post=${message.postId}`);
+                      }}
+                      className="cursor-pointer group"
                     >
-                      {formatTime(message.createdAt)}
-                    </span>
-                    {/* Message status indicator for own messages */}
-                    {isOwn && (
-                      <span className="text-xs ml-1">
-                        {(message as any).status === 'sending' && (
-                          <span className="text-white/60">⏳</span>
+                      <div className={`border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow ${
+                        isOwn ? 'border-[#FFAF50]/30' : 'border-gray-200'
+                      }`}>
+                        {/* Post Media */}
+                        <div className="relative w-full aspect-square bg-gray-100">
+                          {(message.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || message.mediaUrl.includes('/image/')) ? (
+                            <Image
+                              src={message.mediaUrl}
+                              alt="Shared post"
+                              fill
+                              className="object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = '/uploads/DefaultProfile.jpg';
+                              }}
+                            />
+                          ) : (
+                            <video
+                              src={message.mediaUrl}
+                              className="w-full h-full object-cover"
+                              muted
+                            />
+                          )}
+                          {/* Play icon overlay for videos */}
+                          {(message.mediaUrl.match(/\.(mp4|webm|mov)$/i) || message.mediaUrl.includes('/video/')) && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/20 transition-colors">
+                              <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+                                <svg className="w-6 h-6 text-gray-900 ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        {/* Post Caption */}
+                        {message.messageText && (
+                          <div className="p-3 border-t border-gray-100">
+                            <p className="text-sm text-gray-900 line-clamp-2">{message.messageText}</p>
+                          </div>
                         )}
-                        {(message as any).status === 'sent' && (
-                          <span className="text-white/80">✓</span>
-                        )}
-                        {(message as any).status === 'delivered' && (
-                          <span className="text-white">✓✓</span>
-                        )}
-                        {(message as any).status === 'read' && (
-                          <span className="text-blue-200">✓✓</span>
-                        )}
-                        {/* Default for messages from DB without status */}
-                        {!(message as any).status && message.id > 0 && (
-                          <span className="text-white">✓✓</span>
-                        )}
-                      </span>
-                    )}
-                  </div>
+                      </div>
+                      {/* Timestamp below card */}
+                      <div className={`flex items-center ${isOwn ? 'justify-end' : 'justify-start'} mt-1 px-1`}>
+                        <span className="text-xs text-gray-500">
+                          {formatTime(message.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Regular Message */
+                    <>
+                      {message.mediaUrl && !message.postId && (
+                        <div className="mb-2">
+                          {(message.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) || message.mediaUrl.includes('/image/')) ? (
+                            <Image
+                              src={message.mediaUrl}
+                              alt="Shared image"
+                              width={300}
+                              height={300}
+                              className="rounded max-w-full h-auto object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (message.mediaUrl.match(/\.(mp4|webm|mov)$/i) || message.mediaUrl.includes('/video/')) ? (
+                            <video
+                              src={message.mediaUrl}
+                              controls
+                              className="rounded max-w-full h-auto"
+                              style={{ maxHeight: '400px' }}
+                            />
+                          ) : null}
+                        </div>
+                      )}
+                      {message.messageText && !message.postId && (
+                        <p className="text-sm">{message.messageText}</p>
+                      )}
+                      {!message.postId && (
+                        <div className={`flex items-center justify-end gap-1 mt-1`}>
+                          <span
+                            className={`text-xs ${isOwn ? 'text-white/80' : 'text-gray-500'
+                              }`}
+                          >
+                            {formatTime(message.createdAt)}
+                          </span>
+                          {/* Message status indicator for own messages */}
+                          {isOwn && (
+                            <span className="text-xs ml-1">
+                              {(message as any).status === 'sending' && (
+                                <span className="text-white/60">⏳</span>
+                              )}
+                              {(message as any).status === 'sent' && (
+                                <span className="text-white/80">✓</span>
+                              )}
+                              {(message as any).status === 'delivered' && (
+                                <span className="text-white">✓✓</span>
+                              )}
+                              {(message as any).status === 'read' && (
+                                <span className="text-blue-200">✓✓</span>
+                              )}
+                              {/* Default for messages from DB without status */}
+                              {!(message as any).status && message.id > 0 && (
+                                <span className="text-white">✓✓</span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             );

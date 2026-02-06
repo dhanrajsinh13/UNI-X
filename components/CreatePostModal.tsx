@@ -390,10 +390,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-modal p-4" onClick={handleOverlayClick}>
-      <div className="bg-white rounded-2xl md:rounded-xl w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-auto shadow-2xl ring-1 ring-black/5">
+    <div className="fixed inset-0 bg-black/65 backdrop-blur-md flex items-center justify-center z-modal p-4 animate-fade-in" onClick={handleOverlayClick}>
+      <div className="bg-white rounded-2xl w-full max-w-lg md:max-w-2xl max-h-[90vh] overflow-auto shadow-modal ring-1 ring-black/5 animate-fade-in-up">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-gray-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
           {step !== 'upload' && (
             <button
               onClick={handleBack}
@@ -414,7 +414,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
           {step === 'edit' && (
             <button
               onClick={handleNext}
-              className="text-[#FFAF50] font-semibold hover:text-orange-600 transition-colors"
+              className="text-accent font-semibold hover:text-accent/80 transition-colors"
             >
               Next
             </button>
@@ -424,11 +424,11 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
             <button
               onClick={handleShare}
               disabled={isUploading || !caption.trim()}
-              className="text-[#FFAF50] font-semibold hover:text-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="text-accent font-semibold hover:text-accent/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale flex items-center gap-2"
             >
               {isUploading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-[#FFAF50] border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin"></div>
                   Sharing...
                 </>
               ) : (
@@ -452,9 +452,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
         {/* Content */}
         <div className="flex-1">
           {step === 'upload' && (
-            <div className="p-8 md:p-16">
+            <div
+              className="p-8 md:p-16">
               <div
-                className="border-2 border-dashed border-gray-300 rounded-xl p-8 md:p-16 text-center hover:border-[#FFAF50] transition-colors cursor-pointer"
+                className="border-2 border-border rounded-xl p-8 md:p-16 text-center hover:border-accent hover:shadow-lg transition-all cursor-pointer"
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
@@ -468,7 +469,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ isOpen, onClose }) =>
                   </div>
                   <h3 className="text-xl md:text-2xl font-light text-gray-900 mb-2">
                     Drag photos and videos here
-                  </h3>
+                  </h3>tn-primary mt-4
                   <button className="bg-[#FFAF50] text-black px-6 py-2 rounded-lg font-medium hover:bg-orange-500 transition-colors">
                     Select from computer
                   </button>

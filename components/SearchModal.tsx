@@ -529,17 +529,17 @@ export default function SearchModal({ isOpen, onClose, variant = 'modal' }: Sear
     // Modal variant - full screen overlay
     return (
         <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-start justify-center pt-0 md:pt-8"
+            className="fixed inset-0 bg-black/65 backdrop-blur-md z-[9999] flex items-start justify-center pt-0 md:pt-8 animate-fade-in"
             onClick={handleBackdropClick}
         >
-            <div ref={containerRef} className="bg-white w-full h-full md:h-auto md:max-h-[85vh] md:w-full md:max-w-2xl md:rounded-2xl md:shadow-2xl flex flex-col overflow-hidden">
+            <div ref={containerRef} className="bg-white w-full h-full md:h-auto md:max-h-[85vh] md:w-full md:max-w-2xl md:rounded-2xl md:shadow-modal flex flex-col overflow-hidden animate-fade-in-up">
                 {/* Header */}
                 <div className="flex-shrink-0 px-4 pt-4 pb-2 border-b border-gray-100">
                     {/* Mobile Header with close button */}
                     <div className="flex items-center gap-3 mb-3 md:hidden">
                         <button
                             onClick={onClose}
-                            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors duration-fast"
                             aria-label="Close search"
                         >
                             <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">

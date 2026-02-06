@@ -562,13 +562,13 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-modal" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/65 backdrop-blur-sm flex items-center justify-center z-modal" onClick={onClose}>
       <div 
-        className="bg-white max-w-4xl w-full h-[85vh] flex rounded-sm overflow-hidden shadow-2xl"
+        className="bg-white w-full h-full md:max-w-4xl md:w-full md:h-[85vh] flex flex-col md:flex-row md:rounded-lg overflow-hidden shadow-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Left Side - Media */}
-        <div className="flex-1 bg-black flex items-center justify-center relative min-w-0.5">
+        {/* Left Side - Media (full screen on mobile, left side on desktop) */}
+        <div className="flex-1 bg-black flex items-center justify-center relative min-w-0 md:min-w-0.5">
           {mediaItems.length > 0 ? (
             <div className="w-full h-full flex items-center justify-center relative">
               {/* Current Media */}
@@ -619,7 +619,8 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                     muted={isMuted}
                     loop
                     playsInline
-                    preload="auto"
+                    preload="metadata"
+                    autoPlay
                     className={`${getMediaClasses(mediaItems[currentMediaIndex].type, mediaItems[currentMediaIndex].url)} cursor-pointer`}
                     style={{ objectFit: 'contain' }}
                     onError={(e) => ((e.target as HTMLVideoElement).style.display = 'none')}
@@ -713,10 +714,10 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
           )}
         </div>
 
-        {/* Right Side - Details & Comments */}
-        <div className="w-[335px] flex flex-col bg-white">
+        {/* Right Side - Details & Comments (bottom on mobile, right on desktop) */}
+        <div className="w-full md:w-[335px] flex flex-col bg-white">
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <div className="flex items-center gap-2.5">
               <Image
                 src={post.profilePic || '/uploads/DefaultProfile.jpg'}
@@ -729,6 +730,16 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
               <span className="font-semibold text-sm">{post.authorName || 'Unknown User'}</span>
             </div>
             <div className="flex items-center gap-1">
+              {/* Mobile Close Button */}
+              <button
+                onClick={onClose}
+                className="md:hidden p-2 hover:bg-gray-50 rounded-full"
+                title="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
               {canManage && !isMobile && (
                 <div className="relative">
                   <button
@@ -1029,16 +1040,16 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
 
           {/* Actions & Comment Input */}
           <div className="border-t border-gray-100">
-            <div className="flex items-center justify-between px-3 py-2.5">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={handleAuraClick}
                   data-aura-button
-                  className="hover:opacity-60 transition-opacity p-0.5"
+                  className="hover:opacity-60 transition-all duration-fast active:scale-110"
                 >
                   <svg
-                    width={26}
-                    height={26}
+                    width={24}
+                    height={24}
                     viewBox="0 0 100 100"
                     style={{
                       fill: hasAura ? '#FFAF50' : 'transparent',
@@ -1052,29 +1063,29 @@ const PostModal: React.FC<PostModalProps> = ({ isOpen, onClose, post, canManage 
                   </svg>
                 </button>
 
-                <button onClick={handleCommentButtonClick} className="hover:opacity-60 transition-opacity p-0.5">
-                  <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <button onClick={handleCommentButtonClick} className="hover:opacity-60 transition-opacity duration-fast">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                   </svg>
                 </button>
 
-                <button onClick={handleShareClick} className="hover:opacity-60 transition-opacity p-0.5">
-                  <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <button onClick={handleShareClick} className="hover:opacity-60 transition-opacity duration-fast">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13" />
                     <polygon points="22 2 15 22 11 13 2 9 22 2" />
                   </svg>
                 </button>
               </div>
 
-              <button className="hover:opacity-60 transition-opacity p-0.5">
-                <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button className="hover:opacity-60 transition-opacity duration-fast">
+                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                 </svg>
               </button>
             </div>
 
-            <div className="px-3 pb-2 border-b border-gray-100">
-              <p className="text-xs font-semibold">{auraCount} {auraCount === 1 ? 'Aura' : 'Auras'}</p>
+            <div className="px-4 pb-2 border-b border-gray-100">
+              <p className="text-sm font-semibold">{auraCount} {auraCount === 1 ? 'Aura' : 'Auras'}</p>
             </div>
 
             {/* Comment Input */}
